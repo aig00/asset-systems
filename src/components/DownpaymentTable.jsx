@@ -41,7 +41,6 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   });
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch transactions from the new table
   useEffect(() => {
     fetchTransactions();
   }, []);
