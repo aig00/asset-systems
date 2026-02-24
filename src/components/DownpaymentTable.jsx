@@ -41,9 +41,37 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   });
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Auto-generate tag number when modal opens
   useEffect(() => {
     fetchTransactions();
-  }, []);
+    
+    if (showAddAssetModal) {
+      const generateTagNumber = async () => {
+        const { data } = await supabase
+          .from("assets")
+          .select("tag_number")
+          .not("tag_number", "is", null)
+          .order("tag_number", { ascending: false });
+
+        let nextNum = 1;
+        if (data && data.length > 0) {
+          data.forEach((item) => {
+            const match = item.tag_number?.match(/^TAG-(\d+)$/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (num >= nextNum) {
+                nextNum = num + 1;
+              }
+            }
+          });
+        }
+
+        const newTag = `TAG-${nextNum.toString().padStart(3, "0")}`;
+        setAddAssetForm((prev) => ({ ...prev, tag_number: newTag }));
+      };
+      generateTagNumber();
+    }
+  }, [showAddAssetModal]);
 
   const fetchTransactions = async () => {
     const { data, error } = await supabase
@@ -1064,11 +1092,13 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
                       type="text"
                       className="dp-form-input"
                       value={addAssetForm.tag_number}
-                      onChange={(e) =>
-                        setAddAssetForm({ ...addAssetForm, tag_number: e.target.value })
-                      }
-                      placeholder="e.g. TAG-001"
+                      readOnly
+                      style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }}
+                      title="Tag number is auto-generated"
                     />
+                    <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                      Auto-generated • Cannot be edited
+                    </p>
                   </div>
                   <div className="dp-form-group">
                     <label className="dp-form-label">

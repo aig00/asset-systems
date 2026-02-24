@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
+import PinVerificationModal from "./PinVerificationModal";
 import {
   Eye,
   Edit,
@@ -30,6 +31,7 @@ import {
   CheckCircle,
   XCircle,
   Search,
+  Lock,
 } from "lucide-react";
 
 const MODAL_STYLES = `
@@ -59,10 +61,8 @@ const MODAL_STYLES = `
       0 8px 32px rgba(0,0,0,0.12);
     border: 1px solid #fde8e8;
     animation: asModalIn 0.26s cubic-bezier(.22,.61,.36,1) both;
-    /* Every modal is a flex column — header + scrollable body + footer */
     display: flex;
     flex-direction: column;
-    /* Never taller than the viewport */
     max-height: calc(100vh - 40px);
     position: relative;
     margin: auto;
@@ -76,7 +76,6 @@ const MODAL_STYLES = `
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* ── HEADER (never scrolls) ── */
   .as-header {
     padding: 22px 26px 18px;
     border-bottom: 1px solid #fef0f0;
@@ -111,18 +110,16 @@ const MODAL_STYLES = `
   }
   .as-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
 
-  /* ── BODY (always scrollable) ── */
   .as-body {
     padding: 22px 26px;
     overflow-y: auto;
     flex: 1;
-    min-height: 0; /* critical for flex scroll child */
+    min-height: 0;
   }
   .as-body::-webkit-scrollbar { width: 5px; }
   .as-body::-webkit-scrollbar-track { background: #fff5f5; border-radius: 4px; }
   .as-body::-webkit-scrollbar-thumb { background: #fca5a5; border-radius: 4px; }
 
-  /* ── FOOTER (never scrolls) ── */
   .as-footer {
     padding: 16px 26px 22px;
     display: flex; gap: 10px; flex-shrink: 0;
@@ -130,7 +127,6 @@ const MODAL_STYLES = `
     border-radius: 0 0 22px 22px;
   }
 
-  /* ── INFO GRID (View mode) ── */
   .as-info-grid {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: 10px; margin-bottom: 18px;
@@ -146,7 +142,6 @@ const MODAL_STYLES = `
   }
   .as-info-value { font-size: 14.5px; font-weight: 600; color: #111827; }
 
-  /* ── AMORT CARD ── */
   .as-amort-box {
     background: linear-gradient(135deg, #fff1f1, #fff8f8);
     border: 1.5px solid #fecaca; border-radius: 14px;
@@ -161,7 +156,6 @@ const MODAL_STYLES = `
   .as-amort-sub { font-size: 12px; color: #fca5a5; margin-top: 3px; }
   .as-amort-hint { font-size: 12px; color: #f87171; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
 
-  /* ── STATUS BADGE ── */
   .as-status-badge {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
@@ -172,7 +166,6 @@ const MODAL_STYLES = `
   .as-status-disposed    { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
   .as-status-pending     { background: #fef3c7; color: #d97706; border-color: #fde68a; }
 
-  /* ── WARNING BOX ── */
   .as-warn-box {
     background: #fff7ed; border: 1.5px solid #fed7aa;
     border-radius: 13px; padding: 14px 16px;
@@ -184,7 +177,6 @@ const MODAL_STYLES = `
   .as-warn-box.danger .as-warn-text { color: #991b1b; }
   .as-warn-text strong { font-weight: 700; }
 
-  /* ── TRANSFER SELECT ── */
   .as-select {
     font-family: 'DM Sans', sans-serif;
     font-size: 14.5px; color: #111827;
@@ -198,7 +190,6 @@ const MODAL_STYLES = `
   }
   .as-select:focus { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
 
-  /* ── EDIT FORM ── */
   .as-section-label {
     font-size: 11px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
     color: #ef4444; margin-bottom: 11px; margin-top: 4px;
@@ -223,7 +214,6 @@ const MODAL_STYLES = `
   .as-input:hover { border-color: #fca5a5; background: #fff; }
   .as-input:focus { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
 
-  /* ── BUTTONS ── */
   .as-btn-cancel {
     flex: 1; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
     color: #6b7280; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 11px;
@@ -248,7 +238,6 @@ const MODAL_STYLES = `
   .as-btn-indigo:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(67,56,202,0.34); }
   .as-btn-danger:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(153,27,27,0.38); }
 
-  /* ── BACK BUTTON ── */
   .as-btn-back {
     background: #fff; border: 1.5px solid #e5e7eb; color: #374151;
     padding: 7px 13px; border-radius: 9px;
@@ -259,7 +248,6 @@ const MODAL_STYLES = `
   }
   .as-btn-back:hover { border-color: #d1d5db; background: #f9fafb; }
 
-  /* ── AMORTIZATION SCHEDULE ── */
   .date-inputs { display: flex; gap: 14px; margin-bottom: 18px; }
   .date-field { flex: 1; }
   .date-label {
@@ -299,9 +287,11 @@ const MODAL_STYLES = `
   }
   .sched-total .sched-date { color: #991b1b; font-weight: 700; }
   .sched-total .sched-amount { color: #991b1b; font-size: 15px; }
+  .pin-modal-input { width: 100%; padding: 12px 16px; border: 1.5px solid #f3e8e8; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; font-weight: bold; outline: none; transition: border-color 0.15s; }
+  .pin-modal-input:focus { border-color: #dc2626; }
+  .pin-error { color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center; }
 `;
 
-// ─── TABLE STYLES ────────────────────────────────────────────
 const TABLE_STYLES = `
   .at-search-bar {
     display: flex;
@@ -384,7 +374,7 @@ const TABLE_STYLES = `
   .at-status-disposed    { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
   .as-status-disposed .at-status-dot { background: #dc2626; }
   .at-status-pending     { background: #fef3c7; color: #d97706; border-color: #fde68a; }
-.at-status-pending .at-status-dot { background: #d97706; }
+  .at-status-pending .at-status-dot { background: #d97706; }
 
   .at-existing-badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -422,11 +412,43 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   const [transferCompany, setTransferCompany] = useState("");
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const [amortizationDates, setAmortizationDates] = useState({
     start: "2026-02",
     end: "2027-12",
   });
-  const [searchQuery, setSearchQuery] = useState("");
+
+  // PIN Verification state
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+
+  // Verify PIN function - used by PinVerificationModal
+  const handlePinVerify = async (enteredPin) => {
+    const adminPin = import.meta.env.VITE_ADMIN_PIN || "1234";
+    if (enteredPin === adminPin) {
+      setShowPinModal(false);
+      setPinError("");
+      // Execute the pending action after successful PIN verification
+      if (pendingAction) {
+        pendingAction();
+        setPendingAction(null);
+      }
+      return true;
+    } else {
+      setPinError("Incorrect PIN. Please try again.");
+      return false;
+    }
+  };
+
+  // Open PIN modal for protected actions
+  const openWithPin = (action) => {
+    setPendingAction(() => action);
+    setShowPinModal(true);
+    setPinError("");
+  };
 
   // Calculate payment completion percentage
   const calculatePaymentCompletion = (asset) => {
@@ -446,7 +468,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       asset.status?.toLowerCase().includes(query) ||
       asset.current_company?.toLowerCase().includes(query);
     
-    // If showPendingOnly is true, filter for downpayment/pending assets
     if (showPendingOnly) {
       const paymentCompletion = calculatePaymentCompletion(asset);
       return matchesSearch && paymentCompletion < 100;
@@ -477,9 +498,8 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     let current = new Date(start.getFullYear(), start.getMonth(), 1);
     const endTime = new Date(end.getFullYear(), end.getMonth(), 1).getTime();
 
-    // Parse purchase date as local to avoid timezone issues and ensure start is next month
     const [pYear, pMonth] = selectedAsset.purchase_date.split("-").map(Number);
-    const startDepreciationDate = new Date(pYear, pMonth, 1); // pMonth is 1-based, so this creates 1st of next month
+    const startDepreciationDate = new Date(pYear, pMonth, 1);
 
     const lifeYears = parseFloat(selectedAsset.useful_life_years) || 0;
     const endDepreciationDate = new Date(startDepreciationDate);
@@ -508,7 +528,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     return schedule;
   };
 
-
   const calculateAmortization = (asset) => {
     const cost = parseFloat(asset.total_cost || 0);
     const salvage = parseFloat(asset.salvage_value || 0);
@@ -517,7 +536,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   };
 
   const handleExportAsset = () => {
-    // Main asset details
     const assetDetails = [
       {
         "Asset Name": selectedAsset.name,
@@ -538,14 +556,12 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       },
     ];
 
-    // Generate amortization schedule
     const amortSchedule = getAssetAmortizationSchedule();
     const scheduleData = amortSchedule.map((item) => ({
       "Period": item.date,
       "Monthly Depreciation": item.amount,
     }));
     
-    // Add total row
     const amortTotal = amortSchedule.reduce((sum, i) => sum + i.amount, 0);
     scheduleData.push({
       "Period": "Total",
@@ -553,15 +569,10 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     });
 
     const wb = XLSX.utils.book_new();
-    
-    // Add Asset Details sheet
     const ws1 = XLSX.utils.json_to_sheet(assetDetails);
     XLSX.utils.book_append_sheet(wb, ws1, "Asset Details");
-    
-    // Add Amortization Schedule sheet
     const ws2 = XLSX.utils.json_to_sheet(scheduleData);
     XLSX.utils.book_append_sheet(wb, ws2, "Amortization Schedule");
-    
     XLSX.writeFile(wb, `Asset_${selectedAsset.tag_number}.xlsx`);
   };
 
@@ -600,7 +611,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     setLoading(true);
 
     try {
-      // Export the disposed asset data to CSV
       const quantity = Number(selectedAsset.quantity) || 0;
       const unitCost = Number(selectedAsset.unit_cost) || 0;
       const totalCost = quantity * unitCost;
@@ -633,7 +643,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       XLSX.utils.book_append_sheet(wb, ws, "Disposed Asset");
       XLSX.writeFile(wb, `Disposed_${selectedAsset.tag_number}.csv`);
 
-      // Update status to "Disposed" in the database
       const { error: updateError } = await supabase
         .from("assets")
         .update({ status: "Disposed" })
@@ -775,7 +784,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
         {MODAL_STYLES}
       </style>
 
-      {/* ── SEARCH BAR ── */}
       <div className="at-search-bar">
         <div className="at-search-input-wrapper">
           <Search className="at-search-icon" size={18} />
@@ -794,7 +802,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
         )}
       </div>
 
-      {/* ── TABLE ── */}
       <div className="at-wrap">
         <div className="at-scroll">
           <table className="at-table">
@@ -821,17 +828,12 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                 filteredAssets.map((asset) => (
                   <tr key={asset.id} className="at-row">
                     <td className="at-td at-td-tag">{asset.tag_number}</td>
-<td className="at-td at-td-name">{asset.name}{asset.is_existing && <span className="at-existing-badge">Existing</span>}</td>
-                    <td
-                      className="at-td"
-                      style={{ color: "#6b7280", fontSize: 13.5 }}
-                    >
+                    <td className="at-td at-td-name">{asset.name}{asset.is_existing && <span className="at-existing-badge">Existing</span>}</td>
+                    <td className="at-td" style={{ color: "#6b7280", fontSize: 13.5 }}>
                       {asset.category || "—"}
                     </td>
                     <td className="at-td">
-                      <span
-                        className={`at-status ${statusClass(asset.status)}`}
-                      >
+                      <span className={`at-status ${statusClass(asset.status)}`}>
                         <span className="at-status-dot" />
                         {asset.status}
                       </span>
@@ -839,15 +841,8 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                     <td className="at-td" style={{ color: "#6b7280" }}>
                       {asset.current_company || "—"}
                     </td>
-                    <td
-                      className="at-td"
-                      style={{ fontWeight: 600, color: "#111827" }}
-                    >
-                      ₱
-                      {parseFloat(asset.total_cost || 0).toLocaleString(
-                        "en-PH",
-                        { minimumFractionDigits: 2 },
-                      )}
+                    <td className="at-td" style={{ fontWeight: 600, color: "#111827" }}>
+                      ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                     </td>
                     {showPendingOnly && (
                       <td className="at-td">
@@ -862,62 +857,33 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                       </td>
                     )}
                     <td className="at-td at-td-actions">
-                      <button
-                        className="at-action-btn at-btn-view"
-                        title="View"
-                        onClick={() => openModal(asset, "view")}
-                      >
+                      <button className="at-action-btn at-btn-view" title="View" onClick={() => openModal(asset, "view")}>
                         <Eye size={16} />
                       </button>
-                      {userRole === "head" && (
-                        <button
-                          className="at-action-btn at-btn-edit"
-                          title="Edit"
-                          onClick={() => openModal(asset, "edit")}
-                        >
+                      {(userRole === "head" || userRole === "admin") && (
+                        <button className="at-action-btn at-btn-edit" title="Edit" onClick={() => openWithPin(() => openModal(asset, "edit"))}>
                           <Edit size={16} />
                         </button>
                       )}
-                      <button
-                        className="at-action-btn at-btn-del"
-                        title="Delete"
-                        onClick={() => openModal(asset, "delete")}
-                      >
+                      <button className="at-action-btn at-btn-del" title="Delete" onClick={() => openWithPin(() => openModal(asset, "delete"))}>
                         <Trash2 size={16} />
                       </button>
                       {asset.status === "Active" && (
                         <>
-                          <button
-                            className="at-action-btn at-btn-xfer"
-                            title="Transfer"
-                            onClick={() => openModal(asset, "transfer")}
-                          >
+                          <button className="at-action-btn at-btn-xfer" title="Transfer" onClick={() => openWithPin(() => openModal(asset, "transfer"))}>
                             <ArrowRightLeft size={16} />
                           </button>
-                          <button
-                            className="at-action-btn at-btn-dispos"
-                            title="Dispose"
-                            onClick={() => openModal(asset, "dispose")}
-                          >
+                          <button className="at-action-btn at-btn-dispos" title="Dispose" onClick={() => openWithPin(() => openModal(asset, "dispose"))}>
                             <Archive size={16} />
                           </button>
                         </>
                       )}
-                      {/* Admin can approve/reject pending assets */}
                       {asset.status === "Pending" && userRole === "admin" && (
                         <>
-                          <button
-                            className="at-action-btn at-btn-approve"
-                            title="Approve"
-                            onClick={() => handleApprove(asset.id)}
-                          >
+                          <button className="at-action-btn at-btn-approve" title="Approve" onClick={() => handleApprove(asset.id)}>
                             <CheckCircle size={16} />
                           </button>
-                          <button
-                            className="at-action-btn at-btn-reject"
-                            title="Reject"
-                            onClick={() => handleReject(asset.id)}
-                          >
+                          <button className="at-action-btn at-btn-reject" title="Reject" onClick={() => handleReject(asset.id)}>
                             <XCircle size={16} />
                           </button>
                         </>
@@ -931,692 +897,397 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
         </div>
       </div>
 
-      {/* ── MODALS ── */}
-      {modalMode &&
-        selectedAsset &&
-        createPortal(
-          <div
-            className="as-overlay"
-            onClick={(e) => e.target === e.currentTarget && closeModal()}
-          >
-            {/* ── VIEW ── */}
-            {modalMode === "view" && (
-              <div className="as-modal as-modal-md">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <div className="as-icon-wrap as-icon-blue">
-                      <Eye size={19} color="#fff" strokeWidth={2.2} />
-                    </div>
-                    <div className="as-header-titles">
-                      <p className="as-title">Asset Details</p>
-                      <p className="as-subtitle">{selectedAsset.name}</p>
-                    </div>
+      {modalMode && selectedAsset && createPortal(
+        <div className="as-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          {modalMode === "view" && (
+            <div className="as-modal as-modal-md">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <div className="as-icon-wrap as-icon-blue">
+                    <Eye size={19} color="#fff" strokeWidth={2.2} />
                   </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
-                  </button>
+                  <div className="as-header-titles">
+                    <p className="as-title">Asset Details</p>
+                    <p className="as-subtitle">{selectedAsset.name}</p>
+                  </div>
                 </div>
-                <div className="as-body">
-                  <div className="as-info-grid">
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <div className="as-info-grid">
+                  <div className="as-info-item full">
+                    <p className="as-info-label">Asset Name</p>
+                    <p className="as-info-value" style={{ fontSize: 16 }}>{selectedAsset.name}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Tag Number</p>
+                    <p className="as-info-value" style={{ fontFamily: "monospace" }}>{selectedAsset.tag_number}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Category</p>
+                    <p className="as-info-value">{selectedAsset.category || "—"}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Status</p>
+                    <span className={`as-status-badge ${asStatusClass(selectedAsset.status)}`}>{selectedAsset.status}</span>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Company</p>
+                    <p className="as-info-value">{selectedAsset.current_company || "—"}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Total Cost</p>
+                    <p className="as-info-value">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Salvage Value</p>
+                    <p className="as-info-value">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Useful Life</p>
+                    <p className="as-info-value">{selectedAsset.useful_life_years} years</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Purchase Date</p>
+                    <p className="as-info-value">{selectedAsset.purchase_date || "—"}</p>
+                  </div>
+                  {selectedAsset.reference_number && (
+                    <div className="as-info-item">
+                      <p className="as-info-label">Reference #</p>
+                      <p className="as-info-value">{selectedAsset.reference_number}</p>
+                    </div>
+                  )}
+                  {selectedAsset.serial_number && (
+                    <div className="as-info-item">
+                      <p className="as-info-label">Serial Number</p>
+                      <p className="as-info-value">{selectedAsset.serial_number}</p>
+                    </div>
+                  )}
+                  {selectedAsset.description && (
                     <div className="as-info-item full">
-                      <p className="as-info-label">Asset Name</p>
-                      <p className="as-info-value" style={{ fontSize: 16 }}>
-                        {selectedAsset.name}
-                      </p>
+                      <p className="as-info-label">Description</p>
+                      <p className="as-info-value">{selectedAsset.description}</p>
                     </div>
+                  )}
+                  {selectedAsset.location && (
                     <div className="as-info-item">
-                      <p className="as-info-label">Tag Number</p>
-                      <p
-                        className="as-info-value"
-                        style={{ fontFamily: "monospace" }}
-                      >
-                        {selectedAsset.tag_number}
-                      </p>
+                      <p className="as-info-label">Location</p>
+                      <p className="as-info-value">{selectedAsset.location}</p>
                     </div>
+                  )}
+                  {selectedAsset.assigned_to && (
                     <div className="as-info-item">
-                      <p className="as-info-label">Category</p>
-                      <p className="as-info-value">
-                        {selectedAsset.category || "—"}
-                      </p>
+                      <p className="as-info-label">Assigned To</p>
+                      <p className="as-info-value">{selectedAsset.assigned_to}</p>
                     </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Status</p>
-                      <span
-                        className={`as-status-badge ${asStatusClass(selectedAsset.status)}`}
-                      >
-                        {selectedAsset.status}
-                      </span>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Company</p>
-                      <p className="as-info-value">
-                        {selectedAsset.current_company || "—"}
-                      </p>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Total Cost</p>
-                      <p className="as-info-value">
-                        ₱
-                        {parseFloat(
-                          selectedAsset.total_cost || 0,
-                        ).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Salvage Value</p>
-                      <p className="as-info-value">
-                        ₱
-                        {parseFloat(
-                          selectedAsset.salvage_value || 0,
-                        ).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Useful Life</p>
-                      <p className="as-info-value">
-                        {selectedAsset.useful_life_years} years
-                      </p>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Purchase Date</p>
-                      <p className="as-info-value">
-                        {selectedAsset.purchase_date || "—"}
-                      </p>
-                    </div>
-                    {selectedAsset.reference_number && (
-                      <div className="as-info-item">
-                        <p className="as-info-label">Reference #</p>
-                        <p className="as-info-value">
-                          {selectedAsset.reference_number}
-                        </p>
-                      </div>
-                    )}
-                    {selectedAsset.serial_number && (
-                      <div className="as-info-item">
-                        <p className="as-info-label">Serial Number</p>
-                        <p className="as-info-value">
-                          {selectedAsset.serial_number}
-                        </p>
-                      </div>
-                    )}
-                    {selectedAsset.description && (
-                      <div className="as-info-item full">
-                        <p className="as-info-label">Description</p>
-                        <p className="as-info-value">
-                          {selectedAsset.description}
-                        </p>
-                      </div>
-                    )}
-                    {selectedAsset.location && (
-                      <div className="as-info-item">
-                        <p className="as-info-label">Location</p>
-                        <p className="as-info-value">
-                          {selectedAsset.location}
-                        </p>
-                      </div>
-                    )}
-                    {selectedAsset.assigned_to && (
-                      <div className="as-info-item">
-                        <p className="as-info-label">Assigned To</p>
-                        <p className="as-info-value">
-                          {selectedAsset.assigned_to}
-                        </p>
-                      </div>
-                    )}
-                    {selectedAsset.disposed_by && (
-                      <>
-                        <div className="as-info-item">
-                          <p className="as-info-label">Disposed By</p>
-                          <p className="as-info-value">
-                            {selectedAsset.disposed_by}
-                          </p>
-                        </div>
-                        <div className="as-info-item">
-                          <p className="as-info-label">Disposal Date</p>
-                          <p className="as-info-value">
-                            {selectedAsset.disposal_date}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div
-                    className="as-amort-box"
-                    onClick={() => setModalMode("amortization")}
-                  >
-                    <div>
-                      <p className="as-amort-label">Monthly Amortization</p>
-                      <p className="as-amort-value">
-                        ₱{calculateAmortization(selectedAsset)}
-                      </p>
-                      <p className="as-amort-sub">Straight-line depreciation</p>
-                      <p className="as-amort-hint">
-                        <ArrowRight size={12} /> Click to view full schedule
-                      </p>
-                    </div>
-                    <TrendingDown
-                      size={38}
-                      style={{ color: "#fca5a5", opacity: 0.6, flexShrink: 0 }}
-                    />
-                  </div>
+                  )}
                 </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Close
-                  </button>
-                  <button
-                    className="as-btn-primary as-btn-indigo"
-                    onClick={handleExportAsset}
-                  >
-                    <Download size={15} strokeWidth={2.5} /> Export
-                  </button>
+                <div className="as-amort-box" onClick={() => setModalMode("amortization")}>
+                  <div>
+                    <p className="as-amort-label">Monthly Amortization</p>
+                    <p className="as-amort-value">₱{calculateAmortization(selectedAsset)}</p>
+                    <p className="as-amort-sub">Straight-line depreciation</p>
+                    <p className="as-amort-hint"><ArrowRight size={12} /> Click to view full schedule</p>
+                  </div>
+                  <TrendingDown size={38} style={{ color: "#fca5a5", opacity: 0.6, flexShrink: 0 }} />
                 </div>
               </div>
-            )}
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Close</button>
+                <button className="as-btn-primary as-btn-indigo" onClick={handleExportAsset}>
+                  <Download size={15} strokeWidth={2.5} /> Export
+                </button>
+              </div>
+            </div>
+          )}
 
-            {/* ── AMORTIZATION SCHEDULE ── */}
-            {modalMode === "amortization" && (
-              <div className="as-modal as-modal-md">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <button
-                      className="as-btn-back"
-                      onClick={() => setModalMode("view")}
-                    >
-                      <ArrowLeft size={13} /> Back
-                    </button>
-                    <div className="as-header-titles">
-                      <p className="as-title">Amortization Schedule</p>
-                      <p className="as-subtitle">{selectedAsset.name}</p>
-                    </div>
-                  </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
+          {modalMode === "amortization" && (
+            <div className="as-modal as-modal-md">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <button className="as-btn-back" onClick={() => setModalMode("view")}>
+                    <ArrowLeft size={13} /> Back
                   </button>
-                </div>
-                <div className="as-body">
-                  <div className="date-inputs">
-                    <div className="date-field">
-                      <label className="date-label">From</label>
-                      <input
-                        type="month"
-                        className="date-input"
-                        value={amortizationDates.start}
-                        onChange={(e) =>
-                          setAmortizationDates({
-                            ...amortizationDates,
-                            start: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="date-field">
-                      <label className="date-label">To</label>
-                      <input
-                        type="month"
-                        className="date-input"
-                        value={amortizationDates.end}
-                        onChange={(e) =>
-                          setAmortizationDates({
-                            ...amortizationDates,
-                            end: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="sched-list">
-                    {schedule.map((item, idx) => (
-                      <div key={idx} className="sched-row">
-                        <span className="sched-date">{item.date}</span>
-                        <span
-                          className={`sched-amount${item.amount === 0 ? " zero" : ""}`}
-                        >
-                          ₱
-                          {item.amount.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="sched-row sched-total">
-                      <span className="sched-date">Total Period</span>
-                      <span className="sched-amount">
-                        ₱
-                        {scheduleTotal.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
+                  <div className="as-header-titles">
+                    <p className="as-title">Amortization Schedule</p>
+                    <p className="as-subtitle">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Close
-                  </button>
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <div className="date-inputs">
+                  <div className="date-field">
+                    <label className="date-label">From</label>
+                    <input type="month" className="date-input" value={amortizationDates.start} onChange={(e) => setAmortizationDates({ ...amortizationDates, start: e.target.value })} />
+                  </div>
+                  <div className="date-field">
+                    <label className="date-label">To</label>
+                    <input type="month" className="date-input" value={amortizationDates.end} onChange={(e) => setAmortizationDates({ ...amortizationDates, end: e.target.value })} />
+                  </div>
+                </div>
+                <div className="sched-list">
+                  {schedule.map((item, idx) => (
+                    <div key={idx} className="sched-row">
+                      <span className="sched-date">{item.date}</span>
+                      <span className={`sched-amount${item.amount === 0 ? " zero" : ""}`}>₱{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+                  <div className="sched-row sched-total">
+                    <span className="sched-date">Total Period</span>
+                    <span className="sched-amount">₱{scheduleTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
                 </div>
               </div>
-            )}
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Close</button>
+              </div>
+            </div>
+          )}
 
-            {/* ── TRANSFER ── */}
-            {modalMode === "transfer" && (
-              <div className="as-modal as-modal-sm">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <div className="as-icon-wrap as-icon-amber">
-                      <ArrowRightLeft
-                        size={19}
-                        color="#fff"
-                        strokeWidth={2.2}
-                      />
-                    </div>
-                    <div className="as-header-titles">
-                      <p className="as-title">Transfer Asset</p>
-                      <p className="as-subtitle">{selectedAsset.name}</p>
-                    </div>
+          {modalMode === "transfer" && (
+            <div className="as-modal as-modal-sm">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <div className="as-icon-wrap as-icon-amber">
+                    <ArrowRightLeft size={19} color="#fff" strokeWidth={2.2} />
                   </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-                <div className="as-body">
-                  <div className="as-warn-box">
-                    <Info
-                      size={19}
-                      style={{ color: "#d97706", flexShrink: 0, marginTop: 1 }}
-                    />
-                    <p className="as-warn-text">
-                      Transferring from{" "}
-                      <strong>{selectedAsset.current_company}</strong>. A
-                      proof-of-transfer Excel file will be downloaded
-                      automatically.
-                    </p>
+                  <div className="as-header-titles">
+                    <p className="as-title">Transfer Asset</p>
+                    <p className="as-subtitle">{selectedAsset.name}</p>
                   </div>
-                  <label
-                    className="as-field-label"
-                    style={{ marginBottom: 8, display: "flex" }}
-                  >
-                    <Building2 size={13} /> Destination Company
-                  </label>
-                  <select
-                    className="as-select"
-                    value={transferCompany}
-                    onChange={(e) => setTransferCompany(e.target.value)}
-                  >
-                    <option value="">Select company…</option>
-                    <option value="Company A">Company A</option>
-                    <option value="Company B">Company B</option>
-                    <option value="HQ">HQ</option>
-                  </select>
                 </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Cancel
-                  </button>
-                  <button
-                    className="as-btn-primary as-btn-amber"
-                    onClick={handleTransfer}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      "Processing…"
-                    ) : (
-                      <>
-                        <ArrowRight size={15} strokeWidth={2.5} /> Confirm
-                        Transfer
-                      </>
-                    )}
-                  </button>
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <div className="as-warn-box">
+                  <Info size={19} style={{ color: "#d97706", flexShrink: 0, marginTop: 1 }} />
+                  <p className="as-warn-text">Transferring from <strong>{selectedAsset.current_company}</strong>. A proof-of-transfer Excel file will be downloaded automatically.</p>
+                </div>
+                <label className="as-field-label" style={{ marginBottom: 8, display: "flex" }}>
+                  <Building2 size={13} /> Destination Company
+                </label>
+                <select className="as-select" value={transferCompany} onChange={(e) => setTransferCompany(e.target.value)}>
+                  <option value="">Select company…</option>
+                  <option value="Company A">Company A</option>
+                  <option value="Company B">Company B</option>
+                  <option value="HQ">HQ</option>
+                </select>
+              </div>
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Cancel</button>
+                <button className="as-btn-primary as-btn-amber" onClick={handleTransfer} disabled={loading}>
+                  {loading ? "Processing…" : <><ArrowRight size={15} strokeWidth={2.5} /> Confirm Transfer</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {modalMode === "dispose" && (
+            <div className="as-modal as-modal-sm">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <div className="as-icon-wrap as-icon-red">
+                    <Trash2 size={19} color="#fff" strokeWidth={2.2} />
+                  </div>
+                  <div className="as-header-titles">
+                    <p className="as-title">Dispose Asset</p>
+                    <p className="as-subtitle">{selectedAsset.name}</p>
+                  </div>
+                </div>
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <div className="as-warn-box danger">
+                  <AlertTriangle size={19} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
+                  <p className="as-warn-text">You are about to dispose of <strong>{selectedAsset.name}</strong>. This will export all data to CSV and <strong>permanently delete</strong> the record from the table.</p>
+                </div>
+                <div className="as-info-grid" style={{ marginBottom: 0 }}>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Total Cost</p>
+                    <p className="as-info-value">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="as-info-item">
+                    <p className="as-info-label">Salvage Value</p>
+                    <p className="as-info-value">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  </div>
                 </div>
               </div>
-            )}
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Cancel</button>
+                <button className="as-btn-primary as-btn-red" onClick={handleDispose} disabled={loading}>
+                  {loading ? "Processing…" : <><CheckCircle2 size={15} strokeWidth={2.5} /> Confirm Disposal</>}
+                </button>
+              </div>
+            </div>
+          )}
 
-            {/* ── DISPOSE ── */}
-            {modalMode === "dispose" && (
-              <div className="as-modal as-modal-sm">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <div className="as-icon-wrap as-icon-red">
-                      <Trash2 size={19} color="#fff" strokeWidth={2.2} />
-                    </div>
-                    <div className="as-header-titles">
-                      <p className="as-title">Dispose Asset</p>
-                      <p className="as-subtitle">{selectedAsset.name}</p>
-                    </div>
+          {modalMode === "delete" && (
+            <div className="as-modal as-modal-sm">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <div className="as-icon-wrap as-icon-danger">
+                    <AlertTriangle size={19} color="#fff" strokeWidth={2.2} />
                   </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-                <div className="as-body">
-                  <div className="as-warn-box danger">
-                    <AlertTriangle
-                      size={19}
-                      style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }}
-                    />
-                    <p className="as-warn-text">
-                      You are about to dispose of{" "}
-                      <strong>{selectedAsset.name}</strong>. This will export
-                      all data to CSV and <strong>permanently delete</strong>{" "}
-                      the record from the table.
-                    </p>
-                  </div>
-                  <div className="as-info-grid" style={{ marginBottom: 0 }}>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Total Cost</p>
-                      <p className="as-info-value">
-                        ₱
-                        {parseFloat(
-                          selectedAsset.total_cost || 0,
-                        ).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="as-info-item">
-                      <p className="as-info-label">Salvage Value</p>
-                      <p className="as-info-value">
-                        ₱
-                        {parseFloat(
-                          selectedAsset.salvage_value || 0,
-                        ).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
+                  <div className="as-header-titles">
+                    <p className="as-title">Delete Asset</p>
+                    <p className="as-subtitle">This action is permanent</p>
                   </div>
                 </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Cancel
-                  </button>
-                  <button
-                    className="as-btn-primary as-btn-red"
-                    onClick={handleDispose}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      "Processing…"
-                    ) : (
-                      <>
-                        <CheckCircle2 size={15} strokeWidth={2.5} /> Confirm
-                        Disposal
-                      </>
-                    )}
-                  </button>
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <div className="as-warn-box danger">
+                  <AlertTriangle size={19} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
+                  <p className="as-warn-text">You are about to <strong>permanently delete</strong> the record for <strong>{selectedAsset.name}</strong>. This cannot be undone and all data will be lost.</p>
                 </div>
               </div>
-            )}
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Cancel</button>
+                <button className="as-btn-primary as-btn-danger" onClick={handleDelete} disabled={loading}>
+                  {loading ? "Deleting…" : <><Trash2 size={15} strokeWidth={2.5} /> Permanently Delete</>}
+                </button>
+              </div>
+            </div>
+          )}
 
-            {/* ── DELETE ── */}
-            {modalMode === "delete" && (
-              <div className="as-modal as-modal-sm">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <div className="as-icon-wrap as-icon-danger">
-                      <AlertTriangle size={19} color="#fff" strokeWidth={2.2} />
-                    </div>
-                    <div className="as-header-titles">
-                      <p className="as-title">Delete Asset</p>
-                      <p className="as-subtitle">This action is permanent</p>
-                    </div>
+          {modalMode === "edit" && (
+            <div className="as-modal as-modal-lg">
+              <div className="as-header">
+                <div className="as-header-left">
+                  <div className="as-icon-wrap as-icon-indigo">
+                    <Edit size={19} color="#fff" strokeWidth={2.2} />
                   </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-                <div className="as-body">
-                  <div className="as-warn-box danger">
-                    <AlertTriangle
-                      size={19}
-                      style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }}
-                    />
-                    <p className="as-warn-text">
-                      You are about to <strong>permanently delete</strong> the
-                      record for <strong>{selectedAsset.name}</strong>. This
-                      cannot be undone and all data will be lost.
-                    </p>
+                  <div className="as-header-titles">
+                    <p className="as-title">Edit Asset</p>
+                    <p className="as-subtitle">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Cancel
-                  </button>
-                  <button
-                    className="as-btn-primary as-btn-danger"
-                    onClick={handleDelete}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      "Deleting…"
-                    ) : (
-                      <>
-                        <Trash2 size={15} strokeWidth={2.5} /> Permanently
-                        Delete
-                      </>
-                    )}
-                  </button>
+                <button className="as-close" onClick={closeModal}>
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+              <div className="as-body">
+                <p className="as-section-label">Basic Information</p>
+                <div className="as-form-grid">
+                  <div className="as-field">
+                    <label className="as-field-label"><Package size={13} /> Asset Name</label>
+                    <input className="as-input" name="name" value={editForm.name || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Layers size={13} /> Category</label>
+                    <input className="as-input" name="category" value={editForm.category || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Tag size={13} /> Tag Number</label>
+                    <input className="as-input" name="tag_number" value={editForm.tag_number || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><FileText size={13} /> Reference #</label>
+                    <input className="as-input" name="reference_number" value={editForm.reference_number || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Tag size={13} /> Serial Number</label>
+                    <input className="as-input" name="serial_number" value={editForm.serial_number || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field full">
+                    <label className="as-field-label"><FileText size={13} /> Description</label>
+                    <input className="as-input" name="description" value={editForm.description || ""} onChange={handleEditChange} />
+                  </div>
+                </div>
+
+                <p className="as-section-label">Valuation</p>
+                <div className="as-form-grid">
+                  <div className="as-field">
+                    <label className="as-field-label"><Hash size={13} /> Quantity</label>
+                    <input type="number" className="as-input" name="quantity" value={editForm.quantity || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><DollarSign size={13} /> Unit Cost (₱)</label>
+                    <input type="number" step="0.01" className="as-input" name="unit_cost" value={editForm.unit_cost || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><DollarSign size={13} /> Salvage Value (₱)</label>
+                    <input type="number" step="0.01" className="as-input" name="salvage_value" value={editForm.salvage_value || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Clock size={13} /> Useful Life (Years)</label>
+                    <input type="number" className="as-input" name="useful_life_years" value={editForm.useful_life_years || ""} onChange={handleEditChange} />
+                  </div>
+                </div>
+
+                <p className="as-section-label">Logistics</p>
+                <div className="as-form-grid">
+                  <div className="as-field">
+                    <label className="as-field-label"><Calendar size={13} /> Purchase Date</label>
+                    <input type="date" className="as-input" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Building2 size={13} /> Company</label>
+                    <select className="as-input" name="current_company" value={editForm.current_company || "HQ"} onChange={handleEditChange} style={{ cursor: "pointer" }}>
+                      <option value="HQ">HQ</option>
+                      <option value="Company A">Company A</option>
+                      <option value="Company B">Company B</option>
+                    </select>
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Building2 size={13} /> Location</label>
+                    <input className="as-input" name="location" value={editForm.location || ""} onChange={handleEditChange} />
+                  </div>
+                  <div className="as-field">
+                    <label className="as-field-label"><Building2 size={13} /> Assigned To</label>
+                    <input className="as-input" name="assigned_to" value={editForm.assigned_to || ""} onChange={handleEditChange} />
+                  </div>
+                </div>
+
+                <p className="as-section-label">Payment (Downpayment)</p>
+                <div className="as-form-grid">
+                  <div className="as-field full">
+                    <label className="as-field-label"><DollarSign size={13} /> Downpayment / Partial Payment (₱)</label>
+                    <input type="number" step="0.01" min="0" className="as-input" name="downpayment_amount" value={editForm.downpayment_amount || ""} onChange={handleEditChange} placeholder="Enter downpayment amount if partial payment" />
+                    <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>Leave as 0 for full payment. Assets with partial payment will appear in Pending section.</p>
+                  </div>
                 </div>
               </div>
-            )}
-
-            {/* ── EDIT ── */}
-            {modalMode === "edit" && (
-              <div className="as-modal as-modal-lg">
-                <div className="as-header">
-                  <div className="as-header-left">
-                    <div className="as-icon-wrap as-icon-indigo">
-                      <Edit size={19} color="#fff" strokeWidth={2.2} />
-                    </div>
-                    <div className="as-header-titles">
-                      <p className="as-title">Edit Asset</p>
-                      <p className="as-subtitle">{selectedAsset.name}</p>
-                    </div>
-                  </div>
-                  <button className="as-close" onClick={closeModal}>
-                    <X size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-                <div className="as-body">
-                  <p className="as-section-label">Basic Information</p>
-                  <div className="as-form-grid">
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Package size={13} /> Asset Name
-                      </label>
-                      <input
-                        className="as-input"
-                        name="name"
-                        value={editForm.name || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Layers size={13} /> Category
-                      </label>
-                      <input
-                        className="as-input"
-                        name="category"
-                        value={editForm.category || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Tag size={13} /> Tag Number
-                      </label>
-                      <input
-                        className="as-input"
-                        name="tag_number"
-                        value={editForm.tag_number || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <FileText size={13} /> Reference #
-                      </label>
-                      <input
-                        className="as-input"
-                        name="reference_number"
-                        value={editForm.reference_number || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Tag size={13} /> Serial Number
-                      </label>
-                      <input
-                        className="as-input"
-                        name="serial_number"
-                        value={editForm.serial_number || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field full">
-                      <label className="as-field-label">
-                        <FileText size={13} /> Description
-                      </label>
-                      <input
-                        className="as-input"
-                        name="description"
-                        value={editForm.description || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                  </div>
-
-                  <p className="as-section-label">Valuation</p>
-                  <div className="as-form-grid">
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Hash size={13} /> Quantity
-                      </label>
-                      <input
-                        type="number"
-                        className="as-input"
-                        name="quantity"
-                        value={editForm.quantity || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <DollarSign size={13} /> Unit Cost (₱)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="as-input"
-                        name="unit_cost"
-                        value={editForm.unit_cost || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <DollarSign size={13} /> Salvage Value (₱)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="as-input"
-                        name="salvage_value"
-                        value={editForm.salvage_value || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Clock size={13} /> Useful Life (Years)
-                      </label>
-                      <input
-                        type="number"
-                        className="as-input"
-                        name="useful_life_years"
-                        value={editForm.useful_life_years || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                  </div>
-
-                  <p className="as-section-label">Logistics</p>
-                  <div className="as-form-grid">
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Calendar size={13} /> Purchase Date
-                      </label>
-                      <input
-                        type="date"
-                        className="as-input"
-                        name="purchase_date"
-                        value={editForm.purchase_date || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Building2 size={13} /> Company
-                      </label>
-                      <select
-                        className="as-input"
-                        name="current_company"
-                        value={editForm.current_company || "HQ"}
-                        onChange={handleEditChange}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <option value="HQ">HQ</option>
-                        <option value="Company A">Company A</option>
-                        <option value="Company B">Company B</option>
-                      </select>
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Building2 size={13} /> Location
-                      </label>
-                      <input
-                        className="as-input"
-                        name="location"
-                        value={editForm.location || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                    <div className="as-field">
-                      <label className="as-field-label">
-                        <Building2 size={13} /> Assigned To
-                      </label>
-                      <input
-                        className="as-input"
-                        name="assigned_to"
-                        value={editForm.assigned_to || ""}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="as-footer">
-                  <button className="as-btn-cancel" onClick={closeModal}>
-                    Cancel
-                  </button>
-                  <button
-                    className="as-btn-primary as-btn-indigo"
-                    onClick={handleEditSave}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      "Saving…"
-                    ) : (
-                      <>
-                        <Save size={15} strokeWidth={2.5} /> Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
+              <div className="as-footer">
+                <button className="as-btn-cancel" onClick={closeModal}>Cancel</button>
+                <button className="as-btn-primary as-btn-indigo" onClick={handleEditSave} disabled={loading}>
+                  {loading ? "Saving…" : <><Save size={15} strokeWidth={2.5} /> Save Changes</>}
+                </button>
               </div>
-            )}
-          </div>,
-          document.body,
-        )}
+            </div>
+          )}
+        </div>,
+        document.body,
+      )}
+
+      {/* PIN Verification Modal - Rendered via Portal for maximum size */}
+      {showPinModal && createPortal(
+        <PinVerificationModal
+          isOpen={showPinModal}
+          onClose={() => {
+            setShowPinModal(false);
+            setPendingAction(null);
+            setPinError("");
+          }}
+          onVerify={handlePinVerify}
+          title="Security Verification"
+          subtitle="Enter your 4-digit PIN to proceed"
+          error={pinError}
+          clearError={() => setPinError("")}
+        />,
+        document.body
+      )}
     </>
   );
 };

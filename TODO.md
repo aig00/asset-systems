@@ -1,16 +1,21 @@
-# Downpayment System Enhancement - TODO
+# TODO: Security PIN for Asset Table Actions
 
 ## Task
-Allow recording multiple downpayments for a single fixed asset with descriptions
+Add a security PIN for every action in Asset Table except for View
 
-## Implementation Steps
+## Implementation Plan
 
-- [ ] 1. Create SQL migration file for `downpayment_transactions` table
-- [ ] 2. Update DownpaymentTable.jsx to:
-  - [ ] Fetch transactions from new table
-  - [ ] Display multiple transactions per asset
-  - [ ] Add functionality to add new transactions
-  - [ ] Add functionality to edit transactions
-  - [ ] Add functionality to delete transactions
-  - [ ] Show total downpayment (sum of all transactions)
-  - [ ] Show payment progress based on total
+### Step 1: Database Migration
+- [x] Create SQL migration file to add `pin` column to profiles table
+
+### Step 2: PIN Verification Component
+- [x] Create PinVerificationModal component for PIN entry
+- [x] Add PIN to AuthContext for state management
+
+### Step 3: Update AssetTable.jsx
+- [x] Add PIN verification for Edit action
+- [x] Add PIN verification for Dispose action
+- [x] Add PIN verification for Transfer action
+
+### Step 4: PIN Management
+- [x] Add PIN setup functionality (allow users to set their PIN via AuthContext)

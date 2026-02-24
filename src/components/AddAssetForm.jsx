@@ -41,6 +41,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
     downpayment_amount: 0,
   });
 
+  // Auto-generate tag number on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from("assets").select("category");
@@ -51,7 +52,43 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
         setCategories(uniqueCats);
       }
     };
+
+    const generateTagNumber = async () => {
+      // Fetch all assets to find the highest tag number
+      const { data, error } = await supabase
+        .from("assets")
+        .select("tag_number")
+        .not("tag_number", "is", null)
+        .order("tag_number", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching tag numbers:", error);
+        // Default to TAG-001 if error
+        setFormData((prev) => ({ ...prev, tag_number: "TAG-001" }));
+        return;
+      }
+
+      let nextNum = 1;
+      if (data && data.length > 0) {
+        // Find the highest numeric tag number
+        data.forEach((item) => {
+          const match = item.tag_number?.match(/^TAG-(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num >= nextNum) {
+              nextNum = num + 1;
+            }
+          }
+        });
+      }
+
+      // Format: TAG-001, TAG-002, etc.
+      const newTag = `TAG-${nextNum.toString().padStart(3, "0")}`;
+      setFormData((prev) => ({ ...prev, tag_number: newTag }));
+    };
+
     fetchCategories();
+    generateTagNumber();
   }, []);
 
   const handleCategorySelect = (e) => {
@@ -387,10 +424,15 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
                   <input
                     required
                     name="tag_number"
-                    placeholder="Unique asset tag"
-                    onChange={handleChange}
+                    value={formData.tag_number}
+                    readOnly
                     className="field-input"
+                    style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }}
+                    title="Tag number is auto-generated"
                   />
+                  <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                    Auto-generated • Cannot be edited
+                  </p>
                 </div>
 
                 <div className="field">
