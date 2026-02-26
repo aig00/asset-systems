@@ -30,7 +30,7 @@ import DashboardCharts from "../components/DashboardCharts";
 import DownpaymentTable from "../components/DownpaymentTable";
 
 const Dashboard = () => {
-  const { user, role } = useAuth();
+const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [assets, setAssets] = useState([]);
   const [transactions, setTransactions] = useState({});
@@ -244,21 +244,36 @@ const Dashboard = () => {
     XLSX.writeFile(wb, "System_Logs.xlsx");
   };
 
-  const handleExportClick = () => {
+const handleExportClick = () => {
     if (role !== "admin" && role !== "head")
       return alert("Access Restricted: Only Admin or Head can export logs.");
+    
+    // Check if account is locked
+    const lockStatus = checkPinLockStatus();
+    if (lockStatus.isLocked) {
+      setPinError(`Account locked. Try again in ${lockStatus.remainingTime}`);
+      return;
+    }
+    
     setShowPinModal(true);
     setPinInput("");
     setPinError("");
   };
 
-  const verifyPinAndExport = () => {
-    const adminPin = import.meta.env.VITE_ADMIN_PIN || "1234";
-    if (pinInput === adminPin) {
+  const verifyPinAndExport = async () => {
+    if (!pinInput || pinInput.length !== 4) {
+      setPinError("Please enter a 4-digit PIN");
+      return;
+    }
+
+    // Use secure PIN verification from AuthContext
+    const result = await verifyPin(pinInput);
+    
+    if (result.success) {
       exportLogs();
       setShowPinModal(false);
     } else {
-      setPinError("Incorrect PIN. Please try again.");
+      setPinError(result.error || "Incorrect PIN. Please try again.");
     }
   };
 

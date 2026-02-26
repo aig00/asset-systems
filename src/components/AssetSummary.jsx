@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import PinVerificationModal from "./PinVerificationModal";
+import { useAuth } from "../context/AuthContext";
 import {
   Eye,
   Edit,
@@ -474,6 +475,8 @@ const TABLE_STYLES = `
 `;
 
 const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnly = false }) => {
+  const { verifyPin, checkPinLockStatus } = useAuth();
+  
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [modalMode, setModalMode] = useState(null);
   const [transferCompany, setTransferCompany] = useState("");
@@ -497,10 +500,19 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
 
-  // Verify PIN function - used by PinVerificationModal
+  // Verify PIN function - used by PinVerificationModal (SECURE)
   const handlePinVerify = async (enteredPin) => {
-    const adminPin = import.meta.env.VITE_ADMIN_PIN || "1234";
-    if (enteredPin === adminPin) {
+    // Check if account is locked first
+    const lockStatus = checkPinLockStatus();
+    if (lockStatus.isLocked) {
+      setPinError(`Account locked. Try again in ${lockStatus.remainingTime}`);
+      return false;
+    }
+    
+    // Use secure PIN verification from AuthContext
+    const result = await verifyPin(enteredPin);
+    
+    if (result.success) {
       setShowPinModal(false);
       setPinError("");
       // Execute the pending action after successful PIN verification
@@ -510,7 +522,7 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       }
       return true;
     } else {
-      setPinError("Incorrect PIN. Please try again.");
+      setPinError(result.error || "Incorrect PIN. Please try again.");
       return false;
     }
   };
@@ -624,21 +636,21 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   const handleExportAsset = () => {
     const assetDetails = [
       {
-        "Asset Name": selectedAsset.name,
-        "Tag Number": selectedAsset.tag_number,
-        Category: selectedAsset.category || "",
-        Status: selectedAsset.status || "",
-        Company: selectedAsset.current_company || "",
+        "Asset Name": sanitizeForCSV(selectedAsset.name),
+        "Tag Number": sanitizeForCSV(selectedAsset.tag_number),
+        Category: sanitizeForCSV(selectedAsset.category || ""),
+        Status: sanitizeForCSV(selectedAsset.status || ""),
+        Company: sanitizeForCSV(selectedAsset.current_company || ""),
         "Total Cost": selectedAsset.total_cost || 0,
         "Salvage Value": selectedAsset.salvage_value || 0,
         "Useful Life (Years)": selectedAsset.useful_life_years || 0,
-        "Purchase Date": selectedAsset.purchase_date || "",
-        "Reference Number": selectedAsset.reference_number || "",
-        "Serial Number": selectedAsset.serial_number || "",
-        Description: selectedAsset.description || "",
-        Location: selectedAsset.location || "",
-        "Assigned To": selectedAsset.assigned_to || "",
-        "Monthly Amortization": calculateAmortization(selectedAsset),
+        "Purchase Date": sanitizeForCSV(selectedAsset.purchase_date || ""),
+        "Reference Number": sanitizeForCSV(selectedAsset.reference_number || ""),
+        "Serial Number": sanitizeForCSV(selectedAsset.serial_number || ""),
+        Description: sanitizeForCSV(selectedAsset.description || ""),
+        Location: sanitizeForCSV(selectedAsset.location || ""),
+        "Assigned To": sanitizeForCSV(selectedAsset.assigned_to || ""),
+        "Monthly Amortization": sanitizeForCSV(calculateAmortization(selectedAsset)),
       },
     ];
 
@@ -667,11 +679,11 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     setLoading(true);
     const data = [
       {
-        "Asset Name": selectedAsset.name,
-        "Tag Number": selectedAsset.tag_number,
-        "Previous Company": selectedAsset.current_company,
-        "New Company": transferCompany,
-        "Transferred By": userEmail,
+        "Asset Name": sanitizeForCSV(selectedAsset.name),
+        "Tag Number": sanitizeForCSV(selectedAsset.tag_number),
+        "Previous Company": sanitizeForCSV(selectedAsset.current_company),
+        "New Company": sanitizeForCSV(transferCompany),
+        "Transferred By": sanitizeForCSV(userEmail),
         Date: format(new Date(), "yyyy-MM-dd"),
       },
     ];
@@ -709,17 +721,17 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
       const exportData = [
         {
-          "Asset Name": selectedAsset.name,
-          Category: selectedAsset.category,
-          Tag: selectedAsset.tag_number,
-          Reference: selectedAsset.reference_number,
+          "Asset Name": sanitizeForCSV(selectedAsset.name),
+          Category: sanitizeForCSV(selectedAsset.category),
+          Tag: sanitizeForCSV(selectedAsset.tag_number),
+          Reference: sanitizeForCSV(selectedAsset.reference_number),
           Qty: quantity,
           "Unit Cost": unitCost,
           "Total Cost": totalCost,
           "Salvage Value": salvageValue,
           "Useful Life": usefulLifeYears,
-          "Purchase Date": selectedAsset.purchase_date,
-          "Disposed By": userEmail,
+          "Purchase Date": sanitizeForCSV(selectedAsset.purchase_date),
+          "Disposed By": sanitizeForCSV(userEmail),
           "Disposal Date": format(new Date(), "yyyy-MM-dd"),
           "Monthly Amortization": monthlyAmortization.toFixed(2),
         },

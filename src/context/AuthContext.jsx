@@ -1,60 +1,125 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import {
+  generateSalt,
+  hashPin,
+  verifyPin as secureVerifyPin,
+  recordFailedAttempt,
+  recordSuccess as clearFailedAttempts,
+  checkLockStatus,
+} from "../utils/security";
 
 const AuthContext = createContext({ 
   user: null, 
   role: null, 
   loading: true,
-  pin: null,
+  pinData: null,
   hasPin: false,
-  verifyPin: async () => false,
+  verifyPin: async () => ({ success: false, error: "Not initialized" }),
   setPin: async () => false,
-  refreshPin: async () => {}
+  refreshPin: async () => {},
+  checkPinLockStatus: () => ({ isLocked: false, attemptsRemaining: 5 }),
 });
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pin, setPinState] = useState(null);
+  const [pinData, setPinData] = useState(null); // { hash: string, salt: string }
   const [hasPin, setHasPin] = useState(false);
 
-  // Fetch user's PIN from database
-  const fetchPin = async (userId) => {
+  // Fetch user's PIN hash and salt from database
+  const fetchPinData = async (userId) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("pin")
+        .select("pin_hash, pin_salt")
         .eq("id", userId)
         .single();
 
-      if (!error && data) {
-        const userPin = data.pin;
-        setPinState(userPin);
-        setHasPin(!!userPin);
-        return userPin;
+      if (!error && data && data.pin_hash && data.pin_salt) {
+        const pinDataObj = {
+          hash: data.pin_hash,
+          salt: data.pin_salt,
+        };
+        setPinData(pinDataObj);
+        setHasPin(true);
+        return pinDataObj;
       }
     } catch (err) {
       console.error("Error fetching PIN:", err);
     }
-    setPinState(null);
+    setPinData(null);
     setHasPin(false);
     return null;
   };
 
-  // Verify PIN - returns false if no PIN, otherwise compares
-  const verifyPin = async (enteredPin) => {
+  // Check if account is locked due to failed attempts
+  const checkPinLockStatus = () => {
     if (!user) {
-      throw new Error("User not authenticated");
+      return { isLocked: false, attemptsRemaining: 5 };
     }
-    // If no PIN is set in database, return false (invalid)
-    if (!pin) {
-      return false;
-    }
-    return enteredPin === pin;
+    return checkLockStatus(user.id);
   };
 
-  // Set user's PIN
+  // Verify PIN with rate limiting - returns object with success/error
+  const verifyPin = async (enteredPin) => {
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    // Check if account is locked
+    const lockStatus = checkPinLockStatus();
+    if (lockStatus.isLocked) {
+      return { 
+        success: false, 
+        error: `Account locked. Try again in ${lockStatus.remainingTime}`,
+        isLocked: true,
+        remainingTime: lockStatus.remainingTime,
+      };
+    }
+
+    // If no PIN is set in database, return false
+    if (!pinData) {
+      return { success: false, error: "No PIN set for this account" };
+    }
+
+    try {
+      // Verify PIN using secure comparison
+      const isValid = await secureVerifyPin(enteredPin, pinData.hash, pinData.salt);
+
+      if (isValid) {
+        // Clear failed attempts on success
+        clearFailedAttempts(user.id);
+        return { success: true };
+      } else {
+        // Record failed attempt
+        const attemptInfo = recordFailedAttempt(user.id);
+        const remaining = 5 - attemptInfo.attempts;
+        
+        if (attemptInfo.lockedUntil) {
+          const minutes = Math.ceil((attemptInfo.lockedUntil - Date.now()) / 60000);
+          return { 
+            success: false, 
+            error: `Account locked due to too many failed attempts. Try again in ${minutes} minute(s)`,
+            isLocked: true,
+            attemptsRemaining: 0,
+          };
+        }
+        
+        return { 
+          success: false, 
+          error: `Invalid PIN. ${remaining} attempt(s) remaining`,
+          attemptsRemaining: remaining,
+        };
+      }
+    } catch (err) {
+      console.error("PIN verification error:", err);
+      return { success: false, error: "Verification failed" };
+    }
+  };
+
+  // Set user's PIN with secure hashing
   const setUserPin = async (newPin) => {
     if (!user) {
       throw new Error("User not authenticated");
@@ -67,17 +132,30 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      // Generate salt and hash the PIN
+      const salt = generateSalt();
+      const hash = await hashPin(newPin, salt);
+
+      // Store hash and salt in database
       const { error } = await supabase
         .from("profiles")
-        .update({ pin: newPin })
+        .update({ 
+          pin_hash: hash, 
+          pin_salt: salt 
+        })
         .eq("id", user.id);
 
       if (error) {
         throw error;
       }
 
-      setPinState(newPin);
+      // Update local state
+      setPinData({ hash, salt });
       setHasPin(true);
+      
+      // Clear any failed attempts after setting new PIN
+      clearFailedAttempts(user.id);
+      
       return true;
     } catch (err) {
       console.error("Error setting PIN:", err);
@@ -85,8 +163,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // OPTIMIZATION 8: Refresh PIN uses fetchRole which already fetches both role and PIN
-  // This avoids duplicate API calls on refresh
+  // Refresh PIN data
   const refreshPin = async () => {
     if (user) {
       await fetchRole(user.id);
@@ -100,7 +177,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("role, pin")
+          .select("role, pin_hash, pin_salt")
           .eq("id", userId)
           .single();
 
@@ -110,8 +187,18 @@ export const AuthProvider = ({ children }) => {
             setRole("staff");
           } else {
             setRole(data.role);
-            setPinState(data.pin);
-            setHasPin(!!data.pin);
+            // Handle both old plain PIN and new hashed PIN format
+            if (data.pin_hash && data.pin_salt) {
+              setPinData({ hash: data.pin_hash, salt: data.pin_salt });
+              setHasPin(true);
+            } else if (data.pin) {
+              // Legacy: Migrate plain PIN to hashed on first login
+              setPinData(null);
+              setHasPin(!!data.pin);
+            } else {
+              setPinData(null);
+              setHasPin(false);
+            }
           }
         }
       } catch (err) {
@@ -165,7 +252,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(null);
           setRole(null);
-          setPinState(null);
+          setPinData(null);
           setHasPin(false);
         }
         setLoading(false);
@@ -183,11 +270,12 @@ export const AuthProvider = ({ children }) => {
       user, 
       role, 
       loading, 
-      pin, 
+      pinData, 
       hasPin,
       verifyPin, 
       setPin: setUserPin,
-      refreshPin 
+      refreshPin,
+      checkPinLockStatus,
     }}>
       {!loading ? (
         children

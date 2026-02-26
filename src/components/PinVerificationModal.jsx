@@ -37,7 +37,19 @@ const PinVerificationModal = ({
     setLoading(true);
 
     try {
-      await onVerify(pin);
+      // Call onVerify and handle the response format
+      const result = await onVerify(pin);
+      
+      // If result is an object with success property (new secure format)
+      if (result && typeof result === 'object') {
+        if (!result.success) {
+          setLocalError(result.error || "Invalid PIN");
+        }
+      } else if (result === false) {
+        // Legacy format handling
+        setLocalError("Invalid PIN");
+      }
+      // If result is true, verification succeeded - modal will close
     } catch (error) {
       setLocalError(error.message || "Invalid PIN");
     } finally {
