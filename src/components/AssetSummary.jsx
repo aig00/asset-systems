@@ -292,6 +292,43 @@ const MODAL_STYLES = `
   .pin-modal-input { width: 100%; padding: 12px 16px; border: 1.5px solid #f3e8e8; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; font-weight: bold; outline: none; transition: border-color 0.15s; }
   .pin-modal-input:focus { border-color: #dc2626; }
   .pin-error { color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center; }
+
+  /* Dark Mode */
+  .dark .as-modal { background: #1a1a1a; border-color: #7f1d1d; }
+  .dark .as-header { border-color: #374151; }
+  .dark .as-title { color: #f5f5f5; }
+  .dark .as-subtitle { color: #737373; }
+  .dark .as-close { background: #374151; border-color: #4b5563; color: #a3a3a3; }
+  .dark .as-close:hover { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+  .dark .as-body::-webkit-scrollbar-track { background: #262626; }
+  .dark .as-footer { border-color: #374151; }
+  .dark .as-info-item { background: #262626; border-color: #404040; }
+  .dark .as-info-label { color: #737373; }
+  .dark .as-info-value { color: #f5f5f5; }
+  .dark .as-amort-box { background: linear-gradient(135deg, #450a0a, #1f1f1f); border-color: #7f1d1d; }
+  .dark .as-amort-label { color: #737373; }
+  .dark .as-amort-value { color: #fca5a5; }
+  .dark .as-status-active { background: #052e16; color: #4ade80; border-color: #166534; }
+  .dark .as-status-transferred { background: #451a03; color: #fbbf24; border-color: #78350f; }
+  .dark .as-status-disposed { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+  .dark .as-status-pending { background: #451a03; color: #fbbf24; border-color: #78350f; }
+  .dark .as-warn-box { background: #451a03; border-color: #78350f; }
+  .dark .as-warn-text { color: #fbbf24; }
+  .dark .as-warn-box.danger { background: #450a0a; border-color: #7f1d1d; }
+  .dark .as-warn-box.danger .as-warn-text { color: #fca5a5; }
+  .dark .as-select { background: #374151; border-color: #4b5563; color: #f5f5f5; }
+  .dark .as-section-label { color: #fca5a5; }
+  .dark .as-input { background: #374151; border-color: #4b5563; color: #f5f5f5; }
+  .dark .as-btn-cancel { background: #374151; border-color: #4b5563; color: #a3a3a3; }
+  .dark .date-label { color: #a3a3a3; }
+  .dark .date-input { background: #374151; border-color: #4b5563; color: #f5f5f5; }
+  .dark .sched-list { border-color: #7f1d1d; }
+  .dark .sched-row { border-color: #374151; background: transparent; }
+  .dark .sched-row:nth-child(even) { background: #262626; }
+  .dark .sched-date { color: #a3a3a3; }
+  .dark .sched-amount { color: #f87171; }
+  .dark .sched-total { background: #450a0a !important; border-color: #7f1d1d !important; }
+  .dark .sched-total .sched-date, .dark .sched-total .sched-amount { color: #fca5a5; }
 `;
 
 const TABLE_STYLES = `
@@ -360,7 +397,7 @@ const TABLE_STYLES = `
 
   .at-td { padding: 20px 28px; font-size: 14px; color: #374151; white-space: nowrap; vertical-align: middle; }
   .at-td-tag { font-weight: 700; color: #111827; font-family: monospace; font-size: 13.5px; }
-  .at-td-name { font-weight: 500; color: #1f2937; }
+  .at-td-name { font-weight: 500; color: #1a1a1a; }
   .at-td-actions { text-align: right; }
 
   .at-status {
@@ -406,6 +443,34 @@ const TABLE_STYLES = `
   .at-btn-reject { color: #dc2626; } .at-btn-reject:hover { background: #fef2f2; border-color: #fecaca; }
 
   .at-empty { padding: 64px 24px; text-align: center; color: #d1d5db; font-size: 15px; }
+
+  /* Dark Mode */
+  .dark .at-search-bar { background: #1a1a1a; border-bottom-color: #7f1d1d; }
+  .dark .at-search-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+  .dark .at-search-input::placeholder { color: #737373; }
+  .dark .at-search-results { color: #a3a3a3; }
+  .dark .at-wrap { background: #1a1a1a; }
+  .dark .at-scroll::-webkit-scrollbar-track { background: #262626; }
+  .dark .at-scroll::-webkit-scrollbar-thumb { background: #525252; }
+  .dark .at-thead th { background: #450a0a; color: #fca5a5; border-bottom-color: #7f1d1d; }
+  .dark .at-row { border-bottom-color: #374151; }
+  .dark .at-row:hover { background: #374151; }
+  .dark .at-td { color: #d1d5db; }
+  .dark .at-td-tag { color: #f9fafb; }
+  .dark .at-td-name { color: #f3f4f6; }
+  .dark .at-status-active { background: #052e16; color: #4ade80; border-color: #166534; }
+  .dark .at-status-transferred { background: #451a03; color: #fbbf24; border-color: #78350f; }
+  .dark .at-status-disposed { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+  .dark .at-status-pending { background: #451a03; color: #fbbf24; border-color: #78350f; }
+  .dark .at-existing-badge { background: #312e81; color: #a5b4fc; border-color: #3730a3; }
+  .dark .at-btn-view { color: #60a5fa; }
+  .dark .at-btn-edit { color: #a5b4fc; }
+  .dark .at-btn-xfer { color: #fbbf24; }
+  .dark .at-btn-dispos { color: #fca5a5; }
+  .dark .at-btn-del { color: #737373; }
+  .dark .at-btn-approve { color: #4ade80; }
+  .dark .at-btn-reject { color: #fca5a5; }
+  .dark .at-empty { color: #525252; }
 `;
 
 const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnly = false }) => {

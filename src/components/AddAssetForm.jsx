@@ -319,6 +319,33 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
           animation: spin 0.65s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Dark Mode */
+        .dark .modal-box { background: #1a1a1a; border-color: #7f1d1d; }
+        .dark .modal-box::-webkit-scrollbar-track { background: #262626; }
+        .dark .modal-box::-webkit-scrollbar-thumb { background: #525252; }
+        .dark .modal-header { background: #1a1a1a; border-color: #374151; }
+        .dark .modal-title { color: #f5f5f5; }
+        .dark .modal-subtitle { color: #737373; }
+        .dark .close-btn { background: #374151; border-color: #4b5563; color: #a3a3a3; }
+        .dark .close-btn:hover { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+        .dark .form-section-label { color: #fca5a5; }
+        .dark .form-section-label::after { background: linear-gradient(90deg, #7f1d1d, transparent); }
+        .dark .field-label { color: #d1d5db; }
+        .dark .field-input { background: #374151; border-color: #4b5563; color: #f5f5f5; }
+        .dark .field-input::placeholder { color: #737373; }
+        .dark .field-input:hover { border-color: #7f1d1d; background: #404040; }
+        .dark .field-input:focus { background: #404040; }
+        .dark .cost-preview { background: linear-gradient(135deg, #450a0a, #1f1f1f); border-color: #7f1d1d; }
+        .dark .cost-item-label { color: #737373; }
+        .dark .cost-item-value { color: #fca5a5; }
+        .dark .cost-divider { background: #7f1d1d; }
+        .dark .cost-note { color: #f87171; }
+        .dark .btn-cancel { background: #374151; border-color: #4b5563; color: #a3a3a3; }
+        .dark .btn-cancel:hover { background: #404040; color: #e5e5e5; }
+        .dark .existing-check { background: #1e3a5f !important; border-color: #1e40af !important; }
+        .dark .existing-check span:first-child { color: #f5f5f5 !important; }
+        .dark .existing-check span:last-child { color: #a3a3a3 !important; }
       `}</style>
 
       <div
@@ -459,7 +486,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
                   />
                 </div>
 
-<div className="field full-width">
+                <div className="field full-width">
                   <label className="field-label">
                     <AlignLeft size={12} /> Description
                   </label>
@@ -471,7 +498,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
                   />
                 </div>
 
-                <div className="field full-width" style={{ flexDirection: 'row', alignItems: 'center', gap: '12px', padding: '12px 16px', background: formData.is_existing ? '#eff6ff' : '#fafafa', border: `1.5px solid ${formData.is_existing ? '#bfdbfe' : '#f3e8e8'}`, borderRadius: '10px', cursor: 'pointer' }} onClick={() => setFormData({ ...formData, is_existing: !formData.is_existing })}>
+                <div className="field full-width existing-check" style={{ flexDirection: 'row', alignItems: 'center', gap: '12px', padding: '12px 16px', background: formData.is_existing ? '#eff6ff' : '#fafafa', border: `1.5px solid ${formData.is_existing ? '#bfdbfe' : '#f3e8e8'}`, borderRadius: '10px', cursor: 'pointer' }} onClick={() => setFormData({ ...formData, is_existing: !formData.is_existing })}>
                   <input 
                     type="checkbox" 
                     checked={formData.is_existing} 

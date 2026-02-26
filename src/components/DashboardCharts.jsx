@@ -12,10 +12,39 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useTheme } from "../context/ThemeContext";
 
 const COLORS = ["#10B981", "#EF4444", "#F59E0B", "#3B82F6"];
 
+// Custom tooltip for dark mode
+const CustomTooltip = ({ active, payload, label }) => {
+  const { isDark } = useTheme();
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: isDark ? '#262626' : '#fff',
+        border: `1px solid ${isDark ? 'rgba(220,38,38,0.3)' : '#fde8e8'}`,
+        borderRadius: '8px',
+        padding: '12px 16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      }}>
+        <p style={{ color: isDark ? '#f5f5f5' : '#111827', fontWeight: 600, marginBottom: 4 }}>
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color, fontSize: 13 }}>
+            {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const DashboardCharts = ({ assets }) => {
+  const { isDark } = useTheme();
+
   // Calculate data for Pie Chart - Asset Status Distribution
   const statusData = React.useMemo(() => {
     const statusCounts = assets.reduce((acc, asset) => {
@@ -45,7 +74,7 @@ const DashboardCharts = ({ assets }) => {
         value: Math.round(value),
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10 categories
+      .slice(0, 10);
   }, [assets]);
 
   // Calculate data for Bar Chart - Assets by Company
@@ -76,8 +105,13 @@ const DashboardCharts = ({ assets }) => {
         count: value,
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // Top 10 categories
+      .slice(0, 10);
   }, [assets]);
+
+  // Dark mode colors for chart elements
+  const gridColor = isDark ? '#333333' : '#e5e7eb';
+  const axisColor = isDark ? '#737373' : '#6b7280';
+  const textColor = isDark ? '#a3a3a3' : '#374151';
 
   return (
     <>
@@ -105,7 +139,7 @@ const DashboardCharts = ({ assets }) => {
           font-family: 'Syne', sans-serif;
           font-size: 18px;
           font-weight: 700;
-          color: #1f2937;
+          color: #1a1a1a;
           margin-bottom: 24px;
         }
         .chart-container {
@@ -126,9 +160,7 @@ const DashboardCharts = ({ assets }) => {
       <div className="charts-root">
         {/* Pie Chart - Asset Status Distribution */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            Asset Status Distribution
-          </h3>
+          <h3 className="chart-title">Asset Status Distribution</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -140,19 +172,18 @@ const DashboardCharts = ({ assets }) => {
                   outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={{ stroke: axisColor }}
                 >
                   {statusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  wrapperStyle={{ color: textColor }}
+                  formatter={(value) => <span style={{ color: textColor }}>{value}</span>}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -160,24 +191,20 @@ const DashboardCharts = ({ assets }) => {
 
         {/* Bar Chart - Asset Value by Category */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            Asset Value by Category (Top 10)
-          </h3>
+          <h3 className="chart-title">Asset Value by Category (Top 10)</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: 10, fill: axisColor }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip
-                  formatter={(value) => [`₱${value.toLocaleString()}`, "Value"]}
-                />
+                <YAxis tick={{ fontSize: 10, fill: axisColor }} />
+                <Tooltip content={<CustomTooltip />} formatter={(value) => [`₱${value.toLocaleString()}`, "Value"]} />
                 <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -186,16 +213,14 @@ const DashboardCharts = ({ assets }) => {
 
         {/* Bar Chart - Assets by Company */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            Asset Count by Company
-          </h3>
+          <h3 className="chart-title">Asset Count by Company</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={companyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: axisColor }} />
+                <YAxis tick={{ fontSize: 12, fill: axisColor }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -204,22 +229,20 @@ const DashboardCharts = ({ assets }) => {
 
         {/* Bar Chart - Asset Count by Category */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            Asset Count by Category (Top 10)
-          </h3>
+          <h3 className="chart-title">Asset Count by Category (Top 10)</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryCountData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: 10, fill: axisColor }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
+                <YAxis tick={{ fontSize: 12, fill: axisColor }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

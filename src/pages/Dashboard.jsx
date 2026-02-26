@@ -15,8 +15,14 @@ import {
   ChevronRight,
   X,
   Lock,
+  Moon,
+  Sun,
+  Mail,
+  Shield,
+  User,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { supabase } from "../supabaseClient";
 import AddAssetForm from "../components/AddAssetForm";
 import AssetSummary from "../components/AssetSummary";
@@ -25,6 +31,7 @@ import DownpaymentTable from "../components/DownpaymentTable";
 
 const Dashboard = () => {
   const { user, role } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [assets, setAssets] = useState([]);
   const [transactions, setTransactions] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
@@ -395,13 +402,17 @@ const Dashboard = () => {
           display: flex; flex-direction: column; align-items: center; gap: 12px; 
           text-decoration: none; flex-shrink: 0; padding: 8px 0;
         }
-        .brand-mark {
-          width: 52px; height: 52px;
-          background: linear-gradient(135deg, #dc2626, #f43f5e);
-          border-radius: 14px;
+.brand-mark {
+          width: 72px; height: 72px;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 4px 14px rgba(220,38,38,0.38);
           flex-shrink: 0;
+          transition: transform 0.3s ease;
+        }
+        .brand-mark:hover {
+          transform: scale(1.05);
+        }
+        .brand-mark img {
+          filter: drop-shadow(0 2px 4px rgba(220,38,38,0.2));
         }
         .brand-mark span {
           font-family: 'Syne', sans-serif;
@@ -409,7 +420,7 @@ const Dashboard = () => {
         }
         .brand-name {
           font-family: 'Syne', sans-serif;
-          font-size: 14px; font-weight: 700; color: #1f2937;
+          font-size: 14px; font-weight: 700; color: #1a1a1a;
           white-space: nowrap;
           text-align: center;
           line-height: 1.3;
@@ -441,34 +452,100 @@ const Dashboard = () => {
           box-shadow: 0 2px 8px rgba(220,38,38,0.15);
         }
 
+        /* ── ENHANCED USER CHIP ── */
         .user-chip {
-          display: flex; flex-direction: column; align-items: center; gap: 10px;
-          background: #fff5f5;
+          display: flex; flex-direction: column; align-items: center; gap: 12px;
+          background: linear-gradient(145deg, #fff5f5, #fff0f0);
           border: 1px solid #fecaca;
-          border-radius: 14px;
-          padding: 14px 12px;
+          border-radius: 16px;
+          padding: 18px 14px;
           width: 100%;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .user-chip::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #dc2626, #f87171, #dc2626);
+          opacity: 0.7;
+        }
+        .user-chip:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(220,38,38,0.15);
+        }
+        .user-avatar-wrapper {
+          position: relative;
+          padding: 3px;
+          background: linear-gradient(135deg, #dc2626, #f43f5e);
+          border-radius: 50%;
         }
         .user-avatar {
-          width: 40px; height: 40px;
+          width: 48px; height: 48px;
           background: linear-gradient(135deg, #dc2626, #f43f5e);
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 16px; font-weight: 700; color: #fff;
+          font-size: 20px; font-weight: 700; color: #fff;
+          flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+          position: relative;
+          z-index: 1;
+        }
+        .user-avatar-ring {
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          border-radius: 50%;
+          border: 2px solid rgba(220,38,38,0.2);
+          animation: pulse-ring 2s ease-in-out infinite;
+        }
+        @keyframes pulse-ring {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.7; }
+        }
+        .user-info {
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          width: 100%;
+        }
+        .user-email-wrapper {
+          display: flex; align-items: center; gap: 6px;
+          width: 100%;
+          justify-content: center;
+        }
+        .user-email-icon {
+          color: #dc2626;
           flex-shrink: 0;
         }
         .user-email {
           font-size: 12px; color: #4b5563;
-          max-width: 100%;
+          max-width: 180px;
           overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
           text-align: center;
+          font-weight: 500;
         }
         .role-badge {
+          display: inline-flex; align-items: center; gap: 5px;
           font-size: 10px; font-weight: 700;
           letter-spacing: 0.1em; text-transform: uppercase;
-          background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
-          padding: 3px 10px; border-radius: 20px;
+          background: linear-gradient(135deg, #fff1f1, #fee2e2);
+          border: 1px solid #fecaca; color: #dc2626;
+          padding: 5px 12px; border-radius: 20px;
           flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(220,38,38,0.1);
+        }
+        .role-badge-icon {
+          display: flex;
+        }
+        .user-greeting {
+          font-size: 11px; color: #9ca3af;
+          margin-top: 2px;
+          font-weight: 500;
         }
         .logout-btn {
           display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -774,6 +851,53 @@ const Dashboard = () => {
         .sched-total { background: #fff1f1 !important; border-top: 2px solid #fecaca; }
         .sched-total .sched-date { color: #991b1b; font-weight: 700; }
         .sched-total .sched-amount { color: #991b1b; font-size: 16px; }
+
+        /* Dark Mode Styles */
+        .dark .dash-root { background: #0a0a0a; }
+        .dark .nav-bar { background: rgba(26,26,26,0.95); border-color: rgba(220,38,38,0.2); }
+        .dark .nav-top, .dark .nav-bottom { border-color: rgba(220,38,38,0.15); }
+        .dark .brand-name { color: #e5e5e5; }
+        .dark .nav-tab { color: #737373; }
+        .dark .nav-tab:hover { color: #e5e5e5; background: rgba(220,38,38,0.1); }
+        .dark .nav-tab.active { background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(220,38,38,0.1)); }
+        .dark .user-chip { background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.2); }
+        .dark .user-chip:hover { box-shadow: 0 8px 24px rgba(220,38,38,0.25); }
+        .dark .user-email { color: #a3a3a3; }
+        .dark .user-email-icon { color: #f87171; }
+        .dark .user-greeting { color: #737373; }
+        .dark .role-badge { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.3); color: #fca5a5; }
+        .dark .user-avatar-ring { border-color: rgba(220,38,38,0.3); }
+        .dark .logout-btn:hover { background: rgba(220,38,38,0.1); }
+        .dark .page-title { color: #f5f5f5; }
+        .dark .page-subtitle { color: #737373; }
+        .dark .stat-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .stat-value { color: #f5f5f5; }
+        .dark .stat-label { color: #737373; }
+        .dark .stat-footer { color: #525252; }
+        .dark .health-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .metric-value { color: #f5f5f5; }
+        .dark .metric-label { color: #737373; }
+        .dark .metric-sub { color: #525252; }
+        .dark .prog-track { background: rgba(220,38,38,0.15); }
+        .dark .content-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .btn-outline { background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.3); }
+        .dark .btn-outline:hover { background: rgba(220,38,38,0.2); }
+        .dark .log-table-head { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.15); color: #fca5a5; }
+        .dark .log-row { border-color: rgba(220,38,38,0.08); }
+        .dark .log-row:hover { background: rgba(220,38,38,0.05); }
+        .dark .log-time, .dark .log-user, .dark .log-detail { color: #a3a3a3; }
+        .dark .log-scroll::-webkit-scrollbar-track { background: #262626; }
+        .dark .log-scroll::-webkit-scrollbar-thumb { background: #525252; }
+        .dark .log-badge-red { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+        .dark .log-badge-green { background: #052e16; color: #4ade80; border-color: #166534; }
+        .dark .log-badge-amber { background: #451a03; color: #fbbf24; border-color: #78350f; }
+        .dark .log-badge-gray { background: #374151; color: #a3a3a3; border-color: #4b5563; }
+        .dark .modal-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .modal-title { color: #f5f5f5; }
+        .dark .modal-header { border-color: rgba(220,38,38,0.15); }
+        .dark .date-input { background: #262626; border-color: #404040; color: #e5e5e5; }
+        .dark .sched-row { border-color: #333; }
+        .dark .sched-row:nth-child(even) { background: #262626; }
       `}</style>
 
       <div className="dash-root">
@@ -784,7 +908,7 @@ const Dashboard = () => {
             <div className="nav-top">
               <div className="brand">
                 <div className="brand-mark">
-                  <span>N</span>
+<img src={NCT_logong} alt="NCT Logo" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
                 </div>
                 <span className="brand-name">
                   NCT Transnational<br /><em>Corp</em>
@@ -808,12 +932,51 @@ const Dashboard = () => {
 
             {/* Bottom Section - User Info & Logout */}
             <div className="nav-bottom">
-              <div className="user-chip">
-                <div className="user-avatar">
-                  {user?.email?.[0]?.toUpperCase()}
+              {/* Theme Toggle Button */}
+              <button 
+                onClick={toggleTheme}
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '10px',
+                  marginBottom: '12px',
+                  borderRadius: '10px',
+                  border: '1.5px solid',
+                  borderColor: isDark ? '#3f2a2a' : '#fecaca',
+                  background: isDark ? '#1a1515' : '#fff5f5',
+                  color: isDark ? '#fca5a5' : '#dc2626',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                {isDark ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              
+              <div className="user-chip" style={isDark ? { background: 'rgba(26,21,21,0.95)', borderColor: '#3f2a2a' } : {}}>
+                <div className="user-avatar-wrapper">
+                  <div className="user-avatar">
+                    {user?.email?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="user-avatar-ring"></div>
                 </div>
-                <span className="user-email">{user?.email}</span>
-                <span className="role-badge">{role}</span>
+                <div className="user-info">
+                  <div className="user-email-wrapper">
+                    <Mail size={12} className="user-email-icon" />
+                    <span className="user-email" title={user?.email}>{user?.email}</span>
+                  </div>
+                  <span className="role-badge">
+                    <span className="role-badge-icon"><Shield size={10} /></span>
+                    {role}
+                  </span>
+                  <span className="user-greeting">Welcome back!</span>
+                </div>
               </div>
               <button className="logout-btn" onClick={handleLogout}>
                 <LogOut size={16} /> Sign Out

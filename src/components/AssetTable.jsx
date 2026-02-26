@@ -201,10 +201,13 @@ const AssetTable = ({ assets, refreshData }) => {
   const handleDisposeClick = (asset) => handlePinRequiredAction("dispose", asset);
   const handleTransferClick = (asset) => handlePinRequiredAction("transfer", asset);
 
+  // Check for dark mode
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
   const statusStyle = (status) => {
-    if (status === "Active") return { bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" };
-    if (status === "Disposed") return { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" };
-    return { bg: "#fffbeb", color: "#d97706", border: "#fde68a" };
+    if (status === "Active") return { bg: isDark ? "#052e16" : "#f0fdf4", color: isDark ? "#4ade80" : "#16a34a", border: isDark ? "#166534" : "#bbf7d0" };
+    if (status === "Disposed") return { bg: isDark ? "#450a0a" : "#fef2f2", color: isDark ? "#fca5a5" : "#dc2626", border: isDark ? "#7f1d1d" : "#fecaca" };
+    return { bg: isDark ? "#451a03" : "#fffbeb", color: isDark ? "#fbbf24" : "#d97706", border: isDark ? "#78350f" : "#fde68a" };
   };
 
   const handleEditChange = (e) => {
@@ -259,29 +262,43 @@ const AssetTable = ({ assets, refreshData }) => {
         .at-root { font-family: 'DM Sans', sans-serif; width: 100%; overflow-x: auto; }
         .at-table { width: 100%; min-width: 680px; border-collapse: collapse; }
         .at-thead { background: #fff7f7; border-bottom: 1px solid #fde8e8; }
+        .dark .at-thead { background: #450a0a; border-bottom: 1px solid #7f1d1d; }
         .at-th { padding: 13px 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #ef4444; white-space: nowrap; }
+        .dark .at-th { color: #fca5a5; }
         .at-th.right { text-align: right; }
         .at-th.center { text-align: center; }
         .at-row { border-bottom: 1px solid #fff1f1; transition: background 0.12s; }
+        .dark .at-row { border-bottom: 1px solid #292524; }
         .at-row:last-child { border-bottom: none; }
         .at-row:hover { background: #fff8f8; }
+        .dark .at-row:hover { background: #292524; }
         .at-td { padding: 16px 24px; font-size: 14px; color: #374151; vertical-align: middle; }
+        .dark .at-td { color: #d1d5db; }
         .at-td.right { text-align: right; }
         .at-td.center { text-align: center; }
         .at-asset-name { font-weight: 600; font-size: 14px; color: #111827; }
+        .dark .at-asset-name { color: #f9fafb; }
         .at-asset-tag { font-size: 12px; color: #9ca3af; margin-top: 2px; font-family: monospace; }
         .at-category { display: inline-block; font-size: 12px; font-weight: 600; color: #6b7280; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 10px; }
+        .dark .at-category { color: #9ca3af; background: #374151; border-color: #4b5563; }
         .at-status { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 11px; border-radius: 99px; border: 1px solid; }
         .at-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #111827; }
+        .dark .at-value { color: #f9fafb; }
         .at-actions { display: flex; justify-content: center; align-items: center; gap: 6px; }
         .at-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.14s; }
         .at-btn:hover { transform: translateY(-1px); }
         .at-btn-view { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+        .dark .at-btn-view { background: #1e3a5f; border-color: #1e40af; color: #60a5fa; }
         .at-btn-transfer { background: #fffbeb; border-color: #fde68a; color: #d97706; }
+        .dark .at-btn-transfer { background: #451a03; border-color: #78350f; color: #fbbf24; }
         .at-btn-dispose { background: #fff1f1; border-color: #fecaca; color: #dc2626; }
+        .dark .at-btn-dispose { background: #450a0a; border-color: #7f1d1d; color: #fca5a5; }
         .at-btn-edit { background: #eef2ff; border-color: #c7d2fe; color: #6366f1; }
+        .dark .at-btn-edit { background: #312e81; border-color: #3730a3; color: #a5b4fc; }
         .at-empty { text-align: center; padding: 64px 24px; color: #d1d5db; }
+        .dark .at-empty { color: #6b7280; }
         .at-empty-icon { width: 48px; height: 48px; background: #fff1f1; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: #fca5a5; }
+        .dark .at-empty-icon { background: #450a0a; color: #7f1d1d; }
       `}</style>
 
       <div className="at-root">
