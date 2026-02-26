@@ -85,8 +85,10 @@ const Dashboard = () => {
     }
   }, [role]);
 
-  const getAmortizationSchedule = () => {
-    if (!amortizationDates.start || !amortizationDates.end) return []
+  // OPTIMIZATION: Memoize amortization schedule to avoid recalculating on every render
+  // This function was being called 3 times per render in the modal
+  const amortizationSchedule = React.useMemo(() => {
+    if (!amortizationDates.start || !amortizationDates.end) return [];
 
     const start = new Date(amortizationDates.start);
     const end = new Date(amortizationDates.end);
@@ -133,7 +135,12 @@ const Dashboard = () => {
       current.setMonth(current.getMonth() + 1);
     }
     return schedule;
-  };
+  }, [assets, amortizationDates.start, amortizationDates.end]);
+
+  // OPTIMIZATION: Memoize amortization total to avoid recalculating
+  const amortizationTotal = React.useMemo(() => {
+    return amortizationSchedule.reduce((sum, item) => sum + item.amount, 0);
+  }, [amortizationSchedule]);
 
   const fetchAssets = async () => {
     const { data, error } = await supabase
@@ -247,14 +254,15 @@ const Dashboard = () => {
     }
   };
 
-useEffect(() => {
-    fetchAssets();
-    fetchTransactions();
-    fetchLogs();
-  }, [role]);
-
+// OPTIMIZATION 7: Combined useEffect for initial data fetching and login recording
   useEffect(() => {
-    const recordLogin = async () => {
+    const initializeData = async () => {
+      // Fetch initial data
+      fetchAssets();
+      fetchTransactions();
+      fetchLogs();
+      
+      // Record login (only once per session)
       if (user?.email && !sessionStorage.getItem("hasLoggedLogin")) {
         await supabase
           .from("logs")
@@ -263,8 +271,9 @@ useEffect(() => {
         fetchLogs();
       }
     };
-    recordLogin();
-  }, [user]);
+    
+    initializeData();
+  }, [role, user]);
 
   // Role-based navigation items
   const allNavItems = [
@@ -1062,9 +1071,9 @@ useEffect(() => {
               </div>
 
               <div className="sched-list">
-                {getAmortizationSchedule().length > 0 ? (
+                {amortizationSchedule.length > 0 ? (
                   <>
-                    {getAmortizationSchedule().map((item, idx) => (
+                    {amortizationSchedule.map((item, idx) => (
                       <div key={idx} className="sched-row">
                         <span className="sched-date">{item.date}</span>
                         <span className="sched-amount">
@@ -1080,12 +1089,10 @@ useEffect(() => {
                       <span className="sched-date">Total Period</span>
                       <span className="sched-amount">
                         ₱
-                        {getAmortizationSchedule()
-                          .reduce((sum, i) => sum + i.amount, 0)
-                          .toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                        {amortizationTotal.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   </>

@@ -1,21 +1,18 @@
-# TODO: Security PIN for Asset Table Actions
+# Asset System Optimization Tasks
 
-## Task
-Add a security PIN for every action in Asset Table except for View
+## Phase 1: AssetSummary.jsx Optimizations ✅ COMPLETE
+- [x] 1. Memoize `calculatePaymentCompletion` function
+- [x] 2. Memoize `calculateAmortization` function
+- [x] 3. Memoize `filteredAssets` using useMemo
+- [x] 4. Memoize `getAssetAmortizationSchedule` using useMemo
 
-## Implementation Plan
+## Phase 2: Dashboard.jsx Optimizations
+- [ ] 5. Memoize `getAmortizationSchedule` function using useMemo
+- [ ] 6. Optimize `fetchAssets` to reduce redundant API calls
+- [ ] 7. Combine multiple useEffect hooks into one
 
-### Step 1: Database Migration
-- [x] Create SQL migration file to add `pin` column to profiles table
+## Phase 3: AuthContext.jsx Optimizations  
+- [ ] 8. Fix duplicate PIN/role fetching on initial load
 
-### Step 2: PIN Verification Component
-- [x] Create PinVerificationModal component for PIN entry
-- [x] Add PIN to AuthContext for state management
-
-### Step 3: Update AssetTable.jsx
-- [x] Add PIN verification for Edit action
-- [x] Add PIN verification for Dispose action
-- [x] Add PIN verification for Transfer action
-
-### Step 4: PIN Management
-- [x] Add PIN setup functionality (allow users to set their PIN via AuthContext)
+## Phase 4: Testing
+- [ ] 9. Verify all features still work correctly

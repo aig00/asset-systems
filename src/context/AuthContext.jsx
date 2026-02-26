@@ -85,10 +85,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Refresh PIN (public method)
+  // OPTIMIZATION 8: Refresh PIN uses fetchRole which already fetches both role and PIN
+  // This avoids duplicate API calls on refresh
   const refreshPin = async () => {
     if (user) {
-      await fetchPin(user.id);
+      await fetchRole(user.id);
     }
   };
 

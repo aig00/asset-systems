@@ -32,6 +32,8 @@ import {
   XCircle,
   Search,
   Lock,
+  FolderOutput,
+  ChevronDown,
 } from "lucide-react";
 
 const MODAL_STYLES = `
@@ -425,6 +427,11 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   const [pinError, setPinError] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
 
+  // Export by Category state
+  const [showExportCategoryModal, setShowExportCategoryModal] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
+
   // Verify PIN function - used by PinVerificationModal
   const handlePinVerify = async (enteredPin) => {
     const adminPin = import.meta.env.VITE_ADMIN_PIN || "1234";
@@ -450,45 +457,45 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     setPinError("");
   };
 
-  // Calculate payment completion percentage
-  const calculatePaymentCompletion = (asset) => {
+  // OPTIMIZATION 1: Memoize payment completion calculation
+  const calculatePaymentCompletion = React.useCallback((asset) => {
     const totalCost = parseFloat(asset.total_cost) || 0;
     const downpayment = parseFloat(asset.downpayment_amount) || 0;
     if (totalCost === 0) return 0;
     return Math.min((downpayment / totalCost) * 100, 100);
-  };
+  }, []);
 
-  // Filter assets based on search query and pending status
-  const filteredAssets = assets.filter((asset) => {
+  // OPTIMIZATION 2: Memoize amortization calculation
+  const calculateAmortization = React.useCallback((asset) => {
+    const cost = parseFloat(asset.total_cost || 0);
+    const salvage = parseFloat(asset.salvage_value || 0);
+    const lifeMonths = (parseInt(asset.useful_life_years) || 1) * 12;
+    return ((cost - salvage) / lifeMonths).toFixed(2);
+  }, []);
+
+  // OPTIMIZATION 3: Memoize filtered assets to avoid recalculating on every render
+  const filteredAssets = React.useMemo(() => {
     const query = searchQuery.toLowerCase();
-    const matchesSearch = 
-      asset.name?.toLowerCase().includes(query) ||
-      asset.tag_number?.toLowerCase().includes(query) ||
-      asset.category?.toLowerCase().includes(query) ||
-      asset.status?.toLowerCase().includes(query) ||
-      asset.current_company?.toLowerCase().includes(query);
     
-    if (showPendingOnly) {
-      const paymentCompletion = calculatePaymentCompletion(asset);
-      return matchesSearch && paymentCompletion < 100;
-    }
-    
-    return matchesSearch;
-  });
+    return assets.filter((asset) => {
+      const matchesSearch = 
+        asset.name?.toLowerCase().includes(query) ||
+        asset.tag_number?.toLowerCase().includes(query) ||
+        asset.category?.toLowerCase().includes(query) ||
+        asset.status?.toLowerCase().includes(query) ||
+        asset.current_company?.toLowerCase().includes(query);
+      
+      if (showPendingOnly) {
+        const paymentCompletion = calculatePaymentCompletion(asset);
+        return matchesSearch && paymentCompletion < 100;
+      }
+      
+      return matchesSearch;
+    });
+  }, [assets, searchQuery, showPendingOnly, calculatePaymentCompletion]);
 
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (modalMode) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalMode]);
-
-  const getAssetAmortizationSchedule = () => {
+  // OPTIMIZATION 4: Memoize amortization schedule to avoid recalculating on every render
+  const getAssetAmortizationSchedule = React.useCallback(() => {
     if (!selectedAsset || !amortizationDates.start || !amortizationDates.end)
       return [];
 
@@ -526,14 +533,28 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       current.setMonth(current.getMonth() + 1);
     }
     return schedule;
-  };
+  }, [selectedAsset, amortizationDates]);
 
-  const calculateAmortization = (asset) => {
-    const cost = parseFloat(asset.total_cost || 0);
-    const salvage = parseFloat(asset.salvage_value || 0);
-    const lifeMonths = (parseInt(asset.useful_life_years) || 1) * 12;
-    return ((cost - salvage) / lifeMonths).toFixed(2);
-  };
+  // Memoized schedule for the modal
+  const schedule = React.useMemo(() => {
+    return modalMode === "amortization" ? getAssetAmortizationSchedule() : [];
+  }, [modalMode, getAssetAmortizationSchedule]);
+  
+  const scheduleTotal = React.useMemo(() => {
+    return schedule.reduce((sum, i) => sum + i.amount, 0);
+  }, [schedule]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (modalMode) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalMode]);
 
   const handleExportAsset = () => {
     const assetDetails = [
@@ -773,9 +794,92 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     }
   };
 
-  const schedule =
-    modalMode === "amortization" ? getAssetAmortizationSchedule() : [];
-  const scheduleTotal = schedule.reduce((sum, i) => sum + i.amount, 0);
+  // Export by Category functions
+  const openExportCategoryModal = () => {
+    const categories = [...new Set(assets.map(asset => asset.category).filter(Boolean))];
+    setAvailableCategories(categories);
+    setSelectedCategories(categories);
+    setShowExportCategoryModal(true);
+  };
+
+  const handleExportByCategory = () => {
+    if (selectedCategories.length === 0) {
+      alert("Please select at least one category to export.");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const summaryData = [];
+    let grandTotal = 0;
+
+    selectedCategories.forEach(category => {
+      const categoryAssets = assets.filter(asset => asset.category === category);
+      if (categoryAssets.length === 0) return;
+
+      const sheetData = categoryAssets.map(asset => {
+        const quantity = Number(asset.quantity) || 0;
+        const unitCost = Number(asset.unit_cost) || 0;
+        const totalCost = Number(asset.total_cost) || 0;
+        const salvageValue = Number(asset.salvage_value) || 0;
+        const usefulLifeYears = Number(asset.useful_life_years) || 0;
+        let monthlyAmortization = 0;
+        if (usefulLifeYears > 0) {
+          monthlyAmortization = (totalCost - salvageValue) / (usefulLifeYears * 12);
+        }
+        return {
+          "Tag Number": asset.tag_number || "",
+          "Asset Name": asset.name || "",
+          "Category": asset.category || "",
+          "Status": asset.status || "",
+          "Company": asset.current_company || "",
+          "Quantity": quantity,
+          "Unit Cost": unitCost,
+          "Total Cost": totalCost,
+          "Salvage Value": salvageValue,
+          "Useful Life (Years)": usefulLifeYears,
+          "Purchase Date": asset.purchase_date || "",
+          "Reference Number": asset.reference_number || "",
+          "Serial Number": asset.serial_number || "",
+          "Description": asset.description || "",
+          "Location": asset.location || "",
+          "Assigned To": asset.assigned_to || "",
+          "Monthly Amortization": monthlyAmortization.toFixed(2)
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(sheetData);
+      const sheetName = category.length > 30 ? category.substring(0, 30) : category;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      const categoryTotal = categoryAssets.reduce((sum, a) => sum + (parseFloat(a.total_cost) || 0), 0);
+      grandTotal += categoryTotal;
+      summaryData.push({
+        "Category": category,
+        "Asset Count": categoryAssets.length,
+        "Total Value": categoryTotal
+      });
+    });
+
+    summaryData.push({
+      "Category": "GRAND TOTAL",
+      "Asset Count": selectedCategories.reduce((sum, cat) => sum + assets.filter(a => a.category === cat).length, 0),
+      "Total Value": grandTotal
+    });
+    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Assets_By_Category_${dateStr}.xlsx`);
+    setShowExportCategoryModal(false);
+  };
+
+  const toggleCategory = (category) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
 
   return (
     <>
@@ -800,6 +904,26 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
             {filteredAssets.length} of {assets.length} results
           </span>
         )}
+        <button 
+          onClick={openExportCategoryModal}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'linear-gradient(135deg, #4338ca, #6366f1)',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: '600',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 'auto'
+          }}
+        >
+          <FolderOutput size={15} />
+          Export by Category
+        </button>
       </div>
 
       <div className="at-wrap">
@@ -1286,6 +1410,115 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
           error={pinError}
           clearError={() => setPinError("")}
         />,
+        document.body
+      )}
+
+      {/* Export by Category Modal */}
+      {showExportCategoryModal && createPortal(
+        <div className="as-overlay" onClick={(e) => e.target === e.currentTarget && setShowExportCategoryModal(false)}>
+          <div className="as-modal as-modal-md">
+            <div className="as-header">
+              <div className="as-header-left">
+                <div className="as-icon-wrap as-icon-indigo">
+                  <FolderOutput size={19} color="#fff" strokeWidth={2.2} />
+                </div>
+                <div className="as-header-titles">
+                  <p className="as-title">Export by Category</p>
+                  <p className="as-subtitle">Select categories to include in export</p>
+                </div>
+              </div>
+              <button className="as-close" onClick={() => setShowExportCategoryModal(false)}>
+                <X size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+            <div className="as-body">
+              {availableCategories.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>
+                  No categories found in assets.
+                </p>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                    <button 
+                      onClick={() => setSelectedCategories([...availableCategories])}
+                      style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCategories([])}
+                      style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                  <div style={{ 
+                    maxHeight: '300px', 
+                    overflowY: 'auto',
+                    border: '1px solid #f3e8e8',
+                    borderRadius: '10px',
+                    padding: '8px'
+                  }}>
+                    {availableCategories.map(category => (
+                      <label 
+                        key={category}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#fafafa'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => toggleCategory(category)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '14px', color: '#374151' }}>{category}</span>
+                        <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>
+                          {assets.filter(a => a.category === category).length} assets
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '12px', textAlign: 'center' }}>
+                    {selectedCategories.length} of {availableCategories.length} categories selected
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="as-footer">
+              <button className="as-btn-cancel" onClick={() => setShowExportCategoryModal(false)}>Cancel</button>
+              <button 
+                className="as-btn-primary as-btn-indigo" 
+                onClick={handleExportByCategory}
+                disabled={selectedCategories.length === 0}
+              >
+                <Download size={15} strokeWidth={2.5} /> Export to Excel
+              </button>
+            </div>
+          </div>
+        </div>,
         document.body
       )}
     </>
