@@ -80,10 +80,10 @@ const DashboardCharts = ({ assets }) => {
   }, [assets]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Pie Chart - Asset Status Distribution */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+      <div className="bg-white p-8 rounded-lg shadow">
+        <h3 className="text-lg font-bold text-gray-800 mb-6">
           Asset Status Distribution
         </h3>
         <div className="h-64">
@@ -116,8 +116,8 @@ const DashboardCharts = ({ assets }) => {
       </div>
 
       {/* Bar Chart - Asset Value by Category */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+      <div className="bg-white p-8 rounded-lg shadow">
+        <h3 className="text-lg font-bold text-gray-800 mb-6">
           Asset Value by Category (Top 10)
         </h3>
         <div className="h-64">
@@ -142,8 +142,8 @@ const DashboardCharts = ({ assets }) => {
       </div>
 
       {/* Bar Chart - Assets by Company */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+      <div className="bg-white p-8 rounded-lg shadow">
+        <h3 className="text-lg font-bold text-gray-800 mb-6">
           Asset Count by Company
         </h3>
         <div className="h-64">
@@ -160,8 +160,8 @@ const DashboardCharts = ({ assets }) => {
       </div>
 
       {/* Bar Chart - Asset Count by Category */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+      <div className="bg-white p-8 rounded-lg shadow">
+        <h3 className="text-lg font-bold text-gray-800 mb-6">
           Asset Count by Category (Top 10)
         </h3>
         <div className="h-64">

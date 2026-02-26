@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
+import NCT_logong from "../assets/NCT_logong.png";
 import {
   LayoutDashboard,
   Table,
@@ -358,108 +359,150 @@ const Dashboard = () => {
         }
         .dash-title { font-family: 'Syne', sans-serif; }
 
-        /* ── NAV ── */
+        /* ── NAV - LEFT SIDEBAR FLOATING CARD ── */
         .nav-bar {
-          position: sticky; top: 0; z-index: 50;
-          height: 68px;
-          width: 100%;
-          background: rgba(255,255,255,0.93);
-          backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(220,38,38,0.09);
-          box-shadow: 0 1px 16px rgba(220,38,38,0.05);
-          display: flex; align-items: stretch;
+          position: fixed; top: 20px; left: 20px; z-index: 50;
+          width: 260px;
+          height: calc(100vh - 40px);
+          background: rgba(255,255,255,0.95);
+          backdrop-filter: blur(20px);
+          border-radius: 20px;
+          border: 1px solid rgba(220,38,38,0.12);
+          box-shadow: 
+            0 4px 24px rgba(220,38,38,0.12),
+            0 12px 48px rgba(0,0,0,0.08);
+          display: flex; flex-direction: column;
+          overflow: hidden;
         }
         .nav-inner {
           width: 100%;
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 0 32px;
+          height: 100%;
           display: flex;
-          align-items: stretch;
-          justify-content: space-between;
-          gap: 16px;
+          flex-direction: column;
+          padding: 20px 16px;
         }
-        .nav-left  { display: flex; align-items: center; gap: 40px; min-width: 0; }
-        .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-
-        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+        .nav-top {
+          display: flex; flex-direction: column; align-items: center;
+          padding-bottom: 20px; border-bottom: 1px solid #fde8e8;
+          margin-bottom: 16px;
+        }
+        .nav-bottom {
+          margin-top: auto;
+          padding-top: 16px; border-top: 1px solid #fde8e8;
+        }
+        
+        .brand { 
+          display: flex; flex-direction: column; align-items: center; gap: 12px; 
+          text-decoration: none; flex-shrink: 0; padding: 8px 0;
+        }
         .brand-mark {
-          width: 38px; height: 38px;
+          width: 52px; height: 52px;
           background: linear-gradient(135deg, #dc2626, #f43f5e);
-          border-radius: 11px;
+          border-radius: 14px;
           display: flex; align-items: center; justify-content: center;
           box-shadow: 0 4px 14px rgba(220,38,38,0.38);
           flex-shrink: 0;
         }
         .brand-mark span {
           font-family: 'Syne', sans-serif;
-          font-size: 16px; font-weight: 800; color: #fff;
+          font-size: 20px; font-weight: 800; color: #fff;
         }
         .brand-name {
           font-family: 'Syne', sans-serif;
-          font-size: 17px; font-weight: 700; color: #1f2937;
+          font-size: 14px; font-weight: 700; color: #1f2937;
           white-space: nowrap;
+          text-align: center;
+          line-height: 1.3;
         }
         .brand-name em { font-style: normal; color: #dc2626; }
 
-        .nav-tabs { display: flex; align-items: stretch; height: 100%; }
+        .nav-tabs { 
+          display: flex; flex-direction: column; 
+          gap: 6px; flex: 1;
+        }
         .nav-tab {
-          display: flex; align-items: center; gap: 8px;
-          padding: 0 18px;
-          font-size: 15px; font-weight: 500;
+          display: flex; align-items: center; gap: 12px;
+          padding: 14px 16px;
+          font-size: 14px; font-weight: 500;
           color: #9ca3af;
           border: none; background: none; cursor: pointer;
-          border-bottom: 2px solid transparent;
-          transition: color 0.18s, border-color 0.18s;
+          border-radius: 12px;
+          transition: all 0.2s ease;
           white-space: nowrap;
+          text-align: left;
         }
-        .nav-tab:hover { color: #374151; }
-        .nav-tab.active { color: #dc2626; border-bottom-color: #dc2626; }
+        .nav-tab:hover { 
+          color: #374151; 
+          background: #fff5f5;
+        }
+        .nav-tab.active { 
+          color: #dc2626; 
+          background: linear-gradient(135deg, #fef2f2, #fee2e2);
+          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
+        }
 
         .user-chip {
-          display: flex; align-items: center; gap: 8px;
+          display: flex; flex-direction: column; align-items: center; gap: 10px;
           background: #fff5f5;
           border: 1px solid #fecaca;
-          border-radius: 99px;
-          padding: 5px 12px 5px 5px;
-          min-width: 0;
+          border-radius: 14px;
+          padding: 14px 12px;
+          width: 100%;
         }
         .user-avatar {
-          width: 28px; height: 28px;
+          width: 40px; height: 40px;
           background: linear-gradient(135deg, #dc2626, #f43f5e);
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 12px; font-weight: 700; color: #fff;
+          font-size: 16px; font-weight: 700; color: #fff;
           flex-shrink: 0;
         }
         .user-email {
-          font-size: 14px; color: #4b5563;
-          max-width: 180px;
+          font-size: 12px; color: #4b5563;
+          max-width: 100%;
           overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+          text-align: center;
         }
         .role-badge {
-          font-size: 11px; font-weight: 700;
+          font-size: 10px; font-weight: 700;
           letter-spacing: 0.1em; text-transform: uppercase;
           background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
-          padding: 2px 8px; border-radius: 20px;
+          padding: 3px 10px; border-radius: 20px;
           flex-shrink: 0;
         }
         .logout-btn {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 15px; font-weight: 500;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          width: 100%;
+          font-size: 14px; font-weight: 500;
           color: #9ca3af; background: none; border: none; cursor: pointer;
           transition: color 0.15s;
           white-space: nowrap;
           flex-shrink: 0;
+          padding: 10px;
+          border-radius: 10px;
         }
-        .logout-btn:hover { color: #dc2626; }
+        .logout-btn:hover { 
+          color: #dc2626; 
+          background: #fff5f5;
+        }
 
         /* ── PAGE LAYOUT ── */
         .page-main {
           width: 100%;
-          max-width: 1400px;
+          max-width: 1800px;
           margin: 0 auto;
-          padding: 40px 32px 80px;
+          padding: 48px 32px 80px 300px; /* Added left padding for sidebar */
+        }
+        @media (max-width: 768px) {
+          .page-main { padding: 48px 20px 80px 20px; }
+          .nav-bar { 
+            position: fixed; top: 0; left: 0; right: 0; 
+            width: 100%; height: auto; max-height: 60vh;
+            border-radius: 0 0 20px 20px;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+          }
+          .nav-bar.open { transform: translateY(0); }
         }
 
         /* Page header */
@@ -480,8 +523,8 @@ const Dashboard = () => {
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 18px;
-          margin-bottom: 20px;
+          gap: 28px;
+          margin-bottom: 32px;
           width: 100%;
         }
         @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -494,7 +537,7 @@ const Dashboard = () => {
           border: 1px solid #fde8e8;
           box-shadow: 0 3px 20px rgba(220,38,38,0.08);
           overflow: hidden;
-          padding: 24px 24px 20px;
+          padding: 32px 32px 28px;
           transition: transform 0.22s cubic-bezier(.22,.61,.36,1), box-shadow 0.22s ease;
           min-width: 0;
         }
@@ -547,19 +590,19 @@ const Dashboard = () => {
           border-radius: 18px;
           border: 1px solid #fde8e8;
           box-shadow: 0 3px 20px rgba(220,38,38,0.06);
-          padding: 24px 28px;
+          padding: 36px 40px;
           width: 100%;
-          margin-bottom: 32px;
+          margin-bottom: 40px;
         }
         .health-metrics {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           gap: 0;
-          margin-top: 18px;
+          margin-top: 28px;
         }
         .health-metric {
-          padding: 0 32px 0 0;
+          padding: 0 48px 0 0;
           min-width: 0;
           /* Allow wrapping on small screens */
           flex-shrink: 0;
@@ -600,11 +643,11 @@ const Dashboard = () => {
 
         /* ── ANALYTICS SECTION ── */
         .analytics-section {
-          margin-top: 32px;
+          margin-top: 40px;
           width: 100%;
         }
         .analytics-header {
-          margin-bottom: 20px;
+          margin-bottom: 28px;
         }
 
         /* ── SHARED VIEW STYLES ── */
@@ -665,7 +708,7 @@ const Dashboard = () => {
           display: grid;
           grid-template-columns: 1.4fr 1.6fr 1fr 2fr;
           gap: 16px;
-          padding: 15px 28px;
+          padding: 20px 28px;
           border-bottom: 1px solid #fff1f1;
           align-items: center;
           transition: background 0.12s;
@@ -737,27 +780,34 @@ const Dashboard = () => {
         {/* ── NAVBAR ── */}
         <nav className="nav-bar">
           <div className="nav-inner">
-            <div className="nav-left">
+            {/* Top Section - Brand */}
+            <div className="nav-top">
               <div className="brand">
+                <div className="brand-mark">
+                  <span>N</span>
+                </div>
                 <span className="brand-name">
-                  NCT <em>Asset</em> Manager
+                  NCT Transnational<br /><em>Corp</em>
                 </span>
-              </div>
-              <div className="nav-tabs">
-                {navItems.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setCurrentView(id)}
-                    className={`nav-tab${currentView === id ? " active" : ""}`}
-                  >
-                    <Icon size={17} />
-                    {label}
-                  </button>
-                ))}
               </div>
             </div>
 
-            <div className="nav-right">
+            {/* Middle Section - Navigation Tabs */}
+            <div className="nav-tabs">
+              {navItems.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setCurrentView(id)}
+                  className={`nav-tab${currentView === id ? " active" : ""}`}
+                >
+                  <Icon size={18} />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Section - User Info & Logout */}
+            <div className="nav-bottom">
               <div className="user-chip">
                 <div className="user-avatar">
                   {user?.email?.[0]?.toUpperCase()}

@@ -113,7 +113,7 @@ const MODAL_STYLES = `
   .as-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
 
   .as-body {
-    padding: 22px 26px;
+    padding: 32px 36px;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
@@ -131,11 +131,11 @@ const MODAL_STYLES = `
 
   .as-info-grid {
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; margin-bottom: 18px;
+    gap: 18px; margin-bottom: 24px;
   }
   .as-info-item {
     background: #fafafa; border: 1px solid #f3e8e8;
-    border-radius: 11px; padding: 12px 15px;
+    border-radius: 11px; padding: 16px 20px;
   }
   .as-info-item.full { grid-column: 1 / -1; }
   .as-info-label {
@@ -198,7 +198,7 @@ const MODAL_STYLES = `
     display: flex; align-items: center; gap: 8px;
   }
   .as-section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, #fecaca, transparent); }
-  .as-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 18px; }
+  .as-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
   .as-form-grid .full { grid-column: 1 / -1; }
   .as-field { display: flex; flex-direction: column; gap: 5px; }
   .as-field-label {
@@ -298,8 +298,8 @@ const TABLE_STYLES = `
   .at-search-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 16px 20px;
+    gap: 16px;
+    padding: 24px 28px;
     background: #fff;
     border-bottom: 1px solid #fde8e8;
   }
@@ -346,7 +346,7 @@ const TABLE_STYLES = `
 
   .at-thead th {
     background: #fff7f7;
-    padding: 13px 22px;
+    padding: 18px 28px;
     font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
     color: #ef4444; text-align: left;
     border-bottom: 1px solid #fde8e8;
@@ -358,7 +358,7 @@ const TABLE_STYLES = `
   .at-row:last-child { border-bottom: none; }
   .at-row:hover { background: #fff8f8; }
 
-  .at-td { padding: 15px 22px; font-size: 14px; color: #374151; white-space: nowrap; vertical-align: middle; }
+  .at-td { padding: 20px 28px; font-size: 14px; color: #374151; white-space: nowrap; vertical-align: middle; }
   .at-td-tag { font-weight: 700; color: #111827; font-family: monospace; font-size: 13.5px; }
   .at-td-name { font-weight: 500; color: #1f2937; }
   .at-td-actions { text-align: right; }

@@ -346,8 +346,8 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          padding: 16px 20px;
+          gap: 16px;
+          padding: 24px 28px;
           background: #fff;
           border-bottom: 1px solid #fde8e8;
         }
@@ -412,7 +412,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
         }
         .dp-thead th {
           background: #fff7f7;
-          padding: 13px 22px;
+          padding: 18px 28px;
           font-size: 11.5px;
           font-weight: 700;
           letter-spacing: 0.12em;
@@ -430,7 +430,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
           background: #fff8f8;
         }
         .dp-td {
-          padding: 15px 22px;
+          padding: 20px 28px;
           font-size: 14px;
           color: #374151;
           white-space: nowrap;
@@ -754,7 +754,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
           border-top: 1px solid #fef0f0;
         }
         .dp-form-group {
-          margin-bottom: 16px;
+          margin-bottom: 24px;
         }
         .dp-form-label {
           font-size: 12.5px;
