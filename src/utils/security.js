@@ -50,8 +50,8 @@ const hashPin = async (pin, salt) => {
     },
     key,
     { name: "HMAC", hash: "SHA-256", length: 256 },
-    false,
-    ["sign"]
+    true,
+    ["sign", "verify"]
   );
 
   const exportedKey = await crypto.subtle.exportKey("raw", derivedKey);

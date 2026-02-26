@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
+import ExcelJS from "exceljs";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import PinVerificationModal from "./PinVerificationModal";
@@ -633,24 +634,36 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     };
   }, [modalMode]);
 
-  const handleExportAsset = () => {
+  // Helper function to download Excel file
+  const downloadExcel = async (workbook, filename) => {
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportAsset = async () => {
     const assetDetails = [
       {
-        "Asset Name": sanitizeForCSV(selectedAsset.name),
-        "Tag Number": sanitizeForCSV(selectedAsset.tag_number),
-        Category: sanitizeForCSV(selectedAsset.category || ""),
-        Status: sanitizeForCSV(selectedAsset.status || ""),
-        Company: sanitizeForCSV(selectedAsset.current_company || ""),
+        "Asset Name": selectedAsset.name,
+        "Tag Number": selectedAsset.tag_number,
+        Category: selectedAsset.category || "",
+        Status: selectedAsset.status || "",
+        Company: selectedAsset.current_company || "",
         "Total Cost": selectedAsset.total_cost || 0,
         "Salvage Value": selectedAsset.salvage_value || 0,
         "Useful Life (Years)": selectedAsset.useful_life_years || 0,
-        "Purchase Date": sanitizeForCSV(selectedAsset.purchase_date || ""),
-        "Reference Number": sanitizeForCSV(selectedAsset.reference_number || ""),
-        "Serial Number": sanitizeForCSV(selectedAsset.serial_number || ""),
-        Description: sanitizeForCSV(selectedAsset.description || ""),
-        Location: sanitizeForCSV(selectedAsset.location || ""),
-        "Assigned To": sanitizeForCSV(selectedAsset.assigned_to || ""),
-        "Monthly Amortization": sanitizeForCSV(calculateAmortization(selectedAsset)),
+        "Purchase Date": selectedAsset.purchase_date || "",
+        "Reference Number": selectedAsset.reference_number || "",
+        "Serial Number": selectedAsset.serial_number || "",
+        Description: selectedAsset.description || "",
+        Location: selectedAsset.location || "",
+        "Assigned To": selectedAsset.assigned_to || "",
+        "Monthly Amortization": calculateAmortization(selectedAsset),
       },
     ];
 
@@ -666,12 +679,40 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       "Monthly Depreciation": amortTotal,
     });
 
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.json_to_sheet(assetDetails);
-    XLSX.utils.book_append_sheet(wb, ws1, "Asset Details");
-    const ws2 = XLSX.utils.json_to_sheet(scheduleData);
-    XLSX.utils.book_append_sheet(wb, ws2, "Amortization Schedule");
-    XLSX.writeFile(wb, `Asset_${selectedAsset.tag_number}.xlsx`);
+    // Create Excel workbook with ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    
+    // Asset Details sheet
+    const ws1 = workbook.addWorksheet("Asset Details");
+    ws1.columns = [
+      { header: "Asset Name", key: "Asset Name", width: 25 },
+      { header: "Tag Number", key: "Tag Number", width: 15 },
+      { header: "Category", key: "Category", width: 15 },
+      { header: "Status", key: "Status", width: 12 },
+      { header: "Company", key: "Company", width: 15 },
+      { header: "Total Cost", key: "Total Cost", width: 12 },
+      { header: "Salvage Value", key: "Salvage Value", width: 12 },
+      { header: "Useful Life (Years)", key: "Useful Life (Years)", width: 18 },
+      { header: "Purchase Date", key: "Purchase Date", width: 14 },
+      { header: "Reference Number", key: "Reference Number", width: 15 },
+      { header: "Serial Number", key: "Serial Number", width: 15 },
+      { header: "Description", key: "Description", width: 30 },
+      { header: "Location", key: "Location", width: 20 },
+      { header: "Assigned To", key: "Assigned To", width: 20 },
+      { header: "Monthly Amortization", key: "Monthly Amortization", width: 18 },
+    ];
+    assetDetails.forEach(row => ws1.addRow(row));
+    
+    // Amortization Schedule sheet
+    const ws2 = workbook.addWorksheet("Amortization Schedule");
+    ws2.columns = [
+      { header: "Period", key: "Period", width: 20 },
+      { header: "Monthly Depreciation", key: "Monthly Depreciation", width: 22 },
+    ];
+    scheduleData.forEach(row => ws2.addRow(row));
+
+    // Download the file
+    await downloadExcel(workbook, `Asset_${selectedAsset.tag_number}.xlsx`);
   };
 
   const handleTransfer = async () => {

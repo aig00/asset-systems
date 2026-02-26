@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import NCT_logong from "../assets/NCT_logong.png";
 import {
   LayoutDashboard,
@@ -237,11 +237,37 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
     await supabase.auth.signOut();
   };
 
-  const exportLogs = () => {
-    const ws = XLSX.utils.json_to_sheet(logs);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "System Logs");
-    XLSX.writeFile(wb, "System_Logs.xlsx");
+  const exportLogs = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("System Logs");
+    
+    // Add headers
+    worksheet.columns = [
+      { header: "Timestamp", key: "created_at", width: 20 },
+      { header: "User", key: "user_email", width: 30 },
+      { header: "Action", key: "action_type", width: 15 },
+      { header: "Details", key: "details", width: 40 },
+    ];
+    
+    // Add data
+    logs.forEach((log) => {
+      worksheet.addRow({
+        created_at: new Date(log.created_at).toLocaleString(),
+        user_email: log.user_email,
+        action_type: log.action_type,
+        details: JSON.stringify(log.details),
+      });
+    });
+    
+    // Write file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "System_Logs.xlsx";
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
 const handleExportClick = () => {

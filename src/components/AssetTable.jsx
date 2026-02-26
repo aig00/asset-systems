@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import PinVerificationModal from "./PinVerificationModal";
@@ -40,7 +40,7 @@ const AssetTable = ({ assets, refreshData }) => {
     setLocalAssets(assets || []);
   }, [assets]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const csvData = localAssets.map((asset) => {
       const quantity = Number(asset.quantity) || 0;
       const unitCost = Number(asset.unit_cost) || 0;
@@ -68,17 +68,52 @@ const AssetTable = ({ assets, refreshData }) => {
       };
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(csvData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
-    XLSX.writeFile(workbook, "Asset_Disposal_Report.csv");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Assets");
+    
+    worksheet.columns = [
+      { header: "Asset Name", key: "Asset Name", width: 25 },
+      { header: "Category", key: "Category", width: 15 },
+      { header: "Tag", key: "Tag", width: 15 },
+      { header: "Reference", key: "Reference", width: 15 },
+      { header: "Qty", key: "Qty", width: 8 },
+      { header: "Unit Cost", key: "Unit Cost", width: 12 },
+      { header: "Total Cost", key: "Total Cost", width: 12 },
+      { header: "Salvage Value", key: "Salvage Value", width: 12 },
+      { header: "Useful Life", key: "Useful Life", width: 10 },
+      { header: "Purchase Date", key: "Purchase Date", width: 12 },
+      { header: "Disposed By", key: "Disposed By", width: 15 },
+      { header: "Monthly Amortization", key: "Monthly Amortization", width: 18 },
+    ];
+    
+    csvData.forEach(row => worksheet.addRow(row));
+    
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Asset_Disposal_Report.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const exportToExcel = (data, fileName) => {
-    const worksheet = XLSX.utils.json_to_sheet([data]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Record");
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+  const exportToExcel = async (data, fileName) => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Record");
+    
+    Object.entries(data).forEach(([key, value]) => {
+      worksheet.addRow({ Field: key, Value: value });
+    });
+    
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileName}.xlsx`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleTransfer = async (asset) => {
@@ -134,10 +169,35 @@ const AssetTable = ({ assets, refreshData }) => {
         "Monthly Amortization": monthlyAmortization.toFixed(2),
       }];
 
-      const worksheet = XLSX.utils.json_to_sheet(csvData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Disposed Asset");
-      XLSX.writeFile(workbook, `Disposed_${asset.tag_number}.csv`);
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Disposed Asset");
+      
+      worksheet.columns = [
+        { header: "Asset Name", key: "Asset Name", width: 25 },
+        { header: "Category", key: "Category", width: 15 },
+        { header: "Tag", key: "Tag", width: 15 },
+        { header: "Reference", key: "Reference", width: 15 },
+        { header: "Qty", key: "Qty", width: 8 },
+        { header: "Unit Cost", key: "Unit Cost", width: 12 },
+        { header: "Total Cost", key: "Total Cost", width: 12 },
+        { header: "Salvage Value", key: "Salvage Value", width: 12 },
+        { header: "Useful Life", key: "Useful Life", width: 10 },
+        { header: "Purchase Date", key: "Purchase Date", width: 12 },
+        { header: "Disposed By", key: "Disposed By", width: 20 },
+        { header: "Disposal Date", key: "Disposal Date", width: 12 },
+        { header: "Monthly Amortization", key: "Monthly Amortization", width: 18 },
+      ];
+      
+      csvData.forEach(row => worksheet.addRow(row));
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Disposed_${asset.tag_number}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
 
       const { error: updateError } = await supabase
         .from("assets")
@@ -169,9 +229,9 @@ const AssetTable = ({ assets, refreshData }) => {
   // Handle PIN verification
   const handlePinVerify = async (enteredPin) => {
     try {
-      const isValid = await verifyPin(enteredPin);
-      if (!isValid) {
-        setPinError("Invalid PIN. Please try again.");
+      const result = await verifyPin(enteredPin);
+      if (!result || !result.success) {
+        setPinError(result?.error || "Invalid PIN. Please try again.");
         return false;
       }
       
