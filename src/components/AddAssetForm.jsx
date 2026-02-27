@@ -38,7 +38,6 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
     assigned_to: "",
     current_company: "HQ",
     is_existing: false,
-    downpayment_amount: 0,
   });
 
   // Auto-generate tag number on component mount
@@ -636,28 +635,6 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
                     onChange={handleChange}
                     className="field-input"
                   />
-                </div>
-              </div>
-
-              <p className="form-section-label">Payment (Downpayment)</p>
-              <div className="form-grid">
-                <div className="field full-width">
-                  <label className="field-label">
-                    <DollarSign size={12} /> Downpayment / Partial Payment (₱)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="downpayment_amount"
-                    value={formData.downpayment_amount}
-                    onChange={handleChange}
-                    className="field-input"
-                    placeholder="Enter downpayment amount if partial payment"
-                  />
-                  <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                    Leave as 0 for full payment. Assets with partial payment will appear in Pending section.
-                  </p>
                 </div>
               </div>
 
