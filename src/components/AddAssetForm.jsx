@@ -17,7 +17,7 @@ import {
   AlignLeft,
 } from "lucide-react";
 
-const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
+const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail }) => {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isNewCategory, setIsNewCategory] = useState(false);
@@ -122,6 +122,22 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant" }) => {
       setLoading(false);
       return;
     }
+    
+    // Log the asset creation
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "CREATE_ASSET",
+      details: {
+        asset_name: formData.name,
+        tag_number: formData.tag_number,
+        category: formData.category,
+        total_cost: totalCost,
+        status: formData.status,
+        company: formData.current_company,
+        message: `Asset "${formData.name}" (${formData.tag_number}) created - Category: ${formData.category}, Cost: ₱${totalCost}`
+      }
+    });
+    
     setLoading(false);
     onComplete();
   };

@@ -220,19 +220,28 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
     setStats({ totalValue, active, disposed, depreciation });
   };
 
-  const fetchLogs = async () => {
+const fetchLogs = async () => {
     const { data, error } = await supabase
       .from("logs")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) console.error("Error fetching logs:", error);
-    setLogs(data || []);
+    // Filter out INSERT action type from logs
+    const filteredLogs = (data || []).filter(log => log.action_type !== "INSERT");
+    setLogs(filteredLogs);
   };
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
     await supabase
       .from("logs")
-      .insert({ user_email: user?.email, action_type: "LOGOUT" });
+      .insert({ 
+        user_email: user?.email, 
+        action_type: "LOGOUT",
+        details: { 
+          logout_time: new Date().toISOString(),
+          message: "User logged out"
+        }
+      });
     sessionStorage.removeItem("hasLoggedLogin");
     await supabase.auth.signOut();
   };
@@ -311,11 +320,18 @@ const handleExportClick = () => {
       fetchTransactions();
       fetchLogs();
       
-      // Record login (only once per session)
+// Record login (only once per session)
       if (user?.email && !sessionStorage.getItem("hasLoggedLogin")) {
         await supabase
           .from("logs")
-          .insert({ user_email: user.email, action_type: "LOGIN" });
+          .insert({ 
+            user_email: user.email, 
+            action_type: "LOGIN",
+            details: {
+              login_time: new Date().toISOString(),
+              message: "User logged in"
+            }
+          });
         sessionStorage.setItem("hasLoggedLogin", "true");
         fetchLogs();
       }
@@ -345,6 +361,47 @@ const handleExportClick = () => {
     if (type === "CREATE_ASSET" || type === "LOGIN") return "log-badge-green";
     if (type === "TRANSFER_ASSET") return "log-badge-amber";
     return "log-badge-gray";
+  };
+
+  // Format log details for display
+  const formatLogDetails = (details) => {
+    if (!details) return "";
+    
+    // Parse if string
+    const parsed = typeof details === "string" ? JSON.parse(details) : details;
+    
+    // Check for new_record format (from database trigger)
+    if (parsed.new_record) {
+      const record = parsed.new_record;
+      const parts = [];
+      if (record.name) parts.push(`Name: ${record.name}`);
+      if (record.status) parts.push(`Status: ${record.status}`);
+      if (record.category) parts.push(`Category: ${record.category}`);
+      if (record.total_cost) parts.push(`Cost: ₱${parseFloat(record.total_cost).toLocaleString()}`);
+      if (record.tag_number) parts.push(`Tag: ${record.tag_number}`);
+      if (record.current_company) parts.push(`Company: ${record.current_company}`);
+      return parts.join(" | ") || JSON.stringify(parsed);
+    }
+    
+    // Check for our custom message format
+    if (parsed.message) {
+      return parsed.message;
+    }
+    
+    // Check for other known formats
+    if (parsed.asset_name) {
+      const parts = [];
+      parts.push(`Name: ${parsed.asset_name}`);
+      if (parsed.tag_number) parts.push(`Tag: ${parsed.tag_number}`);
+      if (parsed.category) parts.push(`Category: ${parsed.category}`);
+      if (parsed.total_cost) parts.push(`Cost: ₱${parseFloat(parsed.total_cost).toLocaleString()}`);
+      if (parsed.status) parts.push(`Status: ${parsed.status}`);
+      if (parsed.company) parts.push(`Company: ${parsed.company}`);
+      return parts.join(" | ");
+    }
+    
+    // Fallback to JSON string
+    return JSON.stringify(parsed);
   };
 
   const statCards = [
@@ -1196,7 +1253,7 @@ const handleExportClick = () => {
                           </span>
                         </span>
                         <span className="log-detail">
-                          {JSON.stringify(log.details)}
+                          {formatLogDetails(log.details)}
                         </span>
                       </div>
                     ))

@@ -189,6 +189,21 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       ]);
     }
 
+    // Log the asset creation
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "CREATE_ASSET",
+      details: {
+        asset_name: addAssetForm.name,
+        tag_number: addAssetForm.tag_number,
+        category: addAssetForm.category || "General",
+        total_cost: totalCost,
+        status: "Pending",
+        company: "HQ",
+        message: `Asset "${addAssetForm.name}" (${addAssetForm.tag_number}) created via Downpayment - Category: ${addAssetForm.category || "General"}, Cost: ₱${totalCost}`
+      }
+    });
+
     setLoading(false);
     setShowAddAssetModal(false);
     setAddAssetForm({
