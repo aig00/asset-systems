@@ -160,7 +160,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       salvage_value: 0,
       useful_life_years: 1,
       status: "Pending",
-      current_company: "HQ",
+      current_company: "HO",
       purchase_date: new Date().toISOString().split("T")[0],
     };
 
@@ -199,7 +199,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
         category: addAssetForm.category || "General",
         total_cost: totalCost,
         status: "Pending",
-        company: "HQ",
+        company: "HO",
         message: `Asset "${addAssetForm.name}" (${addAssetForm.tag_number}) created via Downpayment - Category: ${addAssetForm.category || "General"}, Cost: ₱${totalCost}`
       }
     });

@@ -232,6 +232,8 @@ const fetchLogs = async () => {
   };
 
 const handleLogout = async () => {
+    if (!window.confirm("Are you sure you want to sign out?")) return;
+
     await supabase
       .from("logs")
       .insert({ 
@@ -379,7 +381,7 @@ const handleExportClick = () => {
       if (record.category) parts.push(`Category: ${record.category}`);
       if (record.total_cost) parts.push(`Cost: ₱${parseFloat(record.total_cost).toLocaleString()}`);
       if (record.tag_number) parts.push(`Tag: ${record.tag_number}`);
-      if (record.current_company) parts.push(`Company: ${record.current_company}`);
+      if (record.current_company) parts.push(`LOB: ${record.current_company}`);
       return parts.join(" | ") || JSON.stringify(parsed);
     }
     
@@ -396,7 +398,7 @@ const handleExportClick = () => {
       if (parsed.category) parts.push(`Category: ${parsed.category}`);
       if (parsed.total_cost) parts.push(`Cost: ₱${parseFloat(parsed.total_cost).toLocaleString()}`);
       if (parsed.status) parts.push(`Status: ${parsed.status}`);
-      if (parsed.company) parts.push(`Company: ${parsed.company}`);
+      if (parsed.company) parts.push(`LOB: ${parsed.company}`);
       return parts.join(" | ");
     }
     
@@ -648,17 +650,28 @@ const handleExportClick = () => {
         .logout-btn {
           display: flex; align-items: center; justify-content: center; gap: 8px;
           width: 100%;
-          font-size: 14px; font-weight: 500;
-          color: #9ca3af; background: none; border: none; cursor: pointer;
-          transition: color 0.15s;
+          font-size: 13px; font-weight: 600;
+          color: #ef4444; 
+          background: #fff; 
+          border: 1px solid #fee2e2; 
+          cursor: pointer;
+          transition: all 0.2s ease;
           white-space: nowrap;
           flex-shrink: 0;
-          padding: 10px;
-          border-radius: 10px;
+          padding: 12px;
+          border-radius: 14px;
+          margin-top: 12px;
+          box-shadow: 0 2px 5px rgba(239,68,68,0.05);
         }
         .logout-btn:hover { 
           color: #dc2626; 
-          background: #fff5f5;
+          background: #fef2f2;
+          border-color: #fecaca;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(220,38,38,0.1);
+        }
+        .logout-btn:active {
+          transform: translateY(0);
         }
 
         /* ── PAGE LAYOUT ── */
@@ -965,7 +978,18 @@ const handleExportClick = () => {
         .dark .user-greeting { color: #737373; }
         .dark .role-badge { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.3); color: #fca5a5; }
         .dark .user-avatar-ring { border-color: rgba(220,38,38,0.3); }
-        .dark .logout-btn:hover { background: rgba(220,38,38,0.1); }
+        .dark .logout-btn {
+          background: rgba(26,26,26,0.95);
+          border-color: #3f2a2a;
+          color: #f87171;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .dark .logout-btn:hover { 
+          background: #450a0a;
+          border-color: #7f1d1d;
+          color: #fca5a5;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
         .dark .page-title { color: #f5f5f5; }
         .dark .page-subtitle { color: #737373; }
         .dark .stat-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }

@@ -77,7 +77,7 @@ const DashboardCharts = ({ assets }) => {
       .slice(0, 10);
   }, [assets]);
 
-  // Calculate data for Bar Chart - Assets by Company
+  // Calculate data for Bar Chart - Assets by LOB
   const companyData = React.useMemo(() => {
     const companyCounts = assets.reduce((acc, asset) => {
       const company = asset.current_company || "Unknown";
@@ -211,9 +211,9 @@ const DashboardCharts = ({ assets }) => {
           </div>
         </div>
 
-        {/* Bar Chart - Assets by Company */}
+        {/* Bar Chart - Assets by LOB */}
         <div className="chart-card">
-          <h3 className="chart-title">Asset Count by Company</h3>
+          <h3 className="chart-title">Asset Count by LOB</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={companyData}>

@@ -117,7 +117,7 @@ const AssetTable = ({ assets, refreshData }) => {
   };
 
   const handleTransfer = async (asset) => {
-    const destination = prompt("Enter Destination Company Name:");
+    const destination = prompt("Enter Destination LOB:");
     if (!destination) return;
 
     const exportData = {
@@ -471,7 +471,7 @@ const AssetTable = ({ assets, refreshData }) => {
               <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#ef4444", marginBottom: "12px" }}>Logistics</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Purchase Date</label><input type="date" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Company</label><select name="current_company" value={editForm.current_company || "HQ"} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }}><option value="HQ">HQ</option><option value="Company A">Company A</option><option value="Company B">Company B</option></select></div>
+                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>LOB</label><select name="current_company" value={editForm.current_company || "HO"} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }}><option value="HO">HO</option><option value="CY Caloocan">CY Caloocan</option><option value="CY Bustos">CY Bustos</option><option value="Chassis Leasing">Chassis Leasing</option><option value="Reefer">Reefer</option><option value="Trucking">Trucking</option><option value="Technical Service">Technical Service</option><option value="Outports">Outports</option><option value="CY Valenzuela">CY Valenzuela</option></select></div>
                 <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Location</label><input name="location" value={editForm.location || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
                 <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Assigned To</label><input name="assigned_to" value={editForm.assigned_to || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
               </div>

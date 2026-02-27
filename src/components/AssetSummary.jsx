@@ -95,10 +95,10 @@ const MODAL_STYLES = `
     flex-shrink: 0;
   }
   .as-icon-red    { background: linear-gradient(135deg, #dc2626, #f43f5e); box-shadow: 0 3px 12px rgba(220,38,38,0.32); }
-  .as-icon-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 3px 12px rgba(217,119,6,0.30); }
+  .as-icon-amber  { background: linear-gradient(135deg, #ef4444, #f87171); box-shadow: 0 3px 12px rgba(239,68,68,0.30); }
   .as-icon-danger { background: linear-gradient(135deg, #991b1b, #dc2626); box-shadow: 0 3px 12px rgba(153,27,27,0.32); }
-  .as-icon-blue   { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 12px rgba(37,99,235,0.30); }
-  .as-icon-indigo { background: linear-gradient(135deg, #4338ca, #6366f1); box-shadow: 0 3px 12px rgba(67,56,202,0.30); }
+  .as-icon-blue   { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 3px 12px rgba(220,38,38,0.30); }
+  .as-icon-indigo { background: linear-gradient(135deg, #b91c1c, #dc2626); box-shadow: 0 3px 12px rgba(185,28,28,0.30); }
 
   .as-header-titles { min-width: 0; }
   .as-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -234,12 +234,12 @@ const MODAL_STYLES = `
   .as-btn-primary:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
   .as-btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
   .as-btn-red    { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 4px 16px rgba(220,38,38,0.28); }
-  .as-btn-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 4px 16px rgba(217,119,6,0.26); }
-  .as-btn-indigo { background: linear-gradient(135deg, #4338ca, #6366f1); box-shadow: 0 4px 16px rgba(67,56,202,0.26); }
+  .as-btn-amber  { background: linear-gradient(135deg, #ef4444, #f87171); box-shadow: 0 4px 16px rgba(239,68,68,0.26); }
+  .as-btn-indigo { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 4px 16px rgba(220,38,38,0.26); }
   .as-btn-danger { background: linear-gradient(135deg, #991b1b, #dc2626); box-shadow: 0 4px 16px rgba(153,27,27,0.30); }
   .as-btn-red:hover:not(:disabled)    { box-shadow: 0 7px 22px rgba(220,38,38,0.38); }
-  .as-btn-amber:hover:not(:disabled)  { box-shadow: 0 7px 22px rgba(217,119,6,0.34); }
-  .as-btn-indigo:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(67,56,202,0.34); }
+  .as-btn-amber:hover:not(:disabled)  { box-shadow: 0 7px 22px rgba(239,68,68,0.34); }
+  .as-btn-indigo:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(220,38,38,0.34); }
   .as-btn-danger:hover:not(:disabled) { box-shadow: 0 7px 22px rgba(153,27,27,0.38); }
 
   .as-btn-back {
@@ -435,10 +435,10 @@ const TABLE_STYLES = `
   }
   .at-action-btn:first-child { margin-left: 0; }
   .at-action-btn:hover { transform: translateY(-1px); }
-  .at-btn-view   { color: #3b82f6; } .at-btn-view:hover   { background: #eff6ff; border-color: #bfdbfe; }
-  .at-btn-edit   { color: #6366f1; } .at-btn-edit:hover   { background: #eef2ff; border-color: #c7d2fe; }
-  .at-btn-xfer   { color: #d97706; } .at-btn-xfer:hover   { background: #fffbeb; border-color: #fde68a; }
-  .at-btn-dispos { color: #dc2626; } .at-btn-dispos:hover { background: #fef2f2; border-color: #fecaca; }
+  .at-btn-view   { color: #ef4444; } .at-btn-view:hover   { background: #fef2f2; border-color: #fecaca; }
+  .at-btn-edit   { color: #dc2626; } .at-btn-edit:hover   { background: #fef2f2; border-color: #fecaca; }
+  .at-btn-xfer   { color: #b91c1c; } .at-btn-xfer:hover   { background: #fef2f2; border-color: #fecaca; }
+  .at-btn-dispos { color: #991b1b; } .at-btn-dispos:hover { background: #fef2f2; border-color: #fecaca; }
   .at-btn-del    { color: #9ca3af; } .at-btn-del:hover    { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
 
   .at-btn-approve { color: #16a34a; } .at-btn-approve:hover { background: #f0fdf4; border-color: #bbf7d0; }
@@ -465,10 +465,10 @@ const TABLE_STYLES = `
   .dark .at-status-disposed { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
   .dark .at-status-pending { background: #451a03; color: #fbbf24; border-color: #78350f; }
   .dark .at-existing-badge { background: #312e81; color: #a5b4fc; border-color: #3730a3; }
-  .dark .at-btn-view { color: #60a5fa; }
-  .dark .at-btn-edit { color: #a5b4fc; }
-  .dark .at-btn-xfer { color: #fbbf24; }
-  .dark .at-btn-dispos { color: #fca5a5; }
+  .dark .at-btn-view { color: #fca5a5; }
+  .dark .at-btn-edit { color: #f87171; }
+  .dark .at-btn-xfer { color: #ef4444; }
+  .dark .at-btn-dispos { color: #dc2626; }
   .dark .at-btn-del { color: #737373; }
   .dark .at-btn-approve { color: #4ade80; }
   .dark .at-btn-reject { color: #fca5a5; }
@@ -500,6 +500,11 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
   const [showExportCategoryModal, setShowExportCategoryModal] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
+
+  // Export by LOB state
+  const [showExportLobModal, setShowExportLobModal] = useState(false);
+  const [selectedLobs, setSelectedLobs] = useState([]);
+  const [availableLobs, setAvailableLobs] = useState([]);
 
   // Verify PIN function - used by PinVerificationModal (SECURE)
   const handlePinVerify = async (enteredPin) => {
@@ -653,7 +658,7 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
         "Tag Number": selectedAsset.tag_number,
         Category: selectedAsset.category || "",
         Status: selectedAsset.status || "",
-        Company: selectedAsset.current_company || "",
+        LOB: selectedAsset.current_company || "",
         "Total Cost": selectedAsset.total_cost || 0,
         "Salvage Value": selectedAsset.salvage_value || 0,
         "Useful Life (Years)": selectedAsset.useful_life_years || 0,
@@ -912,6 +917,100 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     }
   };
 
+  // Export by LOB functions
+  const openExportLobModal = () => {
+    const lobs = [...new Set(assets.map(asset => asset.current_company).filter(Boolean))];
+    setAvailableLobs(lobs);
+    setSelectedLobs(lobs);
+    setShowExportLobModal(true);
+  };
+
+  const handleExportByLob = () => {
+    if (selectedLobs.length === 0) {
+      alert("Please select at least one LOB to export.");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const summaryData = [];
+    let grandTotal = 0;
+
+    selectedLobs.forEach(lob => {
+      const lobAssets = assets.filter(asset => asset.current_company === lob);
+      if (lobAssets.length === 0) return;
+
+      const sheetData = lobAssets.map(asset => {
+        const quantity = Number(asset.quantity) || 0;
+        const unitCost = Number(asset.unit_cost) || 0;
+        const totalCost = Number(asset.total_cost) || 0;
+        const salvageValue = Number(asset.salvage_value) || 0;
+        const usefulLifeYears = Number(asset.useful_life_years) || 0;
+        let monthlyAmortization = 0;
+        if (usefulLifeYears > 0) {
+          monthlyAmortization = (totalCost - salvageValue) / (usefulLifeYears * 12);
+        }
+        return {
+          "Tag Number": asset.tag_number || "",
+          "Asset Name": asset.name || "",
+          "Category": asset.category || "",
+          "Status": asset.status || "",
+          "Company": asset.current_company || "",
+          "Quantity": quantity,
+          "Unit Cost": unitCost,
+          "Total Cost": totalCost,
+          "Salvage Value": salvageValue,
+          "Useful Life (Years)": usefulLifeYears,
+          "Purchase Date": asset.purchase_date || "",
+          "Reference Number": asset.reference_number || "",
+          "Serial Number": asset.serial_number || "",
+          "Description": asset.description || "",
+          "Location": asset.location || "",
+          "Assigned To": asset.assigned_to || "",
+          "Monthly Amortization": monthlyAmortization.toFixed(2)
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(sheetData);
+      let sheetName = lob.length > 30 ? lob.substring(0, 30) : lob;
+      // Ensure unique sheet name
+      let uniqueSheetName = sheetName;
+      let counter = 1;
+      while (wb.SheetNames.includes(uniqueSheetName)) {
+          uniqueSheetName = `${sheetName.substring(0, 28)}_${counter}`;
+          counter++;
+      }
+      XLSX.utils.book_append_sheet(wb, ws, uniqueSheetName);
+
+      const lobTotal = lobAssets.reduce((sum, a) => sum + (parseFloat(a.total_cost) || 0), 0);
+      grandTotal += lobTotal;
+      summaryData.push({
+        "LOB": lob,
+        "Asset Count": lobAssets.length,
+        "Total Value": lobTotal
+      });
+    });
+
+    summaryData.push({
+      "LOB": "GRAND TOTAL",
+      "Asset Count": selectedLobs.reduce((sum, lob) => sum + assets.filter(a => a.current_company === lob).length, 0),
+      "Total Value": grandTotal
+    });
+    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Assets_By_LOB_${dateStr}.xlsx`);
+    setShowExportLobModal(false);
+  };
+
+  const toggleLob = (lob) => {
+    if (selectedLobs.includes(lob)) {
+      setSelectedLobs(selectedLobs.filter(l => l !== lob));
+    } else {
+      setSelectedLobs([...selectedLobs, lob]);
+    }
+  };
+
   // Export by Category functions
   const openExportCategoryModal = () => {
     const categories = [...new Set(assets.map(asset => asset.category).filter(Boolean))];
@@ -1023,12 +1122,12 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
           </span>
         )}
         <button 
-          onClick={openExportCategoryModal}
+          onClick={openExportLobModal}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            background: 'linear-gradient(135deg, #4338ca, #6366f1)',
+            background: 'linear-gradient(135deg, #dc2626, #ef4444)',
             color: '#fff',
             fontSize: '13px',
             fontWeight: '600',
@@ -1037,6 +1136,25 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
             border: 'none',
             cursor: 'pointer',
             marginLeft: 'auto'
+          }}
+        >
+          <Building2 size={15} />
+          Export by LOB
+        </button>
+        <button 
+          onClick={openExportCategoryModal}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'linear-gradient(135deg, #b91c1c, #dc2626)',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: '600',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer'
           }}
         >
           <FolderOutput size={15} />
@@ -1053,7 +1171,7 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                 <th>Asset Name</th>
                 <th>Category</th>
                 <th>Status</th>
-                <th>Company</th>
+                <th>LOB</th>
                 <th>Total Cost</th>
                 {showPendingOnly && <th>Payment</th>}
                 <th>Actions</th>
@@ -1176,7 +1294,7 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                     <span className={`as-status-badge ${asStatusClass(selectedAsset.status)}`}>{selectedAsset.status}</span>
                   </div>
                   <div className="as-info-item">
-                    <p className="as-info-label">Company</p>
+                    <p className="as-info-label">LOB</p>
                     <p className="as-info-value">{selectedAsset.current_company || "—"}</p>
                   </div>
                   <div className="as-info-item">
@@ -1313,13 +1431,19 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                   <p className="as-warn-text">Transferring from <strong>{selectedAsset.current_company}</strong>. A proof-of-transfer Excel file will be downloaded automatically.</p>
                 </div>
                 <label className="as-field-label" style={{ marginBottom: 8, display: "flex" }}>
-                  <Building2 size={13} /> Destination Company
+                  <Building2 size={13} /> Destination LOB
                 </label>
                 <select className="as-select" value={transferCompany} onChange={(e) => setTransferCompany(e.target.value)}>
-                  <option value="">Select company…</option>
-                  <option value="Company A">Company A</option>
-                  <option value="Company B">Company B</option>
-                  <option value="HQ">HQ</option>
+                  <option value="">Select LOB…</option>
+                  <option value="CY Caloocan">CY Caloocan</option>
+                  <option value="CY Bustos">CY Bustos</option>
+                  <option value="Chassis Leasing">Chassis Leasing</option>
+                  <option value="Reefer">Reefer</option>
+                  <option value="Trucking">Trucking</option>
+                  <option value="Technical Service">Technical Service</option>
+                  <option value="Outports">Outports</option>
+                  <option value="CY Valenzuela">CY Valenzuela</option>
+                  <option value="HO">HO</option>
                 </select>
               </div>
               <div className="as-footer">
@@ -1475,11 +1599,17 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                     <input type="date" className="as-input" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} />
                   </div>
                   <div className="as-field">
-                    <label className="as-field-label"><Building2 size={13} /> Company</label>
+                    <label className="as-field-label"><Building2 size={13} /> LOB</label>
                     <select className="as-input" name="current_company" value={editForm.current_company || "HQ"} onChange={handleEditChange} style={{ cursor: "pointer" }}>
-                      <option value="HQ">HQ</option>
-                      <option value="Company A">Company A</option>
-                      <option value="Company B">Company B</option>
+                      <option value="HO">HO</option>
+                      <option value="CY Caloocan">CY Caloocan</option>
+                      <option value="CY Bustos">CY Bustos</option>
+                      <option value="Chassis Leasing">Chassis Leasing</option>
+                      <option value="Reefer">Reefer</option>
+                      <option value="Trucking">Trucking</option>
+                      <option value="Technical Service">Technical Service</option>
+                      <option value="Outports">Outports</option>
+                      <option value="CY Valenzuela">CY Valenzuela</option>
                     </select>
                   </div>
                   <div className="as-field">
@@ -1631,6 +1761,115 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                 className="as-btn-primary as-btn-indigo" 
                 onClick={handleExportByCategory}
                 disabled={selectedCategories.length === 0}
+              >
+                <Download size={15} strokeWidth={2.5} /> Export to Excel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Export by LOB Modal */}
+      {showExportLobModal && createPortal(
+        <div className="as-overlay" onClick={(e) => e.target === e.currentTarget && setShowExportLobModal(false)}>
+          <div className="as-modal as-modal-md">
+            <div className="as-header">
+              <div className="as-header-left">
+                <div className="as-icon-wrap as-icon-amber">
+                  <Building2 size={19} color="#fff" strokeWidth={2.2} />
+                </div>
+                <div className="as-header-titles">
+                  <p className="as-title">Export by LOB</p>
+                  <p className="as-subtitle">Select LOBs to include in export</p>
+                </div>
+              </div>
+              <button className="as-close" onClick={() => setShowExportLobModal(false)}>
+                <X size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+            <div className="as-body">
+              {availableLobs.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>
+                  No LOBs found in assets.
+                </p>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                    <button 
+                      onClick={() => setSelectedLobs([...availableLobs])}
+                      style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button 
+                      onClick={() => setSelectedLobs([])}
+                      style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        background: '#f3f4f6',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                  <div style={{ 
+                    maxHeight: '300px', 
+                    overflowY: 'auto',
+                    border: '1px solid #f3e8e8',
+                    borderRadius: '10px',
+                    padding: '8px'
+                  }}>
+                    {availableLobs.map(lob => (
+                      <label 
+                        key={lob}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#fafafa'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLobs.includes(lob)}
+                          onChange={() => toggleLob(lob)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '14px', color: '#374151' }}>{lob}</span>
+                        <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>
+                          {assets.filter(a => a.current_company === lob).length} assets
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '12px', textAlign: 'center' }}>
+                    {selectedLobs.length} of {availableLobs.length} LOBs selected
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="as-footer">
+              <button className="as-btn-cancel" onClick={() => setShowExportLobModal(false)}>Cancel</button>
+              <button 
+                className="as-btn-primary as-btn-amber" 
+                onClick={handleExportByLob}
+                disabled={selectedLobs.length === 0}
               >
                 <Download size={15} strokeWidth={2.5} /> Export to Excel
               </button>

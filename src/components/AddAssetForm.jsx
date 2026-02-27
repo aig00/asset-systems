@@ -36,7 +36,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
     purchase_date: "",
     location: "",
     assigned_to: "",
-    current_company: "HQ",
+    current_company: "HO",
     is_existing: false,
   });
 
@@ -614,7 +614,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
 
                 <div className="field">
                   <label className="field-label">
-                    <Building2 size={12} /> Current Company{" "}
+                    <Building2 size={12} /> Current LOB{" "}
                     <span className="required-dot" />
                   </label>
                   <select
@@ -623,9 +623,15 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
                     onChange={handleChange}
                     className="field-input"
                   >
-                    <option value="HQ">HQ</option>
-                    <option value="Company A">Company A</option>
-                    <option value="Company B">Company B</option>
+                    <option value="HO">HO</option>
+                    <option value="CY Caloocan">CY Caloocan</option>
+                    <option value="CY Bustos">CY Bustos</option>
+                    <option value="Chassis Leasing">Chassis Leasing</option>
+                    <option value="Reefer">Reefer</option>
+                    <option value="Trucking">Trucking</option>
+                    <option value="Technical Service">Technical Service</option>
+                    <option value="Outports">Outports</option>
+                    <option value="CY Valenzuela">CY Valenzuela</option>
                   </select>
                 </div>
 
