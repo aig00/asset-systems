@@ -1,26 +1,20 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, role, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
+/**
+ * ProtectedRoute
+ * 
+ * A wrapper component that checks for an authenticated user.
+ * If no user is found, it redirects to the landing/login page.
+ */
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
-    return <Navigate to="/" />;
-  }
-
-  // If allowedRoles is specified, check if user has the required role
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    // Redirect to dashboard if user doesn't have permission
-    return <Navigate to="/dashboard" replace />;
+    // Redirect to the login page (assumed to be '/'), saving the current location
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return children;

@@ -178,7 +178,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
     // If there's an initial downpayment amount, create a transaction
     const initialAmount = parseFloat(addAssetForm.downpayment_amount || 0);
     if (initialAmount > 0 && assetDataResult && assetDataResult[0]) {
-      await supabase.from("downpayment_transactions").insert([
+      const { error: txnError } = await supabase.from("downpayment_transactions").insert([
         {
           asset_id: assetDataResult[0].id,
           amount: initialAmount,
@@ -187,6 +187,11 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
           created_by: userEmail,
         },
       ]);
+
+      if (txnError) {
+        console.error("Error recording initial downpayment:", txnError);
+        alert(`Asset created, but the initial downpayment failed to save: ${txnError.message}. Please record it manually.`);
+      }
     }
 
     // Log the asset creation
