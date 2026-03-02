@@ -50,7 +50,7 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
 };
 
 const AppRoutes = () => {
-  useAutoRefresh(55); // Refreshes if idle for > 55 minutes
+  useAutoRefresh(10); // Refreshes if idle for > 55 minutes
 
   return (
     <Routes>
