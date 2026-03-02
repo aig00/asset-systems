@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ExcelJS from "exceljs";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import NCT_logong from "../assets/NCT_logong.png";
 import {
   LayoutDashboard,
@@ -458,6 +459,7 @@ const handleExportClick = () => {
 
   return (
     <>
+      <SpeedInsights />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
