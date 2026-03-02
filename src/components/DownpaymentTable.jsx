@@ -283,7 +283,6 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   // Handle deleting a transaction
   const handleDeleteTransaction = async () => {
     if (!selectedTransaction) return;
-    if (!confirm("Are you sure you want to delete this transaction?")) return;
 
     setLoading(true);
     const { error } = await supabase
@@ -307,7 +306,6 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   // Handle deleting an asset and all its transactions
   const handleDeleteAsset = async () => {
     if (!selectedAsset) return;
-    if (!confirm(`Are you sure you want to delete the asset "${selectedAsset.name}" and all its transactions? This action cannot be undone.`)) return;
 
     setLoading(true);
     const { error } = await supabase

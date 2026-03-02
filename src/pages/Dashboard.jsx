@@ -28,6 +28,7 @@ import AddAssetForm from "../components/AddAssetForm";
 import AssetSummary from "../components/AssetSummary";
 import DashboardCharts from "../components/DashboardCharts";
 import DownpaymentTable from "../components/DownpaymentTable";
+import { SignOutModal } from "./SignOutModal";
 
 const Dashboard = () => {
 const { user, role, verifyPin, checkPinLockStatus } = useAuth();
@@ -52,6 +53,8 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [pinAction, setPinAction] = useState("");
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Fetch transactions from the new table
   const fetchTransactions = async () => {
@@ -232,21 +235,29 @@ const fetchLogs = async () => {
     setLogs(filteredLogs);
   };
 
-const handleLogout = async () => {
-    if (!window.confirm("Are you sure you want to sign out?")) return;
+  const handleLogout = () => {
+    setShowSignOutModal(true);
+  };
 
-    await supabase
-      .from("logs")
-      .insert({ 
-        user_email: user?.email, 
+  const handleConfirmSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await supabase.from("logs").insert({
+        user_email: user?.email,
         action_type: "LOGOUT",
-        details: { 
+        details: {
           logout_time: new Date().toISOString(),
-          message: "User logged out"
-        }
+          message: "User logged out",
+        },
       });
-    sessionStorage.removeItem("hasLoggedLogin");
-    await supabase.auth.signOut();
+      sessionStorage.removeItem("hasLoggedLogin");
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setIsSigningOut(false);
+      setShowSignOutModal(false);
+    }
   };
 
   const exportLogs = async () => {
@@ -409,47 +420,6 @@ const handleExportClick = () => {
     return "log-badge-gray";
   };
 
-  // Format log details for display
-  const formatLogDetails = (details) => {
-    if (!details) return "";
-    
-    // Parse if string
-    const parsed = typeof details === "string" ? JSON.parse(details) : details;
-    
-    // Check for new_record format (from database trigger)
-    if (parsed.new_record) {
-      const record = parsed.new_record;
-      const parts = [];
-      if (record.name) parts.push(`Name: ${record.name}`);
-      if (record.status) parts.push(`Status: ${record.status}`);
-      if (record.category) parts.push(`Category: ${record.category}`);
-      if (record.total_cost) parts.push(`Cost: ₱${parseFloat(record.total_cost).toLocaleString()}`);
-      if (record.tag_number) parts.push(`Tag: ${record.tag_number}`);
-      if (record.current_company) parts.push(`LOB: ${record.current_company}`);
-      return parts.join(" | ") || JSON.stringify(parsed);
-    }
-    
-    // Check for our custom message format
-    if (parsed.message) {
-      return parsed.message;
-    }
-    
-    // Check for other known formats
-    if (parsed.asset_name) {
-      const parts = [];
-      parts.push(`Name: ${parsed.asset_name}`);
-      if (parsed.tag_number) parts.push(`Tag: ${parsed.tag_number}`);
-      if (parsed.category) parts.push(`Category: ${parsed.category}`);
-      if (parsed.total_cost) parts.push(`Cost: ₱${parseFloat(parsed.total_cost).toLocaleString()}`);
-      if (parsed.status) parts.push(`Status: ${parsed.status}`);
-      if (parsed.company) parts.push(`LOB: ${parsed.company}`);
-      return parts.join(" | ");
-    }
-    
-    // Fallback to JSON string
-    return JSON.stringify(parsed);
-  };
-
   const statCards = [
     {
       label: "Total Asset Value",
@@ -523,11 +493,11 @@ const handleExportClick = () => {
             0 4px 24px rgba(220,38,38,0.12),
             0 12px 48px rgba(0,0,0,0.08);
           display: flex; flex-direction: column;
-          overflow: hidden;
+          overflow-y: auto;
         }
         .nav-inner {
           width: 100%;
-          height: 100%;
+          min-height: 100%;
           display: flex;
           flex-direction: column;
           padding: 20px 16px;
@@ -922,7 +892,7 @@ const handleExportClick = () => {
           border-bottom: 1px solid #fde8e8;
           padding: 13px 28px;
           display: grid;
-          grid-template-columns: 1.4fr 1.6fr 1fr 2fr;
+          grid-template-columns: 1.4fr 1.6fr 1fr;
           gap: 16px;
           font-size: 12px; font-weight: 700;
           letter-spacing: 0.12em; text-transform: uppercase;
@@ -938,7 +908,7 @@ const handleExportClick = () => {
         .log-scroll::-webkit-scrollbar-thumb { background: #fca5a5; border-radius: 4px; }
         .log-row {
           display: grid;
-          grid-template-columns: 1.4fr 1.6fr 1fr 2fr;
+          grid-template-columns: 1.4fr 1.6fr 1fr;
           gap: 16px;
           padding: 20px 28px;
           border-bottom: 1px solid #fff1f1;
@@ -949,7 +919,6 @@ const handleExportClick = () => {
         .log-row:last-child { border-bottom: none; }
         .log-time { font-size: 14px; color: #6b7280; font-family: monospace; }
         .log-user { font-size: 14px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .log-detail { font-size: 13px; color: #9ca3af; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .log-badge {
           font-size: 11px; font-weight: 700;
           letter-spacing: 0.08em; text-transform: uppercase;
@@ -1098,33 +1067,6 @@ const handleExportClick = () => {
 
             {/* Bottom Section - User Info & Logout */}
             <div className="nav-bottom">
-              {/* Theme Toggle Button */}
-              <button 
-                onClick={toggleTheme}
-                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '12px',
-                  borderRadius: '10px',
-                  border: '1.5px solid',
-                  borderColor: isDark ? '#3f2a2a' : '#fecaca',
-                  background: isDark ? '#1a1515' : '#fff5f5',
-                  color: isDark ? '#fca5a5' : '#dc2626',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {isDark ? <Sun size={16} /> : <Moon size={16} />}
-                {isDark ? 'Light Mode' : 'Dark Mode'}
-              </button>
-              
               <div className="user-chip" style={isDark ? { background: 'rgba(26,21,21,0.95)', borderColor: '#3f2a2a' } : {}}>
                 <div className="user-avatar-wrapper">
                   <div className="user-avatar">
@@ -1144,9 +1086,35 @@ const handleExportClick = () => {
                   <span className="user-greeting">Welcome back!</span>
                 </div>
               </div>
-              <button className="logout-btn" onClick={handleLogout}>
-                <LogOut size={16} /> Sign Out
-              </button>
+              
+              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                <button 
+                  onClick={toggleTheme}
+                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '48px',
+                    padding: '12px',
+                    borderRadius: '14px',
+                    border: '1.5px solid',
+                    borderColor: isDark ? '#3f2a2a' : '#fecaca',
+                    background: isDark ? '#1a1515' : '#fff5f5',
+                    color: isDark ? '#fca5a5' : '#dc2626',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+
+                <button className="logout-btn" onClick={handleLogout} title="Sign Out" style={{ marginTop: 0, width: 'auto', flex: 1 }}>
+                  <LogOut size={20} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           </div>
         </nav>
@@ -1297,7 +1265,6 @@ const handleExportClick = () => {
                   <span>Timestamp</span>
                   <span>User</span>
                   <span>Action</span>
-                  <span>Details</span>
                 </div>
                 <div className="log-scroll">
                   {logs.length === 0 ? (
@@ -1324,9 +1291,6 @@ const handleExportClick = () => {
                           >
                             {log.action_type}
                           </span>
-                        </span>
-                        <span className="log-detail">
-                          {formatLogDetails(log.details)}
                         </span>
                       </div>
                     ))
@@ -1573,6 +1537,13 @@ const handleExportClick = () => {
           </div>
         </div>
       )}
+
+      <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleConfirmSignOut}
+        isSigningOut={isSigningOut}
+      />
     </>
   );
 };
