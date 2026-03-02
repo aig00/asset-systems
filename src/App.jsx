@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useAutoRefresh } from "./useAutoRefresh";
 
 // Wrapper component to redirect logged-in users to dashboard
 const LoginRoute = ({ children }) => {
@@ -48,27 +49,35 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+const AppRoutes = () => {
+  useAutoRefresh(55); // Refreshes if idle for > 55 minutes
+
+  return (
+    <Routes>
+      <Route path="/" element={
+        <LoginRoute>
+          <Login />
+        </LoginRoute>
+      } />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={
-                <LoginRoute>
-                  <Login />
-                </LoginRoute>
-              } />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+            <AppRoutes />
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
