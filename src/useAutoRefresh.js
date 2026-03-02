@@ -7,7 +7,7 @@ export const useAutoRefresh = (timeoutMinutes = 30) => {
     const resetTimer = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        window.location.reload();
+        window.location.href = '/';
       }, timeoutMinutes * 60 * 1000);
     };
 
