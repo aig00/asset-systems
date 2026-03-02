@@ -18,6 +18,8 @@ After adding the enum values, run:
 sql
 -- Make a user an admin
 update profiles set role = 'admin' where email = 'davegabrieljazmin@gmail.com';
+    
+
 
 -- Make a user an accountant
 update profiles set role = 'accountant' where email = 'aigoo00ww@gmail.com';

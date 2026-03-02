@@ -51,6 +51,7 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
+  const [pinAction, setPinAction] = useState("");
 
   // Fetch transactions from the new table
   const fetchTransactions = async () => {
@@ -281,6 +282,27 @@ const handleLogout = async () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const deleteLogs = async () => {
+    if (!window.confirm("Are you sure you want to PERMANENTLY DELETE all system logs? This action cannot be undone.")) return;
+
+    const { error } = await supabase
+      .from("logs")
+      .delete()
+      .neq("id", 0);
+
+    if (error) {
+      console.error("Error deleting logs:", error);
+      alert("Failed to delete logs");
+    } else {
+      await supabase.from("logs").insert({ 
+        user_email: user?.email, 
+        action_type: "DELETE_LOGS",
+        details: { message: "All logs cleared by admin" }
+      });
+      fetchLogs();
+    }
+  };
+
 const handleExportClick = () => {
     if (role !== "admin" && role !== "head")
       return alert("Access Restricted: Only Admin or Head can export logs.");
@@ -292,12 +314,29 @@ const handleExportClick = () => {
       return;
     }
     
+    setPinAction("export");
     setShowPinModal(true);
     setPinInput("");
     setPinError("");
   };
 
-  const verifyPinAndExport = async () => {
+  const handleDeleteLogsClick = () => {
+    if (role !== "admin")
+      return alert("Access Restricted: Only Admin can delete logs.");
+    
+    const lockStatus = checkPinLockStatus();
+    if (lockStatus.isLocked) {
+      setPinError(`Account locked. Try again in ${lockStatus.remainingTime}`);
+      return;
+    }
+    
+    setPinAction("delete");
+    setShowPinModal(true);
+    setPinInput("");
+    setPinError("");
+  };
+
+  const verifyPinAndAction = async () => {
     if (!pinInput || pinInput.length !== 4) {
       setPinError("Please enter a 4-digit PIN");
       return;
@@ -307,7 +346,11 @@ const handleExportClick = () => {
     const result = await verifyPin(pinInput);
     
     if (result.success) {
-      exportLogs();
+      if (pinAction === "export") {
+        exportLogs();
+      } else if (pinAction === "delete") {
+        deleteLogs();
+      }
       setShowPinModal(false);
     } else {
       setPinError(result.error || "Incorrect PIN. Please try again.");
@@ -357,7 +400,8 @@ const handleExportClick = () => {
     if (
       type === "DELETE_ASSET" ||
       type === "DISPOSE_ASSET" ||
-      type === "LOGOUT"
+      type === "LOGOUT" ||
+      type === "DELETE_LOGS"
     )
       return "log-badge-red";
     if (type === "CREATE_ASSET" || type === "LOGIN") return "log-badge-green";
@@ -1239,9 +1283,14 @@ const handleExportClick = () => {
                     {logs.length} entries recorded
                   </p>
                 </div>
-                <button className="btn-outline" onClick={handleExportClick}>
-                  <Download size={17} /> Export XLSX
-                </button>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button className="btn-outline" onClick={handleExportClick}>
+                    <Download size={17} /> Export XLSX
+                  </button>
+                  <button className="btn-outline" onClick={handleDeleteLogsClick} style={{ borderColor: "#fecaca", color: "#dc2626", background: "#fff1f1" }}>
+                    <Trash2 size={17} /> Clear Logs
+                  </button>
+                </div>
               </div>
               <div className="content-card anim d1">
                 <div className="log-table-head">
@@ -1460,7 +1509,7 @@ const handleExportClick = () => {
                 className="modal-title"
                 style={{ display: "flex", alignItems: "center", gap: "10px" }}
               >
-                <Lock size={18} color="#dc2626" /> Admin Authorization
+                <Lock size={18} color="#dc2626" /> {pinAction === "delete" ? "Confirm Deletion" : "Admin Authorization"}
               </h3>
               <button
                 className="close-btn"
@@ -1479,7 +1528,7 @@ const handleExportClick = () => {
                 }}
               >
                 This action is restricted. Please enter the{" "}
-                <strong>Admin PIN</strong> to download the system logs.
+                <strong>Admin PIN</strong> to {pinAction === "delete" ? "permanently delete all logs" : "download the system logs"}.
               </p>
               <input
                 type="password"
@@ -1516,9 +1565,9 @@ const handleExportClick = () => {
                   justifyContent: "center",
                   marginTop: "24px",
                 }}
-                onClick={verifyPinAndExport}
+                onClick={verifyPinAndAction}
               >
-                Verify & Download
+                {pinAction === "delete" ? "Verify & Delete" : "Verify & Download"}
               </button>
             </div>
           </div>
