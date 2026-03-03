@@ -56,6 +56,8 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const [pinAction, setPinAction] = useState("");
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   // Fetch transactions from the new table
   const fetchTransactions = async () => {
@@ -156,6 +158,7 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   }, [amortizationSchedule]);
 
   const fetchAssets = async () => {
+    setIsDataLoading(true);
     const { data, error } = await supabase
       .from("assets")
       .select("*")
@@ -205,6 +208,7 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
         calculateStats(updatedData);
       }
     }
+    setIsDataLoading(false);
   };
 
   const calculateStats = (data) => {
@@ -496,6 +500,13 @@ const handleExportClick = () => {
             0 12px 48px rgba(0,0,0,0.08);
           display: flex; flex-direction: column;
           overflow-y: auto;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-bar:hover {
+          transform: translateY(-2px);
+          box-shadow: 
+            0 8px 32px rgba(220,38,38,0.15),
+            0 16px 64px rgba(0,0,0,0.12);
         }
         .nav-inner {
           width: 100%;
@@ -718,21 +729,66 @@ const handleExportClick = () => {
         }
         .page-title {
           font-family: 'Syne', sans-serif;
-          font-size: 32px; font-weight: 800; color: #111827;
+          font-size: 28px; font-weight: 800; color: #111827;
           line-height: 1.15;
         }
-        .page-subtitle { font-size: 16px; color: #9ca3af; margin-top: 5px; }
+        .page-subtitle { font-size: 14px; color: #9ca3af; margin-top: 5px; }
 
         /* ── STAT CARDS ── */
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 28px;
-          margin-bottom: 32px;
+          gap: 32px;
+          margin-bottom: 40px;
           width: 100%;
         }
-        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 560px)  { .stats-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+        @media (max-width: 560px)  { .stats-grid { grid-template-columns: 1fr; gap: 20px; } }
+        @media (max-width: 400px)  { .stats-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+        /* Enhanced stat card styling for better visual hierarchy */
+        .stat-card-top {
+          display: flex; justify-content: space-between; align-items: flex-start;
+          margin-bottom: 16px;
+        }
+        .stat-icon-box {
+          width: 44px; height: 44px;
+          border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
+          transition: transform 0.2s ease;
+        }
+        .stat-card:hover .stat-icon-box {
+          transform: scale(1.05);
+        }
+        .stat-badge {
+          font-size: 11px; font-weight: 700;
+          letter-spacing: 0.1em; text-transform: uppercase;
+          background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
+          padding: 3px 9px; border-radius: 20px;
+          line-height: 1.6;
+          box-shadow: 0 1px 4px rgba(220,38,38,0.1);
+        }
+        .stat-label { font-size: 14px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
+        .stat-value {
+          font-family: 'Syne', sans-serif;
+          font-size: 24px; font-weight: 800; color: #111827;
+          line-height: 1.1;
+          /* Allow text wrapping for long numbers */
+          overflow: visible;
+          text-overflow: unset;
+          white-space: normal;
+          word-wrap: break-word;
+          word-break: break-all;
+        }
+        .stat-footer {
+          display: flex; align-items: center; gap: 4px;
+          margin-top: 12px;
+          font-size: 12px; color: #d1d5db;
+        }
 
         .stat-card {
           position: relative;
@@ -741,7 +797,7 @@ const handleExportClick = () => {
           border: 1px solid #fde8e8;
           box-shadow: 0 3px 20px rgba(220,38,38,0.08);
           overflow: hidden;
-          padding: 32px 32px 28px;
+          padding: 28px 28px 24px;
           transition: transform 0.22s cubic-bezier(.22,.61,.36,1), box-shadow 0.22s ease;
           min-width: 0;
         }
@@ -757,36 +813,22 @@ const handleExportClick = () => {
         }
         .stat-card-top {
           display: flex; justify-content: space-between; align-items: flex-start;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
         .stat-icon-box {
-          width: 44px; height: 44px;
+          width: 40px; height: 40px;
           border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
         .stat-badge {
-          font-size: 11px; font-weight: 700;
+          font-size: 10px; font-weight: 700;
           letter-spacing: 0.1em; text-transform: uppercase;
           background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
-          padding: 3px 9px; border-radius: 20px;
+          padding: 3px 8px; border-radius: 20px;
           line-height: 1.6;
         }
-        .stat-label { font-size: 14px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
-        .stat-value {
-          font-family: 'Syne', sans-serif;
-          font-size: 28px; font-weight: 800; color: #111827;
-          line-height: 1.1;
-          /* Prevent overflow on long numbers */
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .stat-footer {
-          display: flex; align-items: center; gap: 4px;
-          margin-top: 12px;
-          font-size: 13px; color: #d1d5db;
-        }
+        .stat-label { font-size: 13px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
 
         /* ── PORTFOLIO HEALTH ── */
         .health-card {
@@ -820,11 +862,11 @@ const handleExportClick = () => {
         .metric-label { font-size: 14px; color: #9ca3af; font-weight: 500; margin-bottom: 5px; }
         .metric-value {
           font-family: 'Syne', sans-serif;
-          font-size: 28px; font-weight: 800; color: #111827;
+          font-size: 24px; font-weight: 800; color: #111827;
           display: flex; align-items: baseline; gap: 6px;
         }
-        .metric-unit { font-size: 14px; color: #9ca3af; font-weight: 400; font-family: 'DM Sans', sans-serif; }
-        .metric-sub { font-size: 13px; color: #d1d5db; margin-top: 4px; }
+        .metric-unit { font-size: 13px; color: #9ca3af; font-weight: 400; font-family: 'DM Sans', sans-serif; }
+        .metric-sub { font-size: 12px; color: #d1d5db; margin-top: 4px; }
         .prog-track {
           width: 160px; height: 6px;
           background: #fde8e8;
@@ -868,7 +910,27 @@ const handleExportClick = () => {
           box-shadow: 0 3px 20px rgba(220,38,38,0.06);
           overflow: hidden;
           width: 100%;
+          position: relative;
         }
+        .loading-overlay {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(255,255,255,0.8);
+          backdrop-filter: blur(2px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          border-radius: 18px;
+        }
+        .loading-spinner {
+          width: 32px; height: 32px;
+          border: 3px solid #fde8e8;
+          border-top: 3px solid #dc2626;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .btn-red {
           display: inline-flex; align-items: center; gap: 8px;
           background: linear-gradient(135deg, #dc2626, #ef4444);
@@ -894,7 +956,7 @@ const handleExportClick = () => {
           border-bottom: 1px solid #fde8e8;
           padding: 13px 28px;
           display: grid;
-          grid-template-columns: 1.4fr 1.6fr 1fr;
+          grid-template-columns: 1.2fr 1.2fr 1fr 2fr;
           gap: 16px;
           font-size: 12px; font-weight: 700;
           letter-spacing: 0.12em; text-transform: uppercase;
@@ -910,7 +972,7 @@ const handleExportClick = () => {
         .log-scroll::-webkit-scrollbar-thumb { background: #fca5a5; border-radius: 4px; }
         .log-row {
           display: grid;
-          grid-template-columns: 1.4fr 1.6fr 1fr;
+          grid-template-columns: 1.2fr 1.2fr 1fr 2fr;
           gap: 16px;
           padding: 20px 28px;
           border-bottom: 1px solid #fff1f1;
@@ -921,6 +983,8 @@ const handleExportClick = () => {
         .log-row:last-child { border-bottom: none; }
         .log-time { font-size: 14px; color: #6b7280; font-family: monospace; }
         .log-user { font-size: 14px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .log-action { font-size: 14px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .log-details { font-size: 13px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .log-badge {
           font-size: 11px; font-weight: 700;
           letter-spacing: 0.08em; text-transform: uppercase;
@@ -1263,10 +1327,16 @@ const handleExportClick = () => {
                 </div>
               </div>
               <div className="content-card anim d1">
+                {isDataLoading && (
+                  <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                  </div>
+                )}
                 <div className="log-table-head">
                   <span>Timestamp</span>
                   <span>User</span>
                   <span>Action</span>
+                  <span>Details</span>
                 </div>
                 <div className="log-scroll">
                   {logs.length === 0 ? (
@@ -1287,12 +1357,64 @@ const handleExportClick = () => {
                           {new Date(log.created_at).toLocaleString()}
                         </span>
                         <span className="log-user">{log.user_email}</span>
-                        <span>
+                        <span className="log-action">
                           <span
                             className={`log-badge ${actionTypeColor(log.action_type)}`}
                           >
                             {log.action_type}
                           </span>
+                        </span>
+                        <span className="log-details">
+                          {(() => {
+                            const details = log.details;
+                            if (!details) return "No additional details";
+                            
+                            // Handle different action types with their specific details
+                            switch (log.action_type) {
+                              case "CREATE_ASSET":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • Category: ${details.category} • Cost: ₱${parseFloat(details.total_cost || 0).toLocaleString()} • Status: ${details.status}`;
+                              
+                              case "TRANSFER_ASSET":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • From: ${details.from_company} → To: ${details.to_company} • Status: ${details.status}`;
+                              
+                              case "DISPOSE_ASSET":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • Category: ${details.category} • Disposal Reason: ${details.disposal_reason || "N/A"}`;
+                              
+                              case "DELETE_ASSET":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • Category: ${details.category} • Status: ${details.status}`;
+                              
+                              case "EDIT_ASSET":
+                                const changes = [];
+                                if (details.old_status !== details.new_status) {
+                                  changes.push(`Status: ${details.old_status} → ${details.new_status}`);
+                                }
+                                if (details.old_company !== details.new_company) {
+                                  changes.push(`Company: ${details.old_company} → ${details.new_company}`);
+                                }
+                                if (details.old_category !== details.new_category) {
+                                  changes.push(`Category: ${details.old_category} → ${details.new_category}`);
+                                }
+                                return changes.length > 0 ? changes.join(" • ") : "No changes detected";
+                              
+                              case "UPDATE_DOWNPAYMENT":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • Amount: ₱${parseFloat(details.old_amount || 0).toLocaleString()} → ₱${parseFloat(details.new_amount || 0).toLocaleString()} • Date: ${details.old_date} → ${details.new_date}`;
+                              
+                              case "DELETE_DOWNPAYMENT":
+                                return `Asset "${details.asset_name}" (${details.tag_number}) • Amount: ₱${parseFloat(details.deleted_amount || 0).toLocaleString()} • Date: ${details.deleted_date}`;
+                              
+                              case "LOGIN":
+                                return "User logged in successfully";
+                              
+                              case "LOGOUT":
+                                return "User logged out successfully";
+                              
+                              case "DELETE_LOGS":
+                                return "All system logs cleared by admin";
+                              
+                              default:
+                                return details.message || "No additional details";
+                            }
+                          })()}
                         </span>
                       </div>
                     ))
@@ -1319,6 +1441,11 @@ const handleExportClick = () => {
                 </button>
               </div>
               <div className="content-card anim d1">
+                {isDataLoading && (
+                  <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                  </div>
+                )}
                 <AssetSummary
                   assets={assets}
                   userRole={role}
@@ -1346,6 +1473,11 @@ const handleExportClick = () => {
                 </div>
               </div>
               <div className="content-card anim d1">
+                {isDataLoading && (
+                  <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                  </div>
+                )}
                 <DownpaymentTable
                   assets={assets}
                   userRole={role}

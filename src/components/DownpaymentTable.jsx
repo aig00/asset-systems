@@ -278,6 +278,26 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       return;
     }
 
+    // Log the transaction update
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "UPDATE_DOWNPAYMENT",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        transaction_id: selectedTransaction.id,
+        old_amount: selectedTransaction.amount,
+        new_amount: parseFloat(editForm.amount) || 0,
+        old_description: selectedTransaction.description,
+        new_description: editForm.description,
+        old_date: selectedTransaction.transaction_date,
+        new_date: editForm.transaction_date,
+        updated_by: userEmail,
+        update_date: new Date().toISOString(),
+        message: `Downpayment transaction for "${selectedAsset.name}" (${selectedAsset.tag_number}) updated by ${userEmail}`
+      }
+    });
+
     setLoading(false);
     setModalMode(null);
     setSelectedTransaction(null);
@@ -301,6 +321,23 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       return;
     }
 
+    // Log the transaction deletion
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "DELETE_DOWNPAYMENT",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        transaction_id: selectedTransaction.id,
+        deleted_amount: selectedTransaction.amount,
+        deleted_description: selectedTransaction.description,
+        deleted_date: selectedTransaction.transaction_date,
+        deleted_by: userEmail,
+        deletion_date: new Date().toISOString(),
+        message: `Downpayment transaction for "${selectedAsset.name}" (${selectedAsset.tag_number}) deleted by ${userEmail}`
+      }
+    });
+
     setLoading(false);
     setModalMode(null);
     setSelectedTransaction(null);
@@ -323,6 +360,22 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       setLoading(false);
       return;
     }
+
+    // Log the asset deletion
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "DELETE_ASSET",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        category: selectedAsset.category,
+        total_cost: selectedAsset.total_cost,
+        status: selectedAsset.status,
+        deleted_by: userEmail,
+        deletion_date: new Date().toISOString(),
+        message: `Asset "${selectedAsset.name}" (${selectedAsset.tag_number}) deleted by ${userEmail}`
+      }
+    });
 
     setLoading(false);
     setModalMode(null);

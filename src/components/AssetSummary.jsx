@@ -745,6 +745,23 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       setLoading(false);
       return;
     }
+    
+      // Log the asset transfer
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "TRANSFER_ASSET",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        from_company: selectedAsset.current_company,
+        to_company: transferCompany,
+        status: "Transferred",
+        transferred_by: userEmail,
+        transfer_date: new Date().toISOString(),
+        message: `Asset "${selectedAsset.name}" (${selectedAsset.tag_number}) transferred from ${selectedAsset.current_company} to ${transferCompany} by ${userEmail}`
+      }
+    });
+
     setLoading(false);
     closeModal();
     refreshData();
@@ -823,6 +840,23 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       setLoading(false);
       return;
     }
+    
+    // Log the asset deletion
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "DELETE_ASSET",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        category: selectedAsset.category,
+        total_cost: selectedAsset.total_cost,
+        status: selectedAsset.status,
+        deleted_by: userEmail,
+        deletion_date: new Date().toISOString(),
+        message: `Asset "${selectedAsset.name}" (${selectedAsset.tag_number}) deleted by ${userEmail}`
+      }
+    });
+
     setLoading(false);
     closeModal();
     if (refreshData) {
@@ -844,6 +878,23 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
       setLoading(false);
       return;
     }
+    
+    // Log the asset edit
+    await supabase.from("logs").insert({
+      user_email: userEmail || "unknown",
+      action_type: "EDIT_ASSET",
+      details: {
+        asset_name: selectedAsset.name,
+        tag_number: selectedAsset.tag_number,
+        category: editForm.category || selectedAsset.category,
+        status: editForm.status || selectedAsset.status,
+        company: editForm.current_company || selectedAsset.current_company,
+        edited_by: userEmail,
+        edit_date: new Date().toISOString(),
+        message: `Asset "${selectedAsset.name}" (${selectedAsset.tag_number}) edited by ${userEmail}`
+      }
+    });
+
     setLoading(false);
     closeModal();
     refreshData();
