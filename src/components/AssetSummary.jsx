@@ -492,7 +492,6 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
   // PIN Verification state
   const [showPinModal, setShowPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
 
@@ -725,11 +724,11 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     setLoading(true);
     const data = [
       {
-        "Asset Name": sanitizeForCSV(selectedAsset.name),
-        "Tag Number": sanitizeForCSV(selectedAsset.tag_number),
-        "Previous Company": sanitizeForCSV(selectedAsset.current_company),
-        "New Company": sanitizeForCSV(transferCompany),
-        "Transferred By": sanitizeForCSV(userEmail),
+        "Asset Name": selectedAsset.name,
+        "Tag Number": selectedAsset.tag_number,
+        "Previous Company": selectedAsset.current_company,
+        "New Company": transferCompany,
+        "Transferred By": userEmail,
         Date: format(new Date(), "yyyy-MM-dd"),
       },
     ];
@@ -767,17 +766,17 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
       const exportData = [
         {
-          "Asset Name": sanitizeForCSV(selectedAsset.name),
-          Category: sanitizeForCSV(selectedAsset.category),
-          Tag: sanitizeForCSV(selectedAsset.tag_number),
-          Reference: sanitizeForCSV(selectedAsset.reference_number),
+          "Asset Name": selectedAsset.name,
+          Category: selectedAsset.category,
+          Tag: selectedAsset.tag_number,
+          Reference: selectedAsset.reference_number,
           Qty: quantity,
           "Unit Cost": unitCost,
           "Total Cost": totalCost,
           "Salvage Value": salvageValue,
           "Useful Life": usefulLifeYears,
-          "Purchase Date": sanitizeForCSV(selectedAsset.purchase_date),
-          "Disposed By": sanitizeForCSV(userEmail),
+          "Purchase Date": selectedAsset.purchase_date,
+          "Disposed By": userEmail,
           "Disposal Date": format(new Date(), "yyyy-MM-dd"),
           "Monthly Amortization": monthlyAmortization.toFixed(2),
         },
@@ -835,7 +834,7 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
   const handleEditSave = async () => {
     setLoading(true);
-    const { total_cost, ...updatePayload } = editForm;
+    const { ...updatePayload } = editForm;
     const { error } = await supabase
       .from("assets")
       .update(updatePayload)

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const AssetTable = ({ assets, refreshData }) => {
-  const { user, role, hasPin, verifyPin } = useAuth();
+  const { user, role, verifyPin } = useAuth();
   const [localAssets, setLocalAssets] = useState(assets || []);
   
   // Edit modal state
