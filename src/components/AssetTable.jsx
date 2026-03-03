@@ -343,8 +343,8 @@ const AssetTable = ({ assets, refreshData }) => {
         .dark .at-category { color: #9ca3af; background: #374151; border-color: #4b5563; }
         .at-status { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 11px; border-radius: 99px; border: 1px solid; }
         .at-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #111827; }
-        .dark .at-value { color: #f9fafb; }
-        .at-actions { display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .dark .at-value { color: #111827 !important; }
+        .dark .at-td.right .at-value { color: #111827 !important; }
         .at-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.14s; }
         .at-btn:hover { transform: translateY(-1px); }
         .at-btn-view { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }

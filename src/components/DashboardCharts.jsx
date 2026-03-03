@@ -145,6 +145,8 @@ const DashboardCharts = ({ assets }) => {
         .chart-container {
           height: 280px;
           width: 100%;
+          min-height: 280px;
+          min-width: 300px;
         }
         
         /* Dark mode support */
@@ -162,7 +164,7 @@ const DashboardCharts = ({ assets }) => {
         <div className="chart-card">
           <h3 className="chart-title">Asset Status Distribution</h3>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={statusData}
@@ -193,7 +195,7 @@ const DashboardCharts = ({ assets }) => {
         <div className="chart-card">
           <h3 className="chart-title">Asset Value by Category (Top 10)</h3>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={categoryData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis
@@ -215,7 +217,7 @@ const DashboardCharts = ({ assets }) => {
         <div className="chart-card">
           <h3 className="chart-title">Asset Count by LOB</h3>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={companyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: axisColor }} />
@@ -231,7 +233,7 @@ const DashboardCharts = ({ assets }) => {
         <div className="chart-card">
           <h3 className="chart-title">Asset Count by Category (Top 10)</h3>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={categoryCountData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis
