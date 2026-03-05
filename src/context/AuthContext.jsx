@@ -68,6 +68,13 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: "User not authenticated" };
     }
 
+    // If no PIN is set in database, allow action to proceed without PIN verification
+    // This lets new users use the system while they set up their PIN
+    if (!pinData) {
+      console.log("No PIN set for user - allowing action without PIN verification");
+      return { success: true, pinVerified: false, warning: "PIN not set up. Please configure your PIN in settings for enhanced security." };
+    }
+
     // Check if account is locked
     const lockStatus = checkPinLockStatus();
     if (lockStatus.isLocked) {
@@ -79,11 +86,6 @@ export const AuthProvider = ({ children }) => {
       };
     }
 
-    // If no PIN is set in database, return false
-    if (!pinData) {
-      return { success: false, error: "No PIN set for this account" };
-    }
-
     try {
       // Verify PIN using secure comparison
       const isValid = await secureVerifyPin(enteredPin, pinData.hash, pinData.salt);
@@ -91,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       if (isValid) {
         // Clear failed attempts on success
         clearFailedAttempts(user.id);
-        return { success: true };
+        return { success: true, pinVerified: true };
       } else {
         // Record failed attempt
         const attemptInfo = recordFailedAttempt(user.id);
@@ -183,8 +185,29 @@ export const AuthProvider = ({ children }) => {
 
         if (mounted) {
           if (error || !data) {
-            console.warn("Error fetching role (defaulting to staff):", error);
-            setRole("staff");
+            console.warn("Profile not found, creating default profile for user:", userId);
+            // Get current user email
+            const { data: userData } = await supabase.auth.getUser();
+            const userEmail = userData?.user?.email || "unknown";
+            
+            // Create a default profile for the user
+            const { error: createError } = await supabase
+              .from("profiles")
+              .insert({
+                id: userId,
+                email: userEmail,
+                role: "staff"
+              });
+            
+            if (createError) {
+              console.error("Error creating profile:", createError);
+              setRole("staff");
+            } else {
+              console.log("Created default profile for user:", userEmail);
+              setRole("staff");
+            }
+            setPinData(null);
+            setHasPin(false);
           } else {
             setRole(data.role);
             // Handle both old plain PIN and new hashed PIN format

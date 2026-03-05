@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ExcelJS from "exceljs";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import NCT_logong from "../assets/NCT_logong.png";
+import { useTabVisibility } from "../hooks/useTabVisibility";
 import {
   LayoutDashboard,
   Table,
@@ -34,6 +35,15 @@ import { SignOutModal } from "./SignOutModal";
 const Dashboard = () => {
 const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const isPageVisible = useTabVisibility();
+  
+  // Track pending requests to avoid stale states
+  const abortControllersRef = useRef({
+    assets: null,
+    transactions: null,
+    logs: null,
+  });
+  
   const [assets, setAssets] = useState([]);
   const [transactions, setTransactions] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
@@ -50,6 +60,16 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
     start: "2026-02",
     end: "2027-12",
   });
+  
+  // Track paid months in dashboard amortization schedule
+  const [paidMonths, setPaidMonths] = useState(new Set());
+  
+  // Reset paid months when amortization modal opens
+  useEffect(() => {
+    if (showAmortization) {
+      setPaidMonths(new Set());
+    }
+  }, [showAmortization]);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
@@ -61,25 +81,34 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
 
   // Fetch transactions from the new table
   const fetchTransactions = async () => {
-    const { data, error } = await supabase
-      .from("downpayment_transactions")
-      .select("*")
-      .order("transaction_date", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching transactions:", error);
-      return;
-    }
-
-    // Group transactions by asset_id
-    const grouped = {};
-    data.forEach((txn) => {
-      if (!grouped[txn.asset_id]) {
-        grouped[txn.asset_id] = [];
+    try {
+      // Cancel any pending requests
+      if (abortControllersRef.current.transactions) {
+        abortControllersRef.current.transactions.abort();
       }
-      grouped[txn.asset_id].push(txn);
-    });
-    setTransactions(grouped);
+      
+      const { data, error } = await supabase
+        .from("downpayment_transactions")
+        .select("*")
+        .order("transaction_date", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching transactions:", error);
+        return;
+      }
+
+      // Group transactions by asset_id
+      const grouped = {};
+      data.forEach((txn) => {
+        if (!grouped[txn.asset_id]) {
+          grouped[txn.asset_id] = [];
+        }
+        grouped[txn.asset_id].push(txn);
+      });
+      setTransactions(grouped);
+    } catch (err) {
+      console.error("Unexpected error in fetchTransactions:", err);
+    }
   };
 
   // Calculate total downpayment for an asset (from transactions + legacy)
@@ -159,16 +188,26 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
 
   const fetchAssets = async () => {
     setIsDataLoading(true);
-    const { data, error } = await supabase
-      .from("assets")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      console.error("Error fetching assets:", error);
-    } else {
+    try {
+      // Cancel any pending requests
+      if (abortControllersRef.current.assets) {
+        abortControllersRef.current.assets.abort();
+      }
+      
+      const { data, error } = await supabase
+        .from("assets")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching assets:", error);
+        setIsDataLoading(false);
+        return;
+      }
+      
       // Auto-transfer logic: Check for assets that reached 100% payment
       // and automatically change status from Pending to Active
-      // Check both legacy downpayment_amount and new downpayment_transactions table
+      const pendingUpdates = [];
       for (const asset of data) {
         // Calculate total downpayment from transactions
         const assetTransactions = transactions[asset.id] || [];
@@ -184,31 +223,41 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
         
         // If payment is 100% and status is still Pending, auto-transfer to Active
         if (paymentCompletion >= 100 && asset.status === "Pending") {
-          const { error: updateError } = await supabase
-            .from("assets")
-            .update({ status: "Active" })
-            .eq("id", asset.id);
-          
-          if (updateError) {
-            console.error("Error auto-transferring asset:", updateError);
-          } else {
-            console.log(`Auto-transferred asset ${asset.name} to Active (100% payment)`);
-          }
+          pendingUpdates.push(asset.id);
         }
       }
       
-      // Re-fetch after potential updates
-      const { data: updatedData, error: refetchError } = await supabase
-        .from("assets")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (!refetchError) {
-        setAssets(updatedData);
-        calculateStats(updatedData);
+      // Perform auto-transfer updates
+      let finalData = data;
+      if (pendingUpdates.length > 0) {
+        for (const assetId of pendingUpdates) {
+          const { error: updateError } = await supabase
+            .from("assets")
+            .update({ status: "Active" })
+            .eq("id", assetId);
+          
+          if (updateError) {
+            console.error("Error auto-transferring asset:", updateError);
+          }
+        }
+        
+        // Re-fetch only if updates were made
+        const { data: updatedData, error: refetchError } = await supabase
+          .from("assets")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        finalData = refetchError ? data : updatedData;
       }
+      
+      setAssets(finalData);
+      calculateStats(finalData);
+    } catch (err) {
+      console.error("Unexpected error in fetchAssets:", err);
+      // Keep previous data on error to avoid blank screen
+    } finally {
+      setIsDataLoading(false);
     }
-    setIsDataLoading(false);
   };
 
   const calculateStats = (data) => {
@@ -230,14 +279,28 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   };
 
 const fetchLogs = async () => {
-    const { data, error } = await supabase
-      .from("logs")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) console.error("Error fetching logs:", error);
-    // Filter out INSERT action type from logs
-    const filteredLogs = (data || []).filter(log => log.action_type !== "INSERT");
-    setLogs(filteredLogs);
+    try {
+      // Cancel any pending requests
+      if (abortControllersRef.current.logs) {
+        abortControllersRef.current.logs.abort();
+      }
+      
+      const { data, error } = await supabase
+        .from("logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching logs:", error);
+        return;
+      }
+      
+      // Filter out INSERT action type from logs
+      const filteredLogs = (data || []).filter(log => log.action_type !== "INSERT");
+      setLogs(filteredLogs);
+    } catch (err) {
+      console.error("Unexpected error in fetchLogs:", err);
+    }
   };
 
   const handleLogout = () => {
@@ -400,6 +463,17 @@ const handleExportClick = () => {
     
     initializeData();
   }, [role, user]);
+
+  // OPTIMIZATION 8: Auto-refresh data when tab becomes visible
+  useEffect(() => {
+    if (isPageVisible && !isDataLoading) {
+      // Page just became visible - refresh all data to ensure it's up-to-date
+      console.log("Page became visible - refreshing data");
+      fetchAssets();
+      fetchTransactions();
+      fetchLogs();
+    }
+  }, [isPageVisible]);
 
   // Role-based navigation items
   const allNavItems = [
@@ -1041,6 +1115,30 @@ const handleExportClick = () => {
         .sched-total { background: #fff1f1 !important; border-top: 2px solid #fecaca; }
         .sched-total .sched-date { color: #991b1b; font-weight: 700; }
         .sched-total .sched-amount { color: #991b1b; font-size: 16px; }
+        .sched-row-paid { background: #f0fdf4 !important; }
+        .sched-row-paid .sched-date { color: #16a34a; }
+        .sched-row-paid .sched-amount { color: #16a34a; }
+        .sched-paid-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 24px; height: 24px; border-radius: 6px;
+          border: 1px solid #bbf7d0; background: #fff;
+          color: #16a34a; cursor: pointer;
+          transition: all 0.15s;
+          margin-left: 8px; flex-shrink: 0;
+        }
+        .sched-paid-btn:hover { background: #f0fdf4; border-color: #16a34a; }
+        .sched-paid-btn.paid { background: #16a34a; border-color: #16a34a; color: #fff; }
+        .sched-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .sched-counter { font-size: 12px; color: #6b7280; display: flex; gap: 12px; }
+        .sched-counter-paid { color: #16a34a; font-weight: 600; }
+        .sched-counter-remaining { color: #d97706; font-weight: 600; }
+        .sched-mark-all-btn {
+          font-size: 11px; font-weight: 600; padding: 5px 10px;
+          border-radius: 6px; border: 1px solid #bbf7d0;
+          background: #f0fdf4; color: #16a34a; cursor: pointer;
+          transition: all 0.15s;
+        }
+        .sched-mark-all-btn:hover { background: #dcfce7; }
 
         /* Dark Mode Styles */
         .dark .dash-root { background: #0a0a0a; }
@@ -1552,19 +1650,54 @@ const handleExportClick = () => {
                 </div>
               </div>
 
+              <div className="sched-header">
+                  <div className="sched-counter">
+                    <span className="sched-counter-paid">{paidMonths.size} paid</span>
+                    <span className="sched-counter-remaining">{amortizationSchedule.filter(s => s.amount > 0).length - paidMonths.size} remaining</span>
+                  </div>
+                  <button 
+                    className="sched-mark-all-btn"
+                    onClick={() => {
+                      const allDates = amortizationSchedule.filter(s => s.amount > 0).map(s => s.date);
+                      setPaidMonths(new Set(allDates));
+                    }}
+                  >
+                    Mark All as Paid
+                  </button>
+                </div>
+
               <div className="sched-list">
                 {amortizationSchedule.length > 0 ? (
                   <>
                     {amortizationSchedule.map((item, idx) => (
-                      <div key={idx} className="sched-row">
+                      <div key={idx} className={`sched-row${paidMonths.has(item.date) ? ' sched-row-paid' : ''}`}>
                         <span className="sched-date">{item.date}</span>
-                        <span className="sched-amount">
-                          ₱
-                          {item.amount.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span className="sched-amount">
+                            ₱
+                            {item.amount.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                          {item.amount > 0 && (
+                            <button
+                              className={`sched-paid-btn${paidMonths.has(item.date) ? ' paid' : ''}`}
+                              onClick={() => {
+                                const newPaid = new Set(paidMonths);
+                                if (newPaid.has(item.date)) {
+                                  newPaid.delete(item.date);
+                                } else {
+                                  newPaid.add(item.date);
+                                }
+                                setPaidMonths(newPaid);
+                              }}
+                              title={paidMonths.has(item.date) ? "Mark as unpaid" : "Mark as paid"}
+                            >
+                              {paidMonths.has(item.date) ? '✓' : ''}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                     <div className="sched-row sched-total">

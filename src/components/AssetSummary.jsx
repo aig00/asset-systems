@@ -291,6 +291,30 @@ const MODAL_STYLES = `
   }
   .sched-total .sched-date { color: #991b1b; font-weight: 700; }
   .sched-total .sched-amount { color: #991b1b; font-size: 15px; }
+  .sched-row-paid { background: #f0fdf4 !important; }
+  .sched-row-paid .sched-date { color: #16a34a; }
+  .sched-row-paid .sched-amount { color: #16a34a; }
+  .sched-paid-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 1px solid #bbf7d0; background: #fff;
+    color: #16a34a; cursor: pointer;
+    transition: all 0.15s;
+    margin-left: 8px; flex-shrink: 0;
+  }
+  .sched-paid-btn:hover { background: #f0fdf4; border-color: #16a34a; }
+  .sched-paid-btn.paid { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .sched-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sched-counter { font-size: 12px; color: #6b7280; display: flex; gap: 12px; }
+  .sched-counter-paid { color: #16a34a; font-weight: 600; }
+  .sched-counter-remaining { color: #d97706; font-weight: 600; }
+  .sched-mark-all-btn {
+    font-size: 11px; font-weight: 600; padding: 5px 10px;
+    border-radius: 6px; border: 1px solid #bbf7d0;
+    background: #f0fdf4; color: #16a34a; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sched-mark-all-btn:hover { background: #dcfce7; }
   .pin-modal-input { width: 100%; padding: 12px 16px; border: 1.5px solid #f3e8e8; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; font-weight: bold; outline: none; transition: border-color 0.15s; }
   .pin-modal-input:focus { border-color: #dc2626; }
   .pin-error { color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center; }
@@ -489,6 +513,108 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
     start: "2026-02",
     end: "2027-12",
   });
+
+  // Track paid months in amortization schedule
+  const [paidMonths, setPaidMonths] = useState(new Set());
+  const [loadingPaidMonths, setLoadingPaidMonths] = useState(false);
+
+  // Fetch paid months from database
+  const fetchPaidMonths = async (assetId) => {
+    if (!assetId) return;
+    setLoadingPaidMonths(true);
+    try {
+      const { data, error } = await supabase
+        .from("paid_amortization_months")
+        .select("month_date")
+        .eq("asset_id", assetId)
+        .eq("is_paid", true);
+      
+      if (error) {
+        console.error("Error fetching paid months:", error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const paidSet = new Set(data.map(d => d.month_date));
+        setPaidMonths(paidSet);
+      } else {
+        setPaidMonths(new Set());
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching paid months:", err);
+    } finally {
+      setLoadingPaidMonths(false);
+    }
+  };
+
+  // Save paid month to database
+  const savePaidMonth = async (assetId, monthDate, isPaid) => {
+    if (!assetId || !monthDate) return;
+    
+    try {
+      if (isPaid) {
+        // Insert new paid record
+        const { error } = await supabase
+          .from("paid_amortization_months")
+          .upsert({
+            asset_id: assetId,
+            month_date: monthDate,
+            is_paid: true,
+            created_by: userEmail,
+          }, {
+            onConflict: 'asset_id,month_date'
+          });
+        
+        if (error) {
+          console.error("Error saving paid month:", error);
+        }
+      } else {
+        // Delete paid record
+        const { error } = await supabase
+          .from("paid_amortization_months")
+          .delete()
+          .eq("asset_id", assetId)
+          .eq("month_date", monthDate);
+        
+        if (error) {
+          console.error("Error removing paid month:", error);
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error saving paid month:", err);
+    }
+  };
+
+  // Mark all as paid in database
+  const markAllAsPaid = async (assetId, dates) => {
+    if (!assetId || !dates || dates.length === 0) return;
+    
+    try {
+      const records = dates.map(date => ({
+        asset_id: assetId,
+        month_date: date,
+        is_paid: true,
+        created_by: userEmail,
+      }));
+      
+      const { error } = await supabase
+        .from("paid_amortization_months")
+        .upsert(records, { onConflict: 'asset_id,month_date' });
+      
+      if (error) {
+        console.error("Error marking all as paid:", error);
+      }
+    } catch (err) {
+      console.error("Unexpected error marking all as paid:", err);
+    }
+  };
+
+  // Reset paid months when modal opens/closes or asset changes
+  useEffect(() => {
+    if (modalMode === "amortization" && selectedAsset) {
+      fetchPaidMonths(selectedAsset.id);
+    }
+  }, [modalMode, selectedAsset]);
 
   // PIN Verification state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -1440,11 +1566,48 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
                     <input type="month" className="date-input" value={amortizationDates.end} onChange={(e) => setAmortizationDates({ ...amortizationDates, end: e.target.value })} />
                   </div>
                 </div>
+                <div className="sched-header">
+                  <div className="sched-counter">
+                    <span className="sched-counter-paid">{paidMonths.size} paid</span>
+                    <span className="sched-counter-remaining">{schedule.filter(s => s.amount > 0).length - paidMonths.size} remaining</span>
+                  </div>
+                  <button 
+                    className="sched-mark-all-btn"
+                    onClick={() => {
+                      const allDates = schedule.filter(s => s.amount > 0).map(s => s.date);
+                      setPaidMonths(new Set(allDates));
+                      markAllAsPaid(selectedAsset.id, allDates);
+                    }}
+                  >
+                    Mark All as Paid
+                  </button>
+                </div>
                 <div className="sched-list">
                   {schedule.map((item, idx) => (
-                    <div key={idx} className="sched-row">
+                    <div key={idx} className={`sched-row${paidMonths.has(item.date) ? ' sched-row-paid' : ''}`}>
                       <span className="sched-date">{item.date}</span>
-                      <span className={`sched-amount${item.amount === 0 ? " zero" : ""}`}>₱{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span className={`sched-amount${item.amount === 0 ? " zero" : ""}`}>₱{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        {item.amount > 0 && (
+                          <button
+                            className={`sched-paid-btn${paidMonths.has(item.date) ? ' paid' : ''}`}
+                            onClick={() => {
+                              const newPaid = new Set(paidMonths);
+                              const isPaid = !paidMonths.has(item.date);
+                              if (isPaid) {
+                                newPaid.add(item.date);
+                              } else {
+                                newPaid.delete(item.date);
+                              }
+                              setPaidMonths(newPaid);
+                              savePaidMonth(selectedAsset.id, item.date, isPaid);
+                            }}
+                            title={paidMonths.has(item.date) ? "Mark as unpaid" : "Mark as paid"}
+                          >
+                            {paidMonths.has(item.date) ? '✓' : ''}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   <div className="sched-row sched-total">

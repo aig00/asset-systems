@@ -109,37 +109,38 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
     e.preventDefault();
     setLoading(true);
 
-    const totalCost = formData.quantity * formData.unit_cost;
+    try {
+      const totalCost = formData.quantity * formData.unit_cost;
 
-    const assetData = {
-      ...formData,
-      total_cost: totalCost,
-    };
+      const assetData = {
+        ...formData,
+        total_cost: totalCost,
+      };
 
-    const { error } = await supabase.from("assets").insert([assetData]);
-    if (error) {
+      const { error } = await supabase.from("assets").insert([assetData]);
+      if (error) throw error;
+      
+      // Log the asset creation
+      await supabase.from("logs").insert({
+        user_email: userEmail || "unknown",
+        action_type: "CREATE_ASSET",
+        details: {
+          asset_name: formData.name,
+          tag_number: formData.tag_number,
+          category: formData.category,
+          total_cost: totalCost,
+          status: formData.status,
+          company: formData.current_company,
+          message: `Asset "${formData.name}" (${formData.tag_number}) created - Category: ${formData.category}, Cost: ₱${totalCost}`
+        }
+      });
+      
+      setLoading(false);
+      onComplete();
+    } catch (error) {
       alert("Error adding asset: " + error.message);
       setLoading(false);
-      return;
     }
-    
-    // Log the asset creation
-    await supabase.from("logs").insert({
-      user_email: userEmail || "unknown",
-      action_type: "CREATE_ASSET",
-      details: {
-        asset_name: formData.name,
-        tag_number: formData.tag_number,
-        category: formData.category,
-        total_cost: totalCost,
-        status: formData.status,
-        company: formData.current_company,
-        message: `Asset "${formData.name}" (${formData.tag_number}) created - Category: ${formData.category}, Cost: ₱${totalCost}`
-      }
-    });
-    
-    setLoading(false);
-    onComplete();
   };
 
   const totalCost = (formData.quantity * formData.unit_cost).toFixed(2);

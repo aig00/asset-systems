@@ -28,32 +28,38 @@ const PinVerificationModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (pin.length !== 4) {
-      setLocalError("PIN must be exactly 4 digits");
-      return;
-    }
+    // Allow proceeding without PIN entry if user hasn't set a PIN
+    // PIN field will be empty, which is okay for first-time users
+    if (pin === "" || pin.length === 4) {
+      setLocalError("");
+      setLoading(true);
 
-    setLocalError("");
-    setLoading(true);
-
-    try {
-      // Call onVerify and handle the response format
-      const result = await onVerify(pin);
-      
-      // If result is an object with success property (new secure format)
-      if (result && typeof result === 'object') {
-        if (!result.success) {
-          setLocalError(result.error || "Invalid PIN");
+      try {
+        // Call onVerify with the entered PIN (or empty string if no PIN)
+        const result = await onVerify(pin);
+        
+        // If result is an object with success property (new secure format)
+        if (result && typeof result === 'object') {
+          if (result.success) {
+            // Verification succeeded - close modal
+            onClose();
+          } else {
+            setLocalError(result.error || "Invalid PIN");
+          }
+        } else if (result === true) {
+          // Legacy format handling - success
+          onClose();
+        } else if (result === false) {
+          // Legacy format handling - failure
+          setLocalError("Invalid PIN");
         }
-      } else if (result === false) {
-        // Legacy format handling
-        setLocalError("Invalid PIN");
+      } catch (error) {
+        setLocalError(error.message || "Invalid PIN");
+      } finally {
+        setLoading(false);
       }
-      // If result is true, verification succeeded - modal will close
-    } catch (error) {
-      setLocalError(error.message || "Invalid PIN");
-    } finally {
-      setLoading(false);
+    } else {
+      setLocalError("PIN must be exactly 4 digits");
     }
   };
 

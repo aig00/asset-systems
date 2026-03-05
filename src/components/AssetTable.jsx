@@ -117,23 +117,36 @@ const AssetTable = ({ assets, refreshData }) => {
   };
 
   const handleTransfer = async (asset) => {
-    const destination = prompt("Enter Destination LOB:");
-    if (!destination) return;
+    try {
+      const destination = prompt("Enter Destination LOB:");
+      if (!destination) return;
 
-    const exportData = {
-      ...asset,
-      transfer_date: new Date().toISOString(),
-      destination,
-    };
-    exportToExcel(exportData, `Transfer_Proof_${asset.tag_number}`);
+      const exportData = {
+        ...asset,
+        transfer_date: new Date().toISOString(),
+        destination,
+      };
+      exportToExcel(exportData, `Transfer_Proof_${asset.tag_number}`);
 
-    const { error } = await supabase
-      .from("assets")
-      .update({ status: "Transferred", current_company: destination })
-      .eq("id", asset.id);
+      const { error } = await supabase
+        .from("assets")
+        .update({ status: "Transferred", current_company: destination })
+        .eq("id", asset.id);
 
-    if (!error && refreshData) {
-      refreshData();
+      if (error) throw error;
+      
+      if (refreshData) {
+        await refreshData();
+      }
+      
+      alert("Asset transferred successfully!");
+    } catch (error) {
+      console.error("Error transferring asset:", error);
+      alert(`Failed to transfer asset: ${error.message}`);
+      // Attempt to refresh to re-sync state
+      if (refreshData) {
+        await refreshData();
+      }
     }
   };
 
@@ -231,11 +244,10 @@ const AssetTable = ({ assets, refreshData }) => {
     try {
       const result = await verifyPin(enteredPin);
       if (!result || !result.success) {
-        setPinError(result?.error || "Invalid PIN. Please try again.");
-        return false;
+        return result; // Return the error result to the modal
       }
       
-      setShowPinModal(false);
+      // PIN verification succeeded - execute the pending action
       const { action, asset } = pendingAction;
       
       if (action === "edit") {
@@ -249,10 +261,10 @@ const AssetTable = ({ assets, refreshData }) => {
       }
       
       setPendingAction(null);
-      return true;
+      return result; // Return success result
     } catch (error) {
-      setPinError(error.message || "An error occurred");
-      return false;
+      console.error("PIN verification error:", error);
+      return { success: false, error: error.message || "An error occurred" };
     }
   };
 
