@@ -505,32 +505,44 @@ const handleExportClick = () => {
       value: `₱${stats.totalValue.toLocaleString()}`,
       icon: TrendingUp,
       badge: "TOTAL",
-      iconBg: "#fef2f2",
-      iconColor: "#dc2626",
+      iconGradient: "linear-gradient(135deg, #dc2626, #f87171)",
+      cardAccent: "linear-gradient(90deg, #dc2626, #f87171)",
+      badgeColor: "#dc2626",
+      badgeBg: "#fef2f2",
+      badgeBorder: "#fecaca",
     },
     {
       label: "Active Assets",
       value: stats.active,
       icon: Package,
       badge: "LIVE",
-      iconBg: "#fff1f1",
-      iconColor: "#ef4444",
+      iconGradient: "linear-gradient(135deg, #ef4444, #f43f5e)",
+      cardAccent: "linear-gradient(90deg, #ef4444, #fb7185)",
+      badgeColor: "#ef4444",
+      badgeBg: "#fff1f1",
+      badgeBorder: "#fecaca",
     },
     {
       label: "Disposed Assets",
       value: stats.disposed,
       icon: Trash2,
       badge: "RETIRED",
-      iconBg: "#fef2f2",
-      iconColor: "#b91c1c",
+      iconGradient: "linear-gradient(135deg, #b91c1c, #dc2626)",
+      cardAccent: "linear-gradient(90deg, #b91c1c, #ef4444)",
+      badgeColor: "#b91c1c",
+      badgeBg: "#fff5f5",
+      badgeBorder: "#fecaca",
     },
     {
       label: "Annual Depreciation",
       value: `₱${stats.depreciation.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
       icon: BarChart3,
       badge: "YEARLY",
-      iconBg: "#fff1f1",
-      iconColor: "#dc2626",
+      iconGradient: "linear-gradient(135deg, #991b1b, #b91c1c)",
+      cardAccent: "linear-gradient(90deg, #991b1b, #dc2626)",
+      badgeColor: "#991b1b",
+      badgeBg: "#fff5f5",
+      badgeBorder: "#fecaca",
       onClick: () => setShowAmortization(true),
     },
   ];
@@ -539,8 +551,6 @@ const handleExportClick = () => {
     <>
       <SpeedInsights />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body, #root {
@@ -553,10 +563,12 @@ const handleExportClick = () => {
           font-family: 'DM Sans', sans-serif;
           min-height: 100vh;
           width: 100%;
-          background: #faf9f9;
+          background: #faf8f8;
           background-image:
-            radial-gradient(ellipse 700px 400px at 90% 0%, rgba(254,226,226,0.55) 0%, transparent 65%),
-            radial-gradient(ellipse 500px 350px at 0% 100%, rgba(255,241,241,0.5) 0%, transparent 65%);
+            radial-gradient(ellipse 900px 600px at 95% -5%, rgba(220,38,38,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 700px 450px at 85% 0%, rgba(254,226,226,0.5) 0%, transparent 65%),
+            radial-gradient(ellipse 500px 350px at 0% 100%, rgba(255,241,241,0.4) 0%, transparent 65%),
+            radial-gradient(ellipse 600px 400px at 50% 60%, rgba(220,38,38,0.02) 0%, transparent 60%);
         }
         .dash-title { font-family: 'Syne', sans-serif; }
 
@@ -650,7 +662,16 @@ const handleExportClick = () => {
         .nav-tab.active { 
           color: #dc2626; 
           background: linear-gradient(135deg, #fef2f2, #fee2e2);
-          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
+          box-shadow: 0 2px 8px rgba(220,38,38,0.13);
+          position: relative;
+        }
+        .nav-tab.active::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 7px; bottom: 7px;
+          width: 3px;
+          background: linear-gradient(180deg, #dc2626, #f87171);
+          border-radius: 0 3px 3px 0;
         }
 
         /* ── ENHANCED USER CHIP ── */
@@ -822,95 +843,77 @@ const handleExportClick = () => {
         @media (max-width: 560px)  { .stats-grid { grid-template-columns: 1fr; gap: 20px; } }
         @media (max-width: 400px)  { .stats-grid { grid-template-columns: 1fr; gap: 16px; } }
 
-        /* Enhanced stat card styling for better visual hierarchy */
+        /* ── STAT CARDS ── */
+        .stat-card {
+          position: relative;
+          background: #fff;
+          border-radius: 18px;
+          border: 1px solid #f0eef0;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04);
+          overflow: hidden;
+          padding: 26px 26px 22px;
+          transition: transform 0.24s cubic-bezier(.22,.61,.36,1), box-shadow 0.24s ease;
+          min-width: 0;
+        }
+        .stat-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 18px 42px rgba(0,0,0,0.1), 0 6px 16px rgba(0,0,0,0.06);
+        }
+        .stat-card::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0;
+          height: 3.5px;
+          background: var(--card-accent, linear-gradient(90deg, #dc2626, #f87171));
+          border-radius: 18px 18px 0 0;
+        }
         .stat-card-top {
           display: flex; justify-content: space-between; align-items: flex-start;
           margin-bottom: 16px;
         }
         .stat-icon-box {
           width: 44px; height: 44px;
-          border-radius: 12px;
+          border-radius: 13px;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(220,38,38,0.15);
-          transition: transform 0.2s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .stat-card:hover .stat-icon-box {
-          transform: scale(1.05);
-        }
-        .stat-badge {
-          font-size: 11px; font-weight: 700;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
-          padding: 3px 9px; border-radius: 20px;
-          line-height: 1.6;
-          box-shadow: 0 1px 4px rgba(220,38,38,0.1);
-        }
-        .stat-label { font-size: 14px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
-        .stat-value {
-          font-family: 'Syne', sans-serif;
-          font-size: 24px; font-weight: 800; color: #111827;
-          line-height: 1.1;
-          /* Allow text wrapping for long numbers */
-          overflow: visible;
-          text-overflow: unset;
-          white-space: normal;
-          word-wrap: break-word;
-          word-break: break-all;
-        }
-        .stat-footer {
-          display: flex; align-items: center; gap: 4px;
-          margin-top: 12px;
-          font-size: 12px; color: #d1d5db;
-        }
-
-        .stat-card {
-          position: relative;
-          background: #fff;
-          border-radius: 18px;
-          border: 1px solid #fde8e8;
-          box-shadow: 0 3px 20px rgba(220,38,38,0.08);
-          overflow: hidden;
-          padding: 28px 28px 24px;
-          transition: transform 0.22s cubic-bezier(.22,.61,.36,1), box-shadow 0.22s ease;
-          min-width: 0;
-        }
-        .stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 14px 36px rgba(220,38,38,0.15);
-        }
-        .stat-card::before {
-          content: '';
-          position: absolute; top: 0; left: 0; right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #dc2626, #f87171);
-        }
-        .stat-card-top {
-          display: flex; justify-content: space-between; align-items: flex-start;
-          margin-bottom: 14px;
-        }
-        .stat-icon-box {
-          width: 40px; height: 40px;
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
+          transform: scale(1.08) rotate(-3deg);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.2);
         }
         .stat-badge {
           font-size: 10px; font-weight: 700;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          background: #fff1f1; border: 1px solid #fecaca; color: #dc2626;
-          padding: 3px 8px; border-radius: 20px;
-          line-height: 1.6;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          padding: 3px 9px; border-radius: 20px;
+          line-height: 1.7; border: 1px solid;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
-        .stat-label { font-size: 13px; color: #9ca3af; font-weight: 500; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #9ca3af; font-weight: 500; margin-bottom: 5px; }
+        .stat-value {
+          font-family: 'Syne', sans-serif;
+          font-size: 26px; font-weight: 800; color: #111827;
+          line-height: 1.1;
+          overflow: visible;
+          white-space: normal;
+          word-wrap: break-word;
+          word-break: break-all;
+          letter-spacing: -0.5px;
+        }
+        .stat-footer {
+          display: flex; align-items: center; gap: 4px;
+          margin-top: 14px; padding-top: 12px;
+          border-top: 1px solid #f3f3f3;
+          font-size: 12px; color: #c4c4c4;
+        }
 
         /* ── PORTFOLIO HEALTH ── */
         .health-card {
           background: #fff;
           border-radius: 18px;
-          border: 1px solid #fde8e8;
-          box-shadow: 0 3px 20px rgba(220,38,38,0.06);
-          padding: 36px 40px;
+          border: 1px solid #f0eef0;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.055);
+          padding: 34px 38px;
           width: 100%;
           margin-bottom: 40px;
         }
@@ -980,8 +983,8 @@ const handleExportClick = () => {
         .content-card {
           background: #fff;
           border-radius: 18px;
-          border: 1px solid #fde8e8;
-          box-shadow: 0 3px 20px rgba(220,38,38,0.06);
+          border: 1px solid #f0eef0;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.055);
           overflow: hidden;
           width: 100%;
           position: relative;
@@ -1008,21 +1011,22 @@ const handleExportClick = () => {
         .btn-red {
           display: inline-flex; align-items: center; gap: 8px;
           background: linear-gradient(135deg, #dc2626, #ef4444);
-          color: #fff; font-size: 15px; font-weight: 600;
-          padding: 11px 22px; border-radius: 13px; border: none; cursor: pointer;
-          box-shadow: 0 5px 20px rgba(220,38,38,0.32);
+          color: #fff; font-size: 14px; font-weight: 600;
+          padding: 10px 20px; border-radius: 11px; border: none; cursor: pointer;
+          box-shadow: 0 4px 16px rgba(220,38,38,0.28);
           transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
-          flex-shrink: 0;
+          flex-shrink: 0; letter-spacing: 0.01em;
         }
-        .btn-red:hover { filter: brightness(1.07); transform: translateY(-2px); box-shadow: 0 9px 30px rgba(220,38,38,0.4); }
+        .btn-red:hover { filter: brightness(1.07); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(220,38,38,0.38); }
+        .btn-red:active { transform: translateY(0); }
         .btn-outline {
           display: inline-flex; align-items: center; gap: 8px;
-          background: #fff5f5; color: #dc2626; font-size: 15px; font-weight: 600;
-          padding: 11px 22px; border-radius: 13px; border: 1.5px solid #fca5a5; cursor: pointer;
-          transition: background 0.15s, border-color 0.15s;
-          flex-shrink: 0;
+          background: #fff; color: #dc2626; font-size: 14px; font-weight: 600;
+          padding: 10px 20px; border-radius: 11px; border: 1.5px solid #fecaca; cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, transform 0.15s;
+          flex-shrink: 0; letter-spacing: 0.01em;
         }
-        .btn-outline:hover { background: #fee2e2; border-color: #f87171; }
+        .btn-outline:hover { background: #fef2f2; border-color: #f87171; transform: translateY(-1px); }
 
         /* ── LOG TABLE ── */
         .log-table-head {
@@ -1140,9 +1144,15 @@ const handleExportClick = () => {
         }
         .sched-mark-all-btn:hover { background: #dcfce7; }
 
-        /* Dark Mode Styles */
-        .dark .dash-root { background: #0a0a0a; }
-        .dark .nav-bar { background: rgba(26,26,26,0.95); border-color: rgba(220,38,38,0.2); }
+        /* ── DARK MODE ── */
+        .dark .dash-root {
+          background: #0d0c0c;
+          background-image:
+            radial-gradient(ellipse 900px 600px at 95% -5%, rgba(220,38,38,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 700px 450px at 85% 0%, rgba(220,38,38,0.08) 0%, transparent 65%),
+            radial-gradient(ellipse 500px 350px at 0% 100%, rgba(220,38,38,0.05) 0%, transparent 65%);
+        }
+        .dark .nav-bar { background: rgba(18,16,16,0.96); border-color: rgba(220,38,38,0.18); }
         .dark .nav-top, .dark .nav-bottom { border-color: rgba(220,38,38,0.15); }
         .dark .brand-name { color: #e5e5e5; }
         .dark .nav-tab { color: #737373; }
@@ -1169,16 +1179,17 @@ const handleExportClick = () => {
         }
         .dark .page-title { color: #f5f5f5; }
         .dark .page-subtitle { color: #737373; }
-        .dark .stat-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .stat-card { background: #1c1c1c; border-color: rgba(255,255,255,0.06); box-shadow: 0 2px 16px rgba(0,0,0,0.25); }
+        .dark .stat-card:hover { box-shadow: 0 18px 42px rgba(0,0,0,0.35); }
         .dark .stat-value { color: #f5f5f5; }
         .dark .stat-label { color: #737373; }
-        .dark .stat-footer { color: #525252; }
-        .dark .health-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .stat-footer { color: #404040; border-top-color: rgba(255,255,255,0.05); }
+        .dark .health-card { background: #1c1c1c; border-color: rgba(255,255,255,0.06); box-shadow: 0 2px 16px rgba(0,0,0,0.2); }
         .dark .metric-value { color: #f5f5f5; }
         .dark .metric-label { color: #737373; }
         .dark .metric-sub { color: #525252; }
         .dark .prog-track { background: rgba(220,38,38,0.15); }
-        .dark .content-card { background: #1a1a1a; border-color: rgba(220,38,38,0.15); }
+        .dark .content-card { background: #1c1c1c; border-color: rgba(255,255,255,0.06); box-shadow: 0 2px 16px rgba(0,0,0,0.25); }
         .dark .btn-outline { background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.3); }
         .dark .btn-outline:hover { background: rgba(220,38,38,0.2); }
         .dark .log-table-head { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.15); color: #fca5a5; }
@@ -1305,8 +1316,13 @@ const handleExportClick = () => {
                       value,
                       icon: Icon,
                       badge,
-                      iconBg,
-                      iconColor,
+                      iconGradient,
+                      cardAccent,
+                      badgeColor,
+                      badgeBg,
+                      badgeBorder,
+                      darkBadgeBg,
+                      darkBadgeBorder,
                       onClick,
                     },
                     i,
@@ -1315,25 +1331,33 @@ const handleExportClick = () => {
                       key={label}
                       className={`stat-card anim d${i + 1}`}
                       onClick={onClick}
-                      style={onClick ? { cursor: "pointer" } : {}}
+                      style={{
+                        '--card-accent': cardAccent,
+                        cursor: onClick ? 'pointer' : 'default',
+                      }}
                     >
                       <div className="stat-card-top">
                         <div
                           className="stat-icon-box"
-                          style={{ background: iconBg }}
+                          style={{ background: iconGradient }}
                         >
-                          <Icon
-                            size={21}
-                            style={{ color: iconColor }}
-                            strokeWidth={2}
-                          />
+                          <Icon size={20} color="#fff" strokeWidth={2.2} />
                         </div>
-                        <span className="stat-badge">{badge}</span>
+                        <span
+                          className="stat-badge"
+                          style={{
+                            color: badgeColor,
+                            background: badgeBg,
+                            borderColor: badgeBorder,
+                          }}
+                        >
+                          {badge}
+                        </span>
                       </div>
                       <p className="stat-label">{label}</p>
                       <p className="stat-value">{value}</p>
                       <div className="stat-footer">
-                        <ChevronRight size={13} />
+                        <ChevronRight size={12} />
                         <span>Updated just now</span>
                       </div>
                     </div>
