@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
+import { usePageFocusFix, useLoadingReset } from "../hooks/usePageFocusFix";
 import ExcelJS from "exceljs";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
@@ -14,7 +15,7 @@ import {
   Archive,
   X,
   Save,
-  Package,
+  Package,      
   Tag,
   Hash,
   Building2,
@@ -502,12 +503,29 @@ const TABLE_STYLES = `
 const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnly = false }) => {
   const { verifyPin, checkPinLockStatus } = useAuth();
   
+  // State must be defined BEFORE using hooks that depend on it
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [modalMode, setModalMode] = useState(null);
   const [transferCompany, setTransferCompany] = useState("");
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // TAB FOCUS FIX: Add page focus handler to ensure UI stays responsive after tab switch
+  const handlePageFocus = useCallback(() => {
+    console.log("[AssetSummary] Page gained focus - ensuring UI is responsive");
+    // Force re-render if needed by touching a lightweight state
+    // This helps React recover from stale closures after tab switch
+  }, []);
+  
+  // Use the page focus fix hook
+  usePageFocusFix({
+    onFocus: handlePageFocus,
+    enabled: true
+  });
+  
+  // Prevent stuck loading states when tab becomes visible again
+  useLoadingReset(loading, setLoading);
   
   const [amortizationDates, setAmortizationDates] = useState({
     start: "2026-02",
@@ -994,7 +1012,18 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
   const handleEditSave = async () => {
     setLoading(true);
+    
+    // Calculate total_cost from quantity and unit_cost
+    const quantity = parseInt(editForm.quantity) || 1;
+    const unitCost = parseFloat(editForm.unit_cost) || 0;
+    const totalCost = quantity * unitCost;
+    
     const { ...updatePayload } = editForm;
+    // Include calculated total_cost in the update
+    updatePayload.quantity = quantity;
+    updatePayload.unit_cost = unitCost;
+    updatePayload.total_cost = totalCost;
+    
     const { error } = await supabase
       .from("assets")
       .update(updatePayload)

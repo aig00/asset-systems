@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ExcelJS from "exceljs";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import NCT_logong from "../assets/NCT_logong.png";
@@ -22,10 +22,12 @@ import {
   Mail,
   Shield,
   User,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { supabase } from "../supabaseClient";
+import useSupabaseRealtime from "../hooks/useSupabaseRealtime";
 import AddAssetForm from "../components/AddAssetForm";
 import AssetSummary from "../components/AssetSummary";
 import DashboardCharts from "../components/DashboardCharts";
@@ -76,8 +78,10 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
   const [pinAction, setPinAction] = useState("");
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState(null);
 
   // Fetch transactions from the new table
   const fetchTransactions = async () => {
@@ -467,17 +471,65 @@ const handleExportClick = () => {
     initializeData();
   }, [role, user]);
 
+  // Track previous visibility state to detect when tab becomes visible again
+  const prevIsPageVisibleRef = useRef(isPageVisible);
+  
   // OPTIMIZATION 8: Auto-refresh data when tab becomes visible
+  // Fallback: If realtime connection is lost or not working, refresh on tab visibility
   useEffect(() => {
-    if (isPageVisible && !isDataLoading) {
-      // Page just became visible - refresh all data to ensure it's up-to-date
-      console.log("Page became visible - refreshing data");
+    // Only refresh when tab transitions from hidden to visible
+    if (isPageVisible && !prevIsPageVisibleRef.current && assets.length > 0) {
+      // Page just became visible - refresh data as fallback for realtime
+      console.log("Page became visible - refreshing data (fallback for realtime)");
       fetchAssets();
-      fetchAssets(true);
       fetchTransactions();
       fetchLogs();
     }
+    // Update previous visibility state
+    prevIsPageVisibleRef.current = isPageVisible;
   }, [isPageVisible]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // SUPABASE REALTIME SUBSCRIPTION
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Handle database changes from realtime subscription
+  const handleRealtimeChange = useCallback((change) => {
+    const { table, eventType, new: newRecord, old: oldRecord } = change;
+    console.log(`[Realtime] ${table} table changed: ${eventType}`, { newRecord, oldRecord });
+    
+    // Add a small delay to ensure database has processed the change
+    setTimeout(() => {
+      // Refresh relevant data based on which table changed
+      switch (table) {
+        case "assets":
+          console.log("[Realtime] Refreshing assets...");
+          fetchAssets(true); // true = background fetch (no loading indicator)
+          break;
+        case "logs":
+          console.log("[Realtime] Refreshing logs...");
+          fetchLogs();
+          break;
+        case "downpayment_transactions":
+          console.log("[Realtime] Refreshing transactions...");
+          fetchTransactions();
+          break;
+        default:
+          // Refresh all data for unknown changes
+          console.log("[Realtime] Refreshing all data...");
+          fetchAssets(true);
+          fetchTransactions();
+          fetchLogs();
+      }
+    }, 300); // Small delay to ensure DB has committed
+  }, [fetchAssets, fetchLogs, fetchTransactions]);
+
+  // Initialize realtime subscription
+  useSupabaseRealtime({
+    tables: ["assets", "logs", "downpayment_transactions"],
+    onDataChange: handleRealtimeChange,
+    enabled: !!user, // Only enable when user is authenticated
+  });
 
   // Role-based navigation items
   const allNavItems = [
@@ -1384,7 +1436,7 @@ const handleExportClick = () => {
                     <div className="prog-track">
                       <div
                         className="prog-fill"
-                        style={{
+                          style={{
                           width: `${assets.length > 0 ? (stats.active / assets.length) * 100 : 0}%`,
                         }}
                       />
@@ -1453,11 +1505,6 @@ const handleExportClick = () => {
                 </div>
               </div>
               <div className="content-card anim d1">
-                {isDataLoading && (
-                  <div className="loading-overlay">
-                    <div className="loading-spinner"></div>
-                  </div>
-                )}
                 <div className="log-table-head">
                   <span>Timestamp</span>
                   <span>User</span>
@@ -1559,19 +1606,28 @@ const handleExportClick = () => {
                   <h2 className="page-title dash-title">Asset Inventory</h2>
                   <p className="page-subtitle">{assets.length} total records</p>
                 </div>
-                <button
-                  className="btn-red"
-                  onClick={() => setShowAddForm(true)}
-                >
-                  <Plus size={18} /> Add New Asset
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    className="btn-outline"
+                    onClick={() => {
+                      fetchAssets();
+                      fetchLogs();
+                    }}
+                    disabled={isDataLoading}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <RefreshCw size={16} style={{ animation: isDataLoading ? 'spin 1s linear infinite' : 'none' }} />
+                    Refresh
+                  </button>
+                  <button
+                    className="btn-red"
+                    onClick={() => setShowAddForm(true)}
+                  >
+                    <Plus size={18} /> Add New Asset
+                  </button>
+                </div>
               </div>
               <div className="content-card anim d1">
-                {isDataLoading && (
-                  <div className="loading-overlay">
-                    <div className="loading-spinner"></div>
-                  </div>
-                )}
                 <AssetSummary
                   assets={assets}
                   userRole={role}
@@ -1599,11 +1655,6 @@ const handleExportClick = () => {
                 </div>
               </div>
               <div className="content-card anim d1">
-                {isDataLoading && (
-                  <div className="loading-overlay">
-                    <div className="loading-spinner"></div>
-                  </div>
-                )}
                 <DownpaymentTable
                   assets={assets}
                   userRole={role}
