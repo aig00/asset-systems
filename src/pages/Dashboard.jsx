@@ -186,8 +186,10 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
     return amortizationSchedule.reduce((sum, item) => sum + item.amount, 0);
   }, [amortizationSchedule]);
 
-  const fetchAssets = async () => {
-    setIsDataLoading(true);
+  const fetchAssets = async (isBackground = false) => {
+    // Only show loading overlay if it's not a background fetch or if we have no data yet
+    const shouldShowLoading = !isBackground || assets.length === 0;
+    if (shouldShowLoading) setIsDataLoading(true);
     try {
       // Cancel any pending requests
       if (abortControllersRef.current.assets) {
@@ -257,6 +259,7 @@ const { user, role, verifyPin, checkPinLockStatus } = useAuth();
       // Keep previous data on error to avoid blank screen
     } finally {
       setIsDataLoading(false);
+      if (shouldShowLoading) setIsDataLoading(false);
     }
   };
 
@@ -470,6 +473,7 @@ const handleExportClick = () => {
       // Page just became visible - refresh all data to ensure it's up-to-date
       console.log("Page became visible - refreshing data");
       fetchAssets();
+      fetchAssets(true);
       fetchTransactions();
       fetchLogs();
     }
