@@ -1,14 +1,13 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ThemeProvider } from "./context/ThemeContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { useAutoRefresh } from "./useAutoRefresh";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { ErrorBoundary, ProtectedRoute } from "@/components/common";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 // Lazy load components for better performance
-const Login = React.lazy(() => import("./pages/Login"));
-const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const Login = React.lazy(() => import("@/pages/Login"));
+const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 
 // Wrapper component to redirect logged-in users to dashboard
 const LoginRoute = ({ children }) => {

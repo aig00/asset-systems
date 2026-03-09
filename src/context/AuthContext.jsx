@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase } from "@/lib/supabase";
 import {
   generateSalt,
   hashPin,
@@ -7,7 +7,7 @@ import {
   recordFailedAttempt,
   recordSuccess as clearFailedAttempts,
   checkLockStatus,
-} from "../utils/security";
+} from "@/utils/security";
 
 const AuthContext = createContext({ 
   user: null, 

@@ -11,29 +11,27 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  RadialBarChart,
-  RadialBar,
 } from "recharts";
 import { useTheme } from "../context/ThemeContext";
 
-/* ── Red-themed chart palette ── */
+/* ── Multi-hue chart palette (modern, not all-red) ── */
 const COLORS = [
+  "#6366f1", // indigo
+  "#10b981", // emerald
+  "#f59e0b", // amber
   "#dc2626", // brand red
-  "#ef4444", // red-500
-  "#f87171", // red-400
-  "#b91c1c", // red-700
-  "#fca5a5", // red-300
-  "#991b1b", // red-800
-  "#f43f5e", // rose-500
-  "#fb7185", // rose-400
+  "#06b6d4", // cyan
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#14b8a6", // teal
 ];
 
 /* Status-specific colors */
 const STATUS_COLORS = {
-  Active:      "#16a34a",
+  Active:      "#10b981",
   Disposed:    "#dc2626",
-  Transferred: "#d97706",
-  Pending:     "#b45309",
+  Transferred: "#f59e0b",
+  Pending:     "#6366f1",
   Rejected:    "#9ca3af",
 };
 
@@ -43,12 +41,13 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div
       style={{
-        background: isDark ? "#1e1e1e" : "#fff",
-        border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#f0eef0"}`,
-        borderRadius: "10px",
+        background: isDark ? "rgba(26,26,26,0.95)" : "rgba(255,255,255,0.97)",
+        border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#e8e5e3"}`,
+        borderRadius: "12px",
         padding: "12px 16px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
+        boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
         fontFamily: "'DM Sans', sans-serif",
+        backdropFilter: "blur(8px)",
       }}
     >
       {label && (
@@ -67,11 +66,12 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p
           key={i}
           style={{
-            color: entry.color || entry.fill,
+            color: isDark ? "#d1d5db" : "#374151",
             fontSize: 13,
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            gap: 8,
+            margin: "3px 0",
           }}
         >
           <span
@@ -84,8 +84,8 @@ const CustomTooltip = ({ active, payload, label }) => {
               flexShrink: 0,
             }}
           />
-          {entry.name}:{" "}
-          <strong>
+          <span style={{ color: isDark ? "#9ca3af" : "#6b7280" }}>{entry.name}:</span>
+          <strong style={{ color: isDark ? "#f5f5f5" : "#111827" }}>
             {typeof entry.value === "number"
               ? entry.value.toLocaleString()
               : entry.value}
@@ -145,40 +145,38 @@ const DashboardCharts = ({ assets }) => {
       .slice(0, 10);
   }, [assets]);
 
-  /* Chart colors based on mode */
-  const grid   = isDark ? "rgba(255,255,255,0.06)" : "#f0eef0";
+  /* Theme-aware chart colors */
+  const grid   = isDark ? "rgba(255,255,255,0.06)" : "#f0eeec";
   const axis   = isDark ? "#525252" : "#9ca3af";
   const textColor = isDark ? "#a3a3a3" : "#6b7280";
 
   const cardStyle = {
-    background:   isDark ? "#1c1c1c" : "#fff",
-    borderRadius: "18px",
-    border:       `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "#f0eef0"}`,
-    boxShadow:    isDark
-      ? "0 2px 16px rgba(0,0,0,0.25)"
-      : "0 2px 12px rgba(0,0,0,0.055)",
-    padding:      "28px 28px 24px",
+    background:   isDark ? "var(--surface-3)" : "var(--surface)",
+    borderRadius: "var(--radius-card)",
+    border:       `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "var(--border)"}`,
+    boxShadow:    "var(--shadow-card)",
+    padding:      "24px",
     width:        "100%",
   };
 
   const titleStyle = {
-    fontFamily:   "'Syne', sans-serif",
-    fontSize:     "16px",
-    fontWeight:   700,
-    color:        isDark ? "#f3f4f6" : "#111827",
-    marginBottom: "4px",
-    letterSpacing: "-0.2px",
+    fontFamily:    "'Syne', system-ui, sans-serif",
+    fontSize:      "15px",
+    fontWeight:    700,
+    color:         "var(--text-primary)",
+    marginBottom:  "2px",
+    letterSpacing: "-0.01em",
   };
 
   const subtitleStyle = {
     fontSize:     "12px",
     color:        textColor,
-    marginBottom: "22px",
-    fontWeight:   500,
+    marginBottom: "20px",
+    fontWeight:   400,
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "24px", width: "100%" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "20px", width: "100%" }}>
 
       {/* ── Pie: Status Distribution ── */}
       <div style={cardStyle}>
@@ -190,8 +188,8 @@ const DashboardCharts = ({ assets }) => {
               data={statusData}
               cx="50%"
               cy="50%"
-              innerRadius={65}
-              outerRadius={90}
+              innerRadius={62}
+              outerRadius={88}
               paddingAngle={4}
               dataKey="value"
               strokeWidth={0}
@@ -206,7 +204,7 @@ const DashboardCharts = ({ assets }) => {
             <Tooltip content={<CustomTooltip />} />
             <Legend
               wrapperStyle={{ fontSize: 12, color: textColor, paddingTop: 8 }}
-              formatter={(v) => <span style={{ color: textColor }}>{v}</span>}
+              formatter={(v) => <span style={{ color: textColor, fontSize: 12 }}>{v}</span>}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -217,7 +215,7 @@ const DashboardCharts = ({ assets }) => {
         <p style={titleStyle}>Asset Value by Category</p>
         <p style={subtitleStyle}>Top 10 categories by total cost</p>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={categoryData} barSize={18}>
+          <BarChart data={categoryData} barSize={16}>
             <CartesianGrid strokeDasharray="2 4" stroke={grid} vertical={false} />
             <XAxis
               dataKey="name"
@@ -257,7 +255,7 @@ const DashboardCharts = ({ assets }) => {
         <p style={titleStyle}>Assets by LOB</p>
         <p style={subtitleStyle}>Count per line of business</p>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={companyData} barSize={20}>
+          <BarChart data={companyData} barSize={18}>
             <CartesianGrid strokeDasharray="2 4" stroke={grid} vertical={false} />
             <XAxis
               dataKey="name"
@@ -289,7 +287,7 @@ const DashboardCharts = ({ assets }) => {
         <p style={titleStyle}>Asset Count by Category</p>
         <p style={subtitleStyle}>Top 10 categories by quantity</p>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={categoryCountData} barSize={18}>
+          <BarChart data={categoryCountData} barSize={16}>
             <CartesianGrid strokeDasharray="2 4" stroke={grid} vertical={false} />
             <XAxis
               dataKey="name"
@@ -315,7 +313,6 @@ const DashboardCharts = ({ assets }) => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-
     </div>
   );
 };
