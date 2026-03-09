@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import ExcelJS from "exceljs";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import PinVerificationModal from "./PinVerificationModal";
+import { ModernTable, ModernSearchBar, ModernButton, StatusBadge, KebabMenu, ActionButton } from "./ui/ModernTable";
 import {
   Trash2,
   ArrowRightLeft,
@@ -19,11 +20,87 @@ import {
   Clock,
   Layers,
   FileText,
+  Download,
 } from "lucide-react";
+
+// Memoized row component for performance
+const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPending }) => {
+  const statusVariant = (asset.status || "").toLowerCase();
+  
+  return (
+    <tr className="hover:bg-gray-50 transition-colors duration-150 group">
+      {/* Tag / Name */}
+      <td className="px-4 py-3.5">
+        <div>
+          <p className="font-medium text-gray-900 text-sm">{asset.name}</p>
+          <p className="text-xs text-gray-500 font-mono mt-0.5">{asset.tag_number}</p>
+        </div>
+      </td>
+      
+      {/* Category */}
+      <td className="px-4 py-3.5">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+          {asset.category || "—"}
+        </span>
+      </td>
+      
+      {/* Status */}
+      <td className="px-4 py-3.5">
+        <StatusBadge status={statusVariant} />
+      </td>
+      
+      {/* Value */}
+      <td className="px-4 py-3.5 text-right">
+        <span className="font-mono font-semibold text-gray-900">
+          ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+        </span>
+      </td>
+      
+      {/* Actions */}
+      <td className="px-4 py-3.5">
+        <div className="flex items-center justify-end gap-1">
+          <ActionButton 
+            icon={Eye} 
+            label="View Details"
+            onClick={() => onView(asset)}
+          />
+          
+          {(role === "head" || role === "admin") && (
+            <ActionButton 
+              icon={Edit} 
+              label="Edit"
+              variant="primary"
+              onClick={() => onEdit(asset)}
+            />
+          )}
+          
+          <ActionButton 
+            icon={Trash2} 
+            label="Delete"
+            variant="danger"
+            danger
+            onClick={() => onDelete(asset)}
+          />
+          
+          {role === "head" && asset.status === "Active" && (
+            <ActionButton 
+              icon={ArrowRightLeft} 
+              label="Transfer"
+              onClick={() => onTransfer(asset)}
+            />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+AssetRow.displayName = 'AssetRow';
 
 const AssetTable = ({ assets, refreshData }) => {
   const { user, role, verifyPin } = useAuth();
   const [localAssets, setLocalAssets] = useState(assets || []);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -40,8 +117,20 @@ const AssetTable = ({ assets, refreshData }) => {
     setLocalAssets(assets || []);
   }, [assets]);
 
+  // Filtered assets
+  const filteredAssets = React.useMemo(() => {
+    if (!searchQuery) return localAssets;
+    const query = searchQuery.toLowerCase();
+    return localAssets.filter(asset => 
+      asset.name?.toLowerCase().includes(query) ||
+      asset.tag_number?.toLowerCase().includes(query) ||
+      asset.category?.toLowerCase().includes(query) ||
+      asset.status?.toLowerCase().includes(query)
+    );
+  }, [localAssets, searchQuery]);
+
   const handleExportCSV = async () => {
-    const csvData = localAssets.map((asset) => {
+    const csvData = filteredAssets.map((asset) => {
       const quantity = Number(asset.quantity) || 0;
       const unitCost = Number(asset.unit_cost) || 0;
       const totalCost = quantity * unitCost;
@@ -143,7 +232,6 @@ const AssetTable = ({ assets, refreshData }) => {
     } catch (error) {
       console.error("Error transferring asset:", error);
       alert(`Failed to transfer asset: ${error.message}`);
-      // Attempt to refresh to re-sync state
       if (refreshData) {
         await refreshData();
       }
@@ -244,10 +332,9 @@ const AssetTable = ({ assets, refreshData }) => {
     try {
       const result = await verifyPin(enteredPin);
       if (!result || !result.success) {
-        return result; // Return the error result to the modal
+        return result;
       }
       
-      // PIN verification succeeded - execute the pending action
       const { action, asset } = pendingAction;
       
       if (action === "edit") {
@@ -261,7 +348,7 @@ const AssetTable = ({ assets, refreshData }) => {
       }
       
       setPendingAction(null);
-      return result; // Return success result
+      return result;
     } catch (error) {
       console.error("PIN verification error:", error);
       return { success: false, error: error.message || "An error occurred" };
@@ -273,14 +360,79 @@ const AssetTable = ({ assets, refreshData }) => {
   const handleDisposeClick = (asset) => handlePinRequiredAction("dispose", asset);
   const handleTransferClick = (asset) => handlePinRequiredAction("transfer", asset);
 
-  // Check for dark mode
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-
-  const statusStyle = (status) => {
-    if (status === "Active") return { bg: isDark ? "#052e16" : "#f0fdf4", color: isDark ? "#4ade80" : "#16a34a", border: isDark ? "#166534" : "#bbf7d0" };
-    if (status === "Disposed") return { bg: isDark ? "#450a0a" : "#fef2f2", color: isDark ? "#fca5a5" : "#dc2626", border: isDark ? "#7f1d1d" : "#fecaca" };
-    return { bg: isDark ? "#451a03" : "#fffbeb", color: isDark ? "#fbbf24" : "#d97706", border: isDark ? "#78350f" : "#fde68a" };
-  };
+  // Table columns definition
+  const columns = [
+    { 
+      key: 'name', 
+      header: 'Tag / Name',
+      render: (_, row) => (
+        <div>
+          <p className="font-medium text-gray-900 text-sm">{row.name}</p>
+          <p className="text-xs text-gray-500 font-mono mt-0.5">{row.tag_number}</p>
+        </div>
+      )
+    },
+    { 
+      key: 'category', 
+      header: 'Category',
+      render: (val) => (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+          {val || "—"}
+        </span>
+      )
+    },
+    { 
+      key: 'status', 
+      header: 'Status',
+      type: 'status'
+    },
+    { 
+      key: 'total_cost', 
+      header: 'Value',
+      type: 'currency',
+      align: 'right'
+    },
+    { 
+      key: 'actions', 
+      header: '',
+      align: 'right',
+      width: 'w-40',
+      render: (_, row) => (
+        <div className="flex items-center justify-end gap-1">
+          <ActionButton 
+            icon={Eye} 
+            label="View Details"
+            onClick={() => {}}
+          />
+          
+          {(role === "head" || role === "admin") && (
+            <ActionButton 
+              icon={Edit} 
+              label="Edit"
+              variant="primary"
+              onClick={() => handleEditClick(row)}
+            />
+          )}
+          
+          <ActionButton 
+            icon={Trash2} 
+            label="Delete"
+            variant="danger"
+            danger
+            onClick={() => handleDisposeClick(row)}
+          />
+          
+          {role === "head" && row.status === "Active" && (
+            <ActionButton 
+              icon={ArrowRightLeft} 
+              label="Transfer"
+              onClick={() => handleTransferClick(row)}
+            />
+          )}
+        </div>
+      )
+    },
+  ];
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -330,167 +482,229 @@ const AssetTable = ({ assets, refreshData }) => {
 
   return (
     <>
-      <style>{`
-        .at-root { font-family: 'DM Sans', sans-serif; width: 100%; overflow-x: auto; }
-        .at-table { width: 100%; min-width: 680px; border-collapse: collapse; }
-        .at-thead { background: #fff7f7; border-bottom: 1px solid #fde8e8; }
-        .dark .at-thead { background: #450a0a; border-bottom: 1px solid #7f1d1d; }
-        .at-th { padding: 13px 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #ef4444; white-space: nowrap; }
-        .dark .at-th { color: #fca5a5; }
-        .at-th.right { text-align: right; }
-        .at-th.center { text-align: center; }
-        .at-row { border-bottom: 1px solid #fff1f1; transition: background 0.12s; }
-        .dark .at-row { border-bottom: 1px solid #292524; }
-        .at-row:last-child { border-bottom: none; }
-        .at-row:hover { background: #fff8f8; }
-        .dark .at-row:hover { background: #292524; }
-        .at-td { padding: 16px 24px; font-size: 14px; color: #374151; vertical-align: middle; }
-        .dark .at-td { color: #d1d5db; }
-        .at-td.right { text-align: right; }
-        .at-td.center { text-align: center; }
-        .at-asset-name { font-weight: 600; font-size: 14px; color: #111827; }
-        .dark .at-asset-name { color: #f9fafb; }
-        .at-asset-tag { font-size: 12px; color: #9ca3af; margin-top: 2px; font-family: monospace; }
-        .at-category { display: inline-block; font-size: 12px; font-weight: 600; color: #6b7280; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 10px; }
-        .dark .at-category { color: #9ca3af; background: #374151; border-color: #4b5563; }
-        .at-status { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 11px; border-radius: 99px; border: 1px solid; }
-        .at-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #111827; }
-        .dark .at-value { color: #111827 !important; }
-        .dark .at-td.right .at-value { color: #111827 !important; }
-        .at-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.14s; }
-        .at-btn:hover { transform: translateY(-1px); }
-        .at-btn-view { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
-        .dark .at-btn-view { background: #1e3a5f; border-color: #1e40af; color: #60a5fa; }
-        .at-btn-transfer { background: #fffbeb; border-color: #fde68a; color: #d97706; }
-        .dark .at-btn-transfer { background: #451a03; border-color: #78350f; color: #fbbf24; }
-        .at-btn-dispose { background: #fff1f1; border-color: #fecaca; color: #dc2626; }
-        .dark .at-btn-dispose { background: #450a0a; border-color: #7f1d1d; color: #fca5a5; }
-        .at-btn-edit { background: #eef2ff; border-color: #c7d2fe; color: #6366f1; }
-        .dark .at-btn-edit { background: #312e81; border-color: #3730a3; color: #a5b4fc; }
-        .at-empty { text-align: center; padding: 64px 24px; color: #d1d5db; }
-        .dark .at-empty { color: #6b7280; }
-        .at-empty-icon { width: 48px; height: 48px; background: #fff1f1; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: #fca5a5; }
-        .dark .at-empty-icon { background: #450a0a; color: #7f1d1d; }
-      `}</style>
-
-      <div className="at-root">
-        <div style={{ padding: "10px", textAlign: "right" }}>
-          <button onClick={handleExportCSV} className="at-btn at-btn-view" style={{ width: "auto", padding: "0 15px", fontSize: "13px" }}>
-            Export CSV
-          </button>
+      {/* ── Modern Table Container ── */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header / Toolbar */}
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between gap-4">
+          <ModernSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by name, tag, category..."
+            className="flex-1 max-w-sm"
+          />
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              {filteredAssets.length} of {localAssets.length} assets
+            </span>
+            <ModernButton 
+              variant="secondary" 
+              size="sm"
+              icon={Download}
+              onClick={handleExportCSV}
+            >
+              Export
+            </ModernButton>
+          </div>
         </div>
-        <table className="at-table">
-          <thead className="at-thead">
-            <tr>
-              <th className="at-th">Tag / Name</th>
-              <th className="at-th">Category</th>
-              <th className="at-th">Status</th>
-              <th className="at-th right">Value</th>
-              <th className="at-th center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {localAssets.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="at-empty">
-                    <div className="at-empty-icon"><Trash2 size={22} /></div>
-                    No assets found.
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              localAssets.map((asset) => {
-                const s = statusStyle(asset.status);
-                return (
-                  <tr key={asset.id} className="at-row">
-                    <td className="at-td">
-                      <div className="at-asset-name">{asset.name}</div>
-                      <div className="at-asset-tag">{asset.tag_number}</div>
-                    </td>
-                    <td className="at-td">
-                      <span className="at-category">{asset.category}</span>
-                    </td>
-                    <td className="at-td">
-                      <span className="at-status" style={{ background: s.bg, color: s.color, borderColor: s.border }}>
-                        {asset.status}
-                      </span>
-                    </td>
-                    <td className="at-td right">
-                      <span className="at-value">₱{parseFloat(asset.total_cost).toLocaleString()}</span>
-                    </td>
-                    <td className="at-td center">
-                      <div className="at-actions">
-                        <button title="View Details" className="at-btn at-btn-view">
-                          <Eye size={15} />
-                        </button>
-                        {(role === "head" || role === "admin") && (
-                          <button title="Edit" className="at-btn at-btn-edit" onClick={() => handleEditClick(asset)}>
-                            <Edit size={15} />
-                          </button>
-                        )}
-                        <button onClick={() => handleDisposeClick(asset)} title="Delete" className="at-btn at-btn-dispose">
-                          <Trash2 size={15} />
-                        </button>
-                        {role === "head" && asset.status === "Active" && (
-                          <button onClick={() => handleTransferClick(asset)} title="Transfer" className="at-btn at-btn-transfer">
-                            <ArrowRightLeft size={15} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+
+        {/* Table */}
+        <ModernTable
+          columns={columns}
+          data={filteredAssets}
+          emptyMessage="No assets found."
+          loading={false}
+        />
       </div>
 
       {/* Edit Modal */}
       {showEditModal && selectedAsset && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15, 5, 5, 0.48)", backdropFilter: "blur(7px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={(e) => e.target === e.currentTarget && setShowEditModal(false)}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#ffffff", borderRadius: "22px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 32px 96px rgba(220,38,38,0.16)", border: "1px solid #fde8e8" }}>
-            <div style={{ padding: "22px 26px 18px", borderBottom: "1px solid #fef0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ width: "40px", height: "40px", background: "linear-gradient(135deg, #4338ca, #6366f1)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Edit size={18} color="#fff" />
+        <div 
+          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowEditModal(false)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
+                  <Edit className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'Syne', sans-serif", fontSize: "17px", fontWeight: 800, color: "#111827" }}>Edit Asset</p>
-                  <p style={{ fontSize: "13px", color: "#9ca3af" }}>{selectedAsset.name}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">Edit Asset</h3>
+                  <p className="text-sm text-gray-500">{selectedAsset.name}</p>
                 </div>
               </div>
-              <button onClick={() => setShowEditModal(false)} style={{ width: "32px", height: "32px", borderRadius: "9px", border: "1.5px solid #fde8e8", background: "#fff5f5", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <X size={15} />
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <div style={{ padding: "22px 26px" }}>
-              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#ef4444", marginBottom: "12px" }}>Basic Information</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Asset Name</label><input name="name" value={editForm.name || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Category</label><input name="category" value={editForm.category || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Tag Number</label><input name="tag_number" value={editForm.tag_number || ""} readOnly style={{ fontSize: "14px", color: "#6b7280", background: "#f3f4f6", border: "1.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 13px", width: "100%", cursor: "not-allowed" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Reference #</label><input name="reference_number" value={editForm.reference_number || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Asset Name</label>
+                    <input 
+                      name="name" 
+                      value={editForm.name || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <input 
+                      name="category" 
+                      value={editForm.category || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tag Number</label>
+                    <input 
+                      name="tag_number" 
+                      value={editForm.tag_number || ""} 
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Reference #</label>
+                    <input 
+                      name="reference_number" 
+                      value={editForm.reference_number || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
-              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#ef4444", marginBottom: "12px" }}>Valuation</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Quantity</label><input type="number" name="quantity" value={editForm.quantity || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Unit Cost (₱)</label><input type="number" step="0.01" name="unit_cost" value={editForm.unit_cost || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Salvage Value (₱)</label><input type="number" step="0.01" name="salvage_value" value={editForm.salvage_value || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Useful Life (Years)</label><input type="number" name="useful_life_years" value={editForm.useful_life_years || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
+
+              {/* Valuation */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Valuation</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input 
+                      type="number" 
+                      name="quantity" 
+                      value={editForm.quantity || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (₱)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      name="unit_cost" 
+                      value={editForm.unit_cost || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salvage Value (₱)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      name="salvage_value" 
+                      value={editForm.salvage_value || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Useful Life (Years)</label>
+                    <input 
+                      type="number" 
+                      name="useful_life_years" 
+                      value={editForm.useful_life_years || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
-              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#ef4444", marginBottom: "12px" }}>Logistics</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Purchase Date</label><input type="date" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>LOB</label><select name="current_company" value={editForm.current_company || "HO"} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }}><option value="HO">HO</option><option value="CY Caloocan">CY Caloocan</option><option value="CY Bustos">CY Bustos</option><option value="Chassis Leasing">Chassis Leasing</option><option value="Reefer">Reefer</option><option value="Trucking">Trucking</option><option value="Technical Service">Technical Service</option><option value="Outports">Outports</option><option value="CY Valenzuela">CY Valenzuela</option></select></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Location</label><input name="location" value={editForm.location || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
-                <div><label style={{ fontSize: "12.5px", fontWeight: 600, color: "#374151", marginBottom: "5px", display: "block" }}>Assigned To</label><input name="assigned_to" value={editForm.assigned_to || ""} onChange={handleEditChange} style={{ fontSize: "14px", color: "#111827", background: "#fafafa", border: "1.5px solid #f3e8e8", borderRadius: "10px", padding: "10px 13px", width: "100%" }} /></div>
+
+              {/* Logistics */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Logistics</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                    <input 
+                      type="date" 
+                      name="purchase_date" 
+                      value={editForm.purchase_date || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">LOB</label>
+                    <select 
+                      name="current_company" 
+                      value={editForm.current_company || "HO"} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    >
+                      <option value="HO">HO</option>
+                      <option value="CY Caloocan">CY Caloocan</option>
+                      <option value="CY Bustos">CY Bustos</option>
+                      <option value="Chassis Leasing">Chassis Leasing</option>
+                      <option value="Reefer">Reefer</option>
+                      <option value="Trucking">Trucking</option>
+                      <option value="Technical Service">Technical Service</option>
+                      <option value="Outports">Outports</option>
+                      <option value="CY Valenzuela">CY Valenzuela</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input 
+                      name="location" 
+                      value={editForm.location || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                    <input 
+                      name="assigned_to" 
+                      value={editForm.assigned_to || ""} 
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div style={{ padding: "16px 26px 22px", display: "flex", gap: "10px", borderTop: "1px solid #fef0f0" }}>
-              <button onClick={() => setShowEditModal(false)} style={{ flex: 1, fontSize: "14px", fontWeight: 600, color: "#6b7280", background: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "11px", padding: "11px", cursor: "pointer" }}>Cancel</button>
-              <button onClick={handleEditSave} disabled={loading} style={{ flex: 2, fontSize: "14px", fontWeight: 700, color: "#fff", background: loading ? "#9ca3af" : "linear-gradient(135deg, #4338ca, #6366f1)", border: "none", borderRadius: "11px", padding: "11px", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleEditSave}
+                disabled={loading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 {loading ? "Saving..." : "Save Changes"}
               </button>
             </div>
@@ -517,3 +731,4 @@ const AssetTable = ({ assets, refreshData }) => {
 };
 
 export default AssetTable;
+

@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
@@ -5,7 +6,7 @@ export default {
     extend: {
       colors: {
         brand: {
-          50:  "#fef2f2",
+          50: "#fef2f2",
           100: "#fee2e2",
           200: "#fecaca",
           300: "#fca5a5",
@@ -15,6 +16,19 @@ export default {
           700: "#b91c1c",
           800: "#991b1b",
           900: "#7f1d1d",
+        },
+        // Modern SaaS color palette
+        primary: {
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
         },
         surface: {
           DEFAULT: "var(--surface)",
@@ -37,18 +51,38 @@ export default {
           subtle: "var(--text-subtle)",
           invert: "var(--text-invert)",
         },
-        shadow: {
-          xs: "var(--shadow-xs)",
-          sm: "var(--shadow-sm)",
-          md: "var(--shadow-md)",
-          lg: "var(--shadow-lg)",
-          xl: "var(--shadow-xl)",
+        // Semantic status colors (soft)
+        status: {
+          active: {
+            bg: "#ecfdf5",
+            text: "#059669",
+            border: "#a7f3d0",
+            dot: "#10b981",
+          },
+          pending: {
+            bg: "#fffbeb",
+            text: "#d97706",
+            border: "#fde68a",
+            dot: "#f59e0b",
+          },
+          disposed: {
+            bg: "#fef2f2",
+            text: "#dc2626",
+            border: "#fecaca",
+            dot: "#ef4444",
+          },
+          transferred: {
+            bg: "#eff6ff",
+            text: "#2563eb",
+            border: "#bfdbfe",
+            dot: "#3b82f6",
+          },
         },
       },
       fontFamily: {
-        sans:    ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
         display: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono:    ["JetBrains Mono", "monospace"],
+        mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {
         "2xl": "1rem",
@@ -63,11 +97,15 @@ export default {
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
-        card:       "var(--shadow-card)",
+        card: "var(--shadow-card)",
         "card-hover": "var(--shadow-card-hover)",
-        nav:        "var(--shadow-nav)",
-        modal:      "var(--shadow-modal)",
-        float:      "var(--shadow-float)",
+        nav: "var(--shadow-nav)",
+        modal: "var(--shadow-modal)",
+        float: "var(--shadow-float)",
+        // Modern button shadows
+        "btn-sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        btn: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "btn-hover": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
       },
       spacing: {
         "1.5": "6px",
@@ -82,51 +120,51 @@ export default {
         "10.5": "72px",
       },
       animation: {
-        "fade-up":    "fadeUp 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) both",
-        "fade-in":    "fadeIn 0.24s ease both",
+        "fade-up": "fadeUp 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) both",
+        "fade-in": "fadeIn 0.24s ease both",
         "pulse-ring": "pulseRing 2s ease-in-out infinite",
-        "spin-slow":  "spin 1.2s linear infinite",
-        "slide-in":   "slideIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both",
-        "bounce-in":  "bounceIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both",
-        "glow":       "glow 2s ease-in-out infinite alternate",
+        "spin-slow": "spin 1.2s linear infinite",
+        "slide-in": "slideIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both",
+        "bounce-in": "bounceIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both",
+        "glow": "glow 2s ease-in-out infinite alternate",
       },
       keyframes: {
         fadeUp: {
           from: { opacity: "0", transform: "translateY(12px)" },
-          to:   { opacity: "1", transform: "translateY(0)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
         fadeIn: {
           from: { opacity: "0" },
-          to:   { opacity: "1" },
+          to: { opacity: "1" },
         },
         pulseRing: {
           "0%, 100%": { transform: "scale(1)", opacity: "1" },
-          "50%":      { transform: "scale(1.06)", opacity: "0.65" },
+          "50%": { transform: "scale(1.06)", opacity: "0.65" },
         },
         slideIn: {
           from: { opacity: "0", transform: "translateX(-16px)" },
-          to:   { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "1", transform: "translateX(0)" },
         },
         bounceIn: {
-          "0%":   { opacity: "0", transform: "scale(0.8)" },
-          "50%":  { opacity: "1", transform: "scale(1.05)" },
+          "0%": { opacity: "0", transform: "scale(0.8)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         glow: {
-          from: { boxShadow: "0 0 5px rgba(220,38,38,0.3)" },
-          to:   { boxShadow: "0 0 15px rgba(220,38,38,0.6)" },
+          from: { boxShadow: "0 0 5px rgba(79, 70, 229, 0.3)" },
+          to: { boxShadow: "0 0 15px rgba(79, 70, 229, 0.6)" },
         },
       },
       transitionTimingFunction: {
-        "spring": "cubic-bezier(0.16, 1, 0.3, 1)",
-        "out": "cubic-bezier(0.22, 0.61, 0.36, 1)",
+        spring: "cubic-bezier(0.16, 1, 0.3, 1)",
+        out: "cubic-bezier(0.22, 0.61, 0.36, 1)",
         "in-out": "cubic-bezier(0.4, 0, 0.2, 1)",
       },
       transitionDuration: {
-        "fast": "0.15s",
-        "base": "0.2s",
-        "slow": "0.3s",
-        "spring": "0.35s",
+        fast: "0.15s",
+        base: "0.2s",
+        slow: "0.3s",
+        spring: "0.35s",
       },
       backdropBlur: {
         xs: "2px",
@@ -149,3 +187,4 @@ export default {
     require('@tailwindcss/typography'),
   ],
 };
+

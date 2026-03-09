@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
+import { ModernSearchBar, ModernButton, StatusBadge, ActionButton } from "./ui/ModernTable";
 import {
-  Eye,
   Edit,
   Trash2,
   X,
   Plus,
-  DollarSign,
-  FileText,
-  CheckCircle2,
-  AlertCircle,
   ChevronDown,
   ChevronUp,
   Calendar,
   Receipt,
+  Search,
 } from "lucide-react";
 
 const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
@@ -27,821 +24,149 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   const [loading, setLoading] = useState(false);
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
-  const [addAssetForm, setAddAssetForm] = useState({
-    name: "",
-    category: "",
-    tag_number: "",
-    total_cost: 0,
-    status: "Pending",
-  });
-  const [addTransactionForm, setAddTransactionForm] = useState({
-    amount: "",
-    description: "",
-    transaction_date: new Date().toISOString().split("T")[0],
-  });
+  const [addAssetForm, setAddAssetForm] = useState({ name: "", category: "", tag_number: "", total_cost: 0, status: "Pending" });
+  const [addTransactionForm, setAddTransactionForm] = useState({ amount: "", description: "", transaction_date: new Date().toISOString().split("T")[0] });
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Auto-generate tag number when modal opens
   useEffect(() => {
     fetchTransactions();
-    
     if (showAddAssetModal) {
       const generateTagNumber = async () => {
-        const { data } = await supabase
-          .from("assets")
-          .select("tag_number")
-          .not("tag_number", "is", null)
-          .order("tag_number", { ascending: false });
-
+        const { data } = await supabase.from("assets").select("tag_number").not("tag_number", "is", null).order("tag_number", { ascending: false });
         let nextNum = 1;
-        if (data && data.length > 0) {
-          data.forEach((item) => {
-            const match = item.tag_number?.match(/^TAG-(\d+)$/);
-            if (match) {
-              const num = parseInt(match[1], 10);
-              if (num >= nextNum) {
-                nextNum = num + 1;
-              }
-            }
-          });
+        if (data?.length) {
+          data.forEach((item) => { const match = item.tag_number?.match(/^TAG-(\d+)$/); if (match) { const num = parseInt(match[1], 10); if (num >= nextNum) nextNum = num + 1; } });
         }
-
-        const newTag = `TAG-${nextNum.toString().padStart(3, "0")}`;
-        setAddAssetForm((prev) => ({ ...prev, tag_number: newTag }));
+        setAddAssetForm((prev) => ({ ...prev, tag_number: `TAG-${nextNum.toString().padStart(3, "0")}` }));
       };
       generateTagNumber();
     }
   }, [showAddAssetModal]);
 
   const fetchTransactions = async () => {
-    const { data, error } = await supabase
-      .from("downpayment_transactions")
-      .select("*")
-      .order("transaction_date", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching transactions:", error);
-      return;
-    }
-
-    // Group transactions by asset_id
+    const { data, error } = await supabase.from("downpayment_transactions").select("*").order("transaction_date", { ascending: false });
+    if (error) { console.error("Error:", error); return; }
     const grouped = {};
-    data.forEach((txn) => {
-      if (!grouped[txn.asset_id]) {
-        grouped[txn.asset_id] = [];
-      }
-      grouped[txn.asset_id].push(txn);
-    });
+    (data || []).forEach((txn) => { if (!grouped[txn.asset_id]) grouped[txn.asset_id] = []; grouped[txn.asset_id].push(txn); });
     setTransactions(grouped);
   };
 
-  // Listen for open add modal event from parent
-  useEffect(() => {
-    const handleOpenAdd = () => setShowAddAssetModal(true);
-    window.addEventListener('openAddDownpayment', handleOpenAdd);
-    return () => window.removeEventListener('openAddDownpayment', handleOpenAdd);
-  }, []);
+  useEffect(() => { const handleOpenAdd = () => setShowAddAssetModal(true); window.addEventListener('openAddDownpayment', handleOpenAdd); return () => window.removeEventListener('openAddDownpayment', handleOpenAdd); }, []);
 
-  // Filter assets that have transactions OR have legacy downpayment data
   const downpaymentAssets = assets.filter((asset) => {
     const assetTransactions = transactions[asset.id] || [];
     const hasTransactions = assetTransactions.length > 0;
     const hasLegacyDownpayment = parseFloat(asset.downpayment_amount) > 0;
     const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      asset.name?.toLowerCase().includes(query) ||
-      asset.tag_number?.toLowerCase().includes(query) ||
-      asset.category?.toLowerCase().includes(query);
+    const matchesSearch = asset.name?.toLowerCase().includes(query) || asset.tag_number?.toLowerCase().includes(query) || asset.category?.toLowerCase().includes(query);
     return (hasTransactions || hasLegacyDownpayment) && matchesSearch;
   });
 
-  // Calculate total downpayment for an asset (from transactions + legacy)
-  const getTotalDownpayment = (asset) => {
-    const assetTransactions = transactions[asset.id] || [];
-    const txnTotal = assetTransactions.reduce(
-      (sum, txn) => sum + (parseFloat(txn.amount) || 0),
-      0
-    );
-    const legacyTotal = parseFloat(asset.downpayment_amount) || 0;
-    return txnTotal + legacyTotal;
-  };
+  const getTotalDownpayment = (asset) => { const assetTransactions = transactions[asset.id] || []; const txnTotal = assetTransactions.reduce((sum, txn) => sum + (parseFloat(txn.amount) || 0), 0); const legacyTotal = parseFloat(asset.downpayment_amount) || 0; return txnTotal + legacyTotal; };
 
-  const calculatePaymentCompletion = (asset) => {
-    const totalCost = parseFloat(asset.total_cost) || 0;
-    const downpayment = getTotalDownpayment(asset);
-    if (totalCost === 0) return 0;
-    return Math.min((downpayment / totalCost) * 100, 100);
-  };
+  const calculatePaymentCompletion = (asset) => { const totalCost = parseFloat(asset.total_cost) || 0; const downpayment = getTotalDownpayment(asset); if (totalCost === 0) return 0; return Math.min((downpayment / totalCost) * 100, 100); };
 
-  // Toggle asset expansion to show transactions
-  const toggleAssetExpansion = (assetId) => {
-    setExpandedAssets((prev) => ({
-      ...prev,
-      [assetId]: !prev[assetId],
-    }));
-  };
+  const toggleAssetExpansion = (assetId) => { setExpandedAssets((prev) => ({ ...prev, [assetId]: !prev[assetId] })); };
 
-  // Handle adding a new asset (with initial downpayment)
   const handleAddAssetSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
+    e.preventDefault(); setLoading(true);
     const totalCost = parseFloat(addAssetForm.total_cost) || 0;
-
-    const assetData = {
-      name: addAssetForm.name,
-      category: addAssetForm.category || "General",
-      tag_number: addAssetForm.tag_number,
-      total_cost: totalCost,
-      downpayment_amount: 0, // Will be managed through transactions
-      downpayment_description: "",
-      quantity: 1,
-      unit_cost: totalCost,
-      salvage_value: 0,
-      useful_life_years: 1,
-      status: "Pending",
-      current_company: "HO",
-      purchase_date: new Date().toISOString().split("T")[0],
-    };
-
-    const { data: assetDataResult, error } = await supabase
-      .from("assets")
-      .insert([assetData])
-      .select();
-
-    if (error) {
-      alert("Error adding asset: " + error.message);
-      setLoading(false);
-      return;
-    }
-
-    // If there's an initial downpayment amount, create a transaction
+    const assetData = { name: addAssetForm.name, category: addAssetForm.category || "General", tag_number: addAssetForm.tag_number, total_cost: totalCost, downpayment_amount: 0, quantity: 1, unit_cost: totalCost, salvage_value: 0, useful_life_years: 1, status: "Pending", current_company: "HO", purchase_date: new Date().toISOString().split("T")[0] };
+    const { data: assetDataResult, error } = await supabase.from("assets").insert([assetData]).select();
+    if (error) { alert("Error: " + error.message); setLoading(false); return; }
     const initialAmount = parseFloat(addAssetForm.downpayment_amount || 0);
-    if (initialAmount > 0 && assetDataResult && assetDataResult[0]) {
-      const { error: txnError } = await supabase.from("downpayment_transactions").insert([
-        {
-          asset_id: assetDataResult[0].id,
-          amount: initialAmount,
-          description: addAssetForm.downpayment_description || "Initial downpayment",
-          transaction_date: new Date().toISOString().split("T")[0],
-          created_by: userEmail,
-        },
-      ]);
-
-      if (txnError) {
-        console.error("Error recording initial downpayment:", txnError);
-        alert(`Asset created, but the initial downpayment failed to save: ${txnError.message}. Please record it manually.`);
-      }
+    if (initialAmount > 0 && assetDataResult?.[0]) {
+      await supabase.from("downpayment_transactions").insert([{ asset_id: assetDataResult[0].id, amount: initialAmount, description: addAssetForm.downpayment_description || "Initial downpayment", transaction_date: new Date().toISOString().split("T")[0], created_by: userEmail }]);
     }
-
-    // Log the asset creation
-    await supabase.from("logs").insert({
-      user_email: userEmail || "unknown",
-      action_type: "CREATE_ASSET",
-      details: {
-        asset_name: addAssetForm.name,
-        tag_number: addAssetForm.tag_number,
-        category: addAssetForm.category || "General",
-        total_cost: totalCost,
-        status: "Pending",
-        company: "HO",
-        message: `Asset "${addAssetForm.name}" (${addAssetForm.tag_number}) created via Downpayment - Category: ${addAssetForm.category || "General"}, Cost: ₱${totalCost}`
-      }
-    });
-
-    setLoading(false);
-    setShowAddAssetModal(false);
-    setAddAssetForm({
-      name: "",
-      category: "",
-      tag_number: "",
-      total_cost: 0,
-      status: "Pending",
-    });
-    refreshData();
-    fetchTransactions();
+    await supabase.from("logs").insert({ user_email: userEmail || "unknown", action_type: "CREATE_ASSET", details: { asset_name: addAssetForm.name, message: `Asset "${addAssetForm.name}" created via Downpayment` } });
+    setLoading(false); setShowAddAssetModal(false); setAddAssetForm({ name: "", category: "", tag_number: "", total_cost: 0, status: "Pending" }); refreshData(); fetchTransactions();
   };
 
-  // Handle adding a new transaction to an existing asset
   const handleAddTransactionSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedAsset) return;
-
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("downpayment_transactions")
-      .insert([
-        {
-          asset_id: selectedAsset.id,
-          amount: parseFloat(addTransactionForm.amount) || 0,
-          description: addTransactionForm.description,
-          transaction_date: addTransactionForm.transaction_date,
-          created_by: userEmail,
-        },
-      ]);
-
-    if (error) {
-      alert("Error adding transaction: " + error.message);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-    setShowAddTransactionModal(false);
-    setAddTransactionForm({
-      amount: "",
-      description: "",
-      transaction_date: new Date().toISOString().split("T")[0],
-    });
-    fetchTransactions();
-    refreshData();
+    e.preventDefault(); if (!selectedAsset) return; setLoading(true);
+    await supabase.from("downpayment_transactions").insert([{ asset_id: selectedAsset.id, amount: parseFloat(addTransactionForm.amount) || 0, description: addTransactionForm.description, transaction_date: addTransactionForm.transaction_date, created_by: userEmail }]);
+    setLoading(false); setShowAddTransactionModal(false); setAddTransactionForm({ amount: "", description: "", transaction_date: new Date().toISOString().split("T")[0] }); fetchTransactions(); refreshData();
   };
 
-  // Handle updating a transaction
   const handleUpdateTransaction = async () => {
-    if (!selectedTransaction) return;
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("downpayment_transactions")
-      .update({
-        amount: parseFloat(editForm.amount) || 0,
-        description: editForm.description,
-        transaction_date: editForm.transaction_date,
-      })
-      .eq("id", selectedTransaction.id);
-
-    if (error) {
-      alert("Error updating transaction: " + error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Log the transaction update
-    await supabase.from("logs").insert({
-      user_email: userEmail || "unknown",
-      action_type: "UPDATE_DOWNPAYMENT",
-      details: {
-        asset_name: selectedAsset.name,
-        tag_number: selectedAsset.tag_number,
-        transaction_id: selectedTransaction.id,
-        old_amount: selectedTransaction.amount,
-        new_amount: parseFloat(editForm.amount) || 0,
-        old_description: selectedTransaction.description,
-        new_description: editForm.description,
-        old_date: selectedTransaction.transaction_date,
-        new_date: editForm.transaction_date,
-        updated_by: userEmail,
-        update_date: new Date().toISOString(),
-        message: `Downpayment transaction for "${selectedAsset.name}" (${selectedAsset.tag_number}) updated by ${userEmail}`
-      }
-    });
-
-    setLoading(false);
-    setModalMode(null);
-    setSelectedTransaction(null);
-    fetchTransactions();
-    refreshData();
+    if (!selectedTransaction) return; setLoading(true);
+    await supabase.from("downpayment_transactions").update({ amount: parseFloat(editForm.amount) || 0, description: editForm.description, transaction_date: editForm.transaction_date }).eq("id", selectedTransaction.id);
+    setLoading(false); setModalMode(null); setSelectedTransaction(null); fetchTransactions(); refreshData();
   };
 
-  // Handle deleting a transaction
   const handleDeleteTransaction = async () => {
-    if (!selectedTransaction) return;
-
-    setLoading(true);
-    const { error } = await supabase
-      .from("downpayment_transactions")
-      .delete()
-      .eq("id", selectedTransaction.id);
-
-    if (error) {
-      alert(error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Log the transaction deletion
-    await supabase.from("logs").insert({
-      user_email: userEmail || "unknown",
-      action_type: "DELETE_DOWNPAYMENT",
-      details: {
-        asset_name: selectedAsset.name,
-        tag_number: selectedAsset.tag_number,
-        transaction_id: selectedTransaction.id,
-        deleted_amount: selectedTransaction.amount,
-        deleted_description: selectedTransaction.description,
-        deleted_date: selectedTransaction.transaction_date,
-        deleted_by: userEmail,
-        deletion_date: new Date().toISOString(),
-        message: `Downpayment transaction for "${selectedAsset.name}" (${selectedAsset.tag_number}) deleted by ${userEmail}`
-      }
-    });
-
-    setLoading(false);
-    setModalMode(null);
-    setSelectedTransaction(null);
-    fetchTransactions();
-    refreshData();
+    if (!selectedTransaction) return; setLoading(true);
+    await supabase.from("downpayment_transactions").delete().eq("id", selectedTransaction.id);
+    setLoading(false); setModalMode(null); setSelectedTransaction(null); fetchTransactions(); refreshData();
   };
 
-  // Handle deleting an asset and all its transactions
   const handleDeleteAsset = async () => {
-    if (!selectedAsset) return;
-
-    setLoading(true);
-    const { error } = await supabase
-      .from("assets")
-      .delete()
-      .eq("id", selectedAsset.id);
-
-    if (error) {
-      alert(error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Log the asset deletion
-    await supabase.from("logs").insert({
-      user_email: userEmail || "unknown",
-      action_type: "DELETE_ASSET",
-      details: {
-        asset_name: selectedAsset.name,
-        tag_number: selectedAsset.tag_number,
-        category: selectedAsset.category,
-        total_cost: selectedAsset.total_cost,
-        status: selectedAsset.status,
-        deleted_by: userEmail,
-        deletion_date: new Date().toISOString(),
-        message: `Asset "${selectedAsset.name}" (${selectedAsset.tag_number}) deleted by ${userEmail}`
-      }
-    });
-
-    setLoading(false);
-    setModalMode(null);
-    setSelectedAsset(null);
-    refreshData();
-    fetchTransactions();
+    if (!selectedAsset) return; setLoading(true);
+    await supabase.from("assets").delete().eq("id", selectedAsset.id);
+    setLoading(false); setModalMode(null); setSelectedAsset(null); refreshData(); fetchTransactions();
   };
 
-  // Open modal for editing a transaction
-  const openTransactionModal = (asset, transaction, mode) => {
-    setSelectedAsset(asset);
-    setSelectedTransaction(transaction);
-    setModalMode(mode);
-    if (mode === "edit") {
-      setEditForm({
-        amount: transaction.amount,
-        description: transaction.description,
-        transaction_date: transaction.transaction_date,
-      });
-    }
-  };
+  const openTransactionModal = (asset, transaction, mode) => { setSelectedAsset(asset); setSelectedTransaction(transaction); setModalMode(mode); if (mode === "edit") setEditForm({ amount: transaction.amount, description: transaction.description, transaction_date: transaction.transaction_date }); };
+  const openAddTransaction = (asset) => { setSelectedAsset(asset); setShowAddTransactionModal(true); };
+  const closeModal = () => { setSelectedAsset(null); setSelectedTransaction(null); setModalMode(null); };
 
-  // Open modal for adding transaction to an asset
-  const openAddTransaction = (asset) => {
-    setSelectedAsset(asset);
-    setShowAddTransactionModal(true);
-  };
-
-  const closeModal = () => {
-    setSelectedAsset(null);
-    setSelectedTransaction(null);
-    setModalMode(null);
-  };
-
-  // Check for dark mode
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const renderProgressBar = (percent, isComplete) => (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all duration-300 ${isComplete ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${percent}%` }} /></div>
+      <span className={`text-xs font-semibold min-w-[40px] ${isComplete ? 'text-emerald-600' : 'text-amber-600'}`}>{percent.toFixed(1)}%</span>
+    </div>
+  );
 
   return (
     <>
-      <style>{`
-        /* Modern Downpayment Table Styles */
-        .dp-search-bar { 
-          display: flex; align-items: center; justify-content: space-between; gap: 16px; 
-          padding: 24px 28px; 
-          background: linear-gradient(135deg, #fff7f7, #fff1f1);
-          border-bottom: 1px solid #fde8e8;
-          box-shadow: 0 2px 8px rgba(220,38,38,0.08);
-        }
-        .dark .dp-search-bar { background: #1a1a1a; border-bottom: 1px solid #7f1d1d; }
-        .dp-search-input-wrapper { position: relative; flex: 1; max-width: 400px; }
-        .dp-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
-        .dp-search-input { 
-          width: 100%; padding: 10px 14px 10px 42px; 
-          font-family: 'DM Sans', sans-serif; font-size: 14px; color: #111827;
-          background: linear-gradient(135deg, #fff7f7, #fff1f1);
-          border: 1.5px solid #f3e8e8; border-radius: 10px; outline: none;
-          transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
-        }
-        .dark .dp-search-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
-        .dp-search-input:focus { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
-        .dark .dp-search-input:focus { background: #4b5563; }
-        .dp-add-btn { 
-          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: #fff; 
-          background: linear-gradient(135deg, #dc2626, #ef4444); 
-          border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; 
-          display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
-          transition: all 0.15s ease;
-          box-shadow: 0 4px 12px rgba(220,38,38,0.25);
-        }
-        .dp-add-btn:hover { 
-          background: linear-gradient(135deg, #b91c1c, #dc2626); 
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(220,38,38,0.35);
-        }
-        .dp-add-btn:active { transform: translateY(0); }
-        .dp-table-wrap { background: #fff; overflow: hidden; }
-        .dark .dp-table-wrap { background: #1a1a1a; }
-        .dp-scroll { overflow-x: auto; }
-        .dp-scroll::-webkit-scrollbar { height: 4px; }
-        .dp-scroll::-webkit-scrollbar-track { background: #fff5f5; }
-        .dark .dp-scroll::-webkit-scrollbar-track { background: #262626; }
-        .dp-scroll::-webkit-scrollbar-thumb { background: #fca5a5; border-radius: 4px; }
-        .dark .dp-scroll::-webkit-scrollbar-thumb { background: #525252; }
-        .dp-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        .dp-thead th { 
-          background: linear-gradient(135deg, #fff7f7, #fff1f1);
-          padding: 18px 28px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-          color: #ef4444; text-align: left; border-bottom: 1px solid #fde8e8; white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(220,38,38,0.08);
-        }
-        .dark .dp-thead th { background: #450a0a; color: #fca5a5; border-bottom: 1px solid #7f1d1d; }
-        .dp-row { border-bottom: 1px solid #fff1f1; transition: background 0.12s, transform 0.12s; }
-        .dark .dp-row { border-bottom: 1px solid #374151; }
-        .dp-row:hover { background: #fff8f8; transform: translateX(2px); }
-        .dark .dp-row:hover { background: #374151; }
-        .dp-td { padding: 20px 28px; font-size: 14px; color: #374151; white-space: nowrap; vertical-align: middle; }
-        .dark .dp-td { color: #d1d5db; }
-        .dp-tag { font-weight: 700; color: #111827; font-family: monospace; }
-        .dark .dp-tag { color: #f9fafb; }
-        .dp-name { font-weight: 500; color: #1a1a1a; }
-        .dark .dp-name { color: #f3f4f6; }
-        .dp-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 4px 11px; border-radius: 99px; border: 1px solid; }
-        .dp-status-pending { background: #fef3c7; color: #d97706; border-color: #fde68a; }
-        .dark .dp-status-pending { background: #451a03; color: #fbbf24; border-color: #78350f; }
-        .dp-status-active { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
-        .dark .dp-status-active { background: #052e16; color: #4ade80; border-color: #166534; }
-        .dp-progress-cell { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
-        .dp-progress-text { font-size: 13px; font-weight: 600; }
-        .dp-progress-bar { width: 100px; height: 6px; background: #f3e8e8; border-radius: 3px; overflow: hidden; }
-        .dark .dp-progress-bar { background: #4b5563; }
-        .dp-progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
-        .dp-progress-fill.pending { background: #f59e0b; }
-        .dp-progress-fill.complete { background: #16a34a; }
-        .dp-amount { font-weight: 600; color: #111827; }
-        .dark .dp-amount { color: #f9fafb; }
-        .dp-desc { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #6b7280; font-size: 13px; }
-        .dp-empty { padding: 64px 24px; text-align: center; color: #d1d5db; font-size: 15px; }
-        .dark .dp-empty { color: #6b7280; }
-        .dp-action-btn { 
-          width: 32px; height: 32px; border-radius: 9px;
-          display: inline-flex; align-items: center; justify-content: center;
-          border: 1.5px solid transparent; cursor: pointer;
-          background: transparent;
-          transition: all 0.13s ease;
-          margin-left: 4px;
-          position: relative;
-          overflow: hidden;
-        }
-        .dp-action-btn:first-child { margin-left: 0; }
-        .dp-action-btn:hover { 
-          transform: translateY(-1px) scale(1.02);
-          box-shadow: 0 4px 12px rgba(220,38,38,0.15);
-        }
-        .dp-action-btn:active { transform: translateY(0) scale(0.98); }
-        .dp-btn-edit { color: #6366f1; }
-        .dp-btn-edit:hover { background: #eef2ff; border-color: #c7d2fe; }
-        .dark .dp-btn-edit:hover { background: #312e81; }
-        .dp-btn-delete { color: #dc2626; }
-        .dp-btn-delete:hover { background: #fef2f2; border-color: #fecaca; }
-        .dark .dp-btn-delete:hover { background: #450a0a; }
-        .dp-btn-add { color: #16a34a; }
-        .dp-btn-add:hover { background: #f0fdf4; border-color: #bbf7d0; }
-        .dark .dp-btn-add:hover { background: #052e16; }
-        .dp-expand-btn { 
-          width: 28px; height: 28px; border-radius: 6px; 
-          display: inline-flex; align-items: center; justify-content: center; 
-          border: 1px solid #e5e7eb; cursor: pointer; background: #fff; 
-          transition: all 0.13s ease; margin-right: 8px;
-        }
-        .dark .dp-expand-btn { background: #374151; border-color: #4b5563; color: #d1d5db; }
-        .dp-expand-btn:hover { background: #f9fafb; border-color: #d1d5db; transform: translateY(-1px); }
-        .dark .dp-expand-btn:hover { background: #450a0a; }
-        .dp-transactions-container { background: #fafafa; border-bottom: 1px solid #fde8e8; }
-        .dark .dp-transactions-container { background: #111827; border-bottom: 1px solid #374151; }
-        .dp-transactions-list { padding: 0 22px 16px 70px; }
-        .dp-txn-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; margin-bottom: 8px; }
-        .dp-txn-title { font-size: 13px; font-weight: 600; color: #6b7280; display: flex; align-items: center; gap: 6px; }
-        .dark .dp-txn-title { color: #9ca3af; }
-        .dp-txn-count { background: #e5e7eb; color: #374151; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
-        .dark .dp-txn-count { background: #4b5563; color: #d1d5db; }
-        .dp-txn-add-btn { 
-          font-size: 12px; font-weight: 600; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; 
-          border-radius: 6px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
-          transition: all 0.13s ease;
-        }
-        .dp-txn-add-btn:hover { background: #dcfce7; transform: translateY(-1px); }
-        .dark .dp-txn-add-btn { background: #052e16; border-color: #166534; color: #4ade80; }
-        .dark .dp-txn-add-btn:hover { background: #064e3b; }
-        .dp-txn-item { 
-          display: grid; grid-template-columns: 1fr 1fr 2fr 1fr; gap: 16px; padding: 10px 14px; 
-          background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; align-items: center;
-          transition: all 0.15s ease;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .dark .dp-txn-item { background: #1a1a1a; border-color: #4b5563; }
-        .dp-txn-item:last-child { margin-bottom: 0; }
-        .dp-txn-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .dark .dp-txn-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        .dp-txn-date { font-size: 13px; color: #6b7280; font-family: monospace; }
-        .dark .dp-txn-date { color: #9ca3af; }
-        .dp-txn-amount { font-weight: 600; color: #059669; }
-        .dark .dp-txn-amount { color: #34d399; }
-        .dp-txn-desc { font-size: 13px; color: #374151; }
-        .dark .dp-txn-desc { color: #d1d5db; }
-        .dp-txn-actions { display: flex; gap: 4px; justify-content: flex-end; }
-        .dp-txn-action-btn { 
-          width: 26px; height: 26px; border-radius: 5px; 
-          display: inline-flex; align-items: center; justify-content: center; 
-          border: 1px solid transparent; cursor: pointer; background: transparent; 
-          transition: all 0.13s ease;
-        }
-        .dp-txn-action-btn:hover { transform: translateY(-1px) scale(1.05); }
-        .dp-txn-action-btn:active { transform: translateY(0) scale(0.95); }
-        .dp-txn-action-edit { color: #6366f1; }
-        .dp-txn-action-edit:hover { background: #eef2ff; border-color: #c7d2fe; }
-        .dark .dp-txn-action-edit:hover { background: #312e81; }
-        .dp-txn-action-delete { color: #dc2626; }
-        .dp-txn-action-delete:hover { background: #fef2f2; border-color: #fecaca; }
-        .dark .dp-txn-action-delete:hover { background: #450a0a; }
-        .dp-txn-empty { padding: 16px; text-align: center; color: #9ca3af; font-size: 13px; background: #fff; border: 1px dashed #d1d5db; border-radius: 8px; }
-        .dark .dp-txn-empty { background: #1a1a1a; border-color: #4b5563; color: #6b7280; }
-        .dp-modal-overlay { 
-          position: fixed; inset: 0; z-index: 1000; 
-          background: rgba(15, 5, 5, 0.48); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
-          display: flex; align-items: center; justify-content: center; padding: 20px;
-          animation: dpOverlayIn 0.18s ease both;
-        }
-        @keyframes dpOverlayIn { from { opacity: 0; } to { opacity: 1; } }
-        .dp-modal { 
-          font-family: 'DM Sans', sans-serif; background: #ffffff; border-radius: 22px; width: 100%; max-width: 500px;
-          box-shadow: 0 32px 96px rgba(220,38,38,0.16), 0 8px 32px rgba(0,0,0,0.12);
-          border: 1px solid #fde8e8; animation: dpModalIn 0.26s cubic-bezier(.22,.61,.36,1) both;
-        }
-        @keyframes dpModalIn {
-          from { opacity: 0; transform: translateY(16px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .dark .dp-modal { background: #1a1a1a; border-color: #7f1d1d; }
-        .dp-modal-header { padding: 22px 26px 18px; border-bottom: 1px solid #fef0f0; display: flex; align-items: center; justify-content: space-between; }
-        .dark .dp-modal-header { border-bottom-color: #374151; }
-        .dp-modal-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #111827; }
-        .dark .dp-modal-title { color: #f9fafb; }
-        .dp-modal-close { width: 32px; height: 32px; border-radius: 9px; border: 1.5px solid #fde8e8; background: #fff5f5; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.13s; }
-        .dp-modal-close:hover { background: #fee2e2; color: #dc2626; }
-        .dark .dp-modal-close { background: #374151; border-color: #4b5563; color: #9ca3af; }
-        .dark .dp-modal-close:hover { background: #450a0a; color: #fca5a5; }
-        .dp-modal-body { padding: 22px 26px; max-height: 60vh; overflow-y: auto; }
-        .dp-modal-footer { padding: 16px 26px 22px; display: flex; gap: 10px; border-top: 1px solid #fef0f0; }
-        .dark .dp-modal-footer { border-top-color: #374151; }
-        .dp-form-group { margin-bottom: 24px; }
-        .dp-form-label { font-size: 12.5px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-        .dark .dp-form-label { color: #d1d5db; }
-        .dp-form-input { 
-          font-family: 'DM Sans', sans-serif; font-size: 14px; color: #111827; background: #fafafa; border: 1.5px solid #f3e8e8; 
-          border-radius: 10px; padding: 10px 13px; width: 100%; outline: none;
-          transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
-        }
-        .dark .dp-form-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
-        .dp-form-input:focus { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
-        .dark .dp-form-input:focus { background: #4b5563; }
-        .dp-form-textarea { 
-          font-family: 'DM Sans', sans-serif; font-size: 14px; color: #111827; background: #fafafa; border: 1.5px solid #f3e8e8; 
-          border-radius: 10px; padding: 10px 13px; width: 100%; outline: none; min-height: 80px; resize: vertical;
-          transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
-        }
-        .dark .dp-form-textarea { background: #374151; border-color: #4b5563; color: #f9fafb; }
-        .dp-form-textarea:focus { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
-        .dark .dp-form-textarea:focus { background: #4b5563; }
-        .dp-btn-cancel { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: #6b7280; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 11px; padding: 11px; cursor: pointer; transition: all 0.13s; }
-        .dp-btn-cancel:hover { background: #f3f4f6; color: #374151; }
-        .dark .dp-btn-cancel { background: #374151; border-color: #4b5563; color: #9ca3af; }
-        .dark .dp-btn-cancel:hover { background: #450a0a; color: #fca5a5; }
-        .dp-btn-submit { 
-          flex: 2; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; color: #fff; 
-          background: linear-gradient(135deg, #dc2626, #ef4444); border: none; border-radius: 11px; padding: 11px; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 6px;
-          transition: filter 0.14s, transform 0.14s, box-shadow 0.14s;
-        }
-        .dp-btn-submit:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
-        .dp-btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-        .dp-btn-submit:active { transform: translateY(0); }
-        .dp-btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-        .dp-info-box { padding: 12px; background: #f0fdf4; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; transition: all 0.15s ease; }
-        .dp-info-box.pending { background: #fef3c7; }
-        .dp-info-box:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,0.12); }
-        .dark .dp-info-box { background: #052e16; }
-        .dark .dp-info-box.pending { background: #451a03; }
-        .dark .dp-info-box:hover { box-shadow: 0 4px 12px rgba(153,27,27,0.25); }
-      `}</style>
-
-      {/* Toolbar */}
-      <div className="dp-search-bar">
-        <div className="dp-search-input-wrapper">
-          <Eye className="dp-search-icon" size={18} />
-          <input
-            type="text"
-            className="dp-search-input"
-            placeholder="Search by name, tag, category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <button
-          className="dp-add-btn"
-          onClick={() => setShowAddAssetModal(true)}
-        >
-          <Plus size={16} /> Add Downpayment Asset
-        </button>
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
+        <ModernSearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search by name, tag, category..." className="flex-1 max-w-sm" />
+        <ModernButton variant="primary" size="sm" icon={Plus} onClick={() => setShowAddAssetModal(true)}>Add Downpayment Asset</ModernButton>
       </div>
 
-      {/* Table */}
-      <div className="dp-table-wrap">
-        <div className="dp-scroll">
-          <table className="dp-table">
-            <thead className="dp-thead">
-              <tr>
-                <th style={{ width: 40 }}></th>
-                <th>Tag #</th>
-                <th>Asset Name</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Total Cost</th>
-                <th>Total Downpayment</th>
-                <th>Payment Progress</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div className="bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead><tr className="bg-gray-50 border-b border-gray-200">
+              <th className="w-10 px-4 py-3"></th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tag #</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Asset Name</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Cost</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Downpayment</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Progress</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Actions</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
               {downpaymentAssets.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="dp-empty">
-                    {searchQuery
-                      ? "No downpayment assets match your search."
-                      : "No downpayment assets found. Click 'Add Downpayment Asset' to get started."}
-                  </td>
-                </tr>
+                <tr><td colSpan={9} className="px-4 py-16 text-center"><div className="flex flex-col items-center gap-2"><div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center"><Search className="w-6 h-6 text-gray-400" /></div><p className="text-sm text-gray-500">{searchQuery ? "No assets match your search." : "No downpayment assets found."}</p></div></td></tr>
               ) : (
                 downpaymentAssets.map((asset) => {
                   const paymentPercent = calculatePaymentCompletion(asset);
                   const assetTransactions = transactions[asset.id] || [];
                   const isExpanded = expandedAssets[asset.id];
-
+                  const isComplete = paymentPercent >= 100;
                   return (
                     <React.Fragment key={asset.id}>
-                      <tr className="dp-row">
-                        <td className="dp-td">
-                          <button
-                            className="dp-expand-btn"
-                            onClick={() => toggleAssetExpansion(asset.id)}
-                            title={isExpanded ? "Hide transactions" : "View transactions"}
-                          >
-                            {isExpanded ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </button>
-                        </td>
-                        <td className="dp-td">
-                          <span className="dp-tag">{asset.tag_number}</span>
-                        </td>
-                        <td className="dp-td">
-                          <span className="dp-name">{asset.name}</span>
-                        </td>
-                        <td className="dp-td" style={{ color: "#6b7280" }}>
-                          {asset.category || "—"}
-                        </td>
-                        <td className="dp-td">
-                          <span
-                            className={`dp-status ${
-                              paymentPercent >= 100
-                                ? "dp-status-active"
-                                : "dp-status-pending"
-                            }`}
-                          >
-                            {paymentPercent >= 100 ? "Completed" : "Pending"}
-                          </span>
-                        </td>
-                        <td className="dp-td">
-                          <span className="dp-amount">
-                            ₱{parseFloat(asset.total_cost || 0).toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="dp-td">
-                          <span className="dp-amount" style={{ color: "#059669" }}>
-                            ₱{getTotalDownpayment(asset).toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="dp-td">
-                          <div className="dp-progress-cell">
-                            <span
-                              className="dp-progress-text"
-                              style={{
-                                color: paymentPercent >= 100 ? "#16a34a" : "#d97706",
-                              }}
-                            >
-                              {paymentPercent.toFixed(1)}%
-                            </span>
-                            <div className="dp-progress-bar">
-                              <div
-                                className={`dp-progress-fill ${
-                                  paymentPercent >= 100 ? "complete" : "pending"
-                                }`}
-                                style={{ width: `${paymentPercent}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="dp-td">
-                          <button
-                            className="dp-action-btn dp-btn-add"
-                            title="Add Transaction"
-                            onClick={() => openAddTransaction(asset)}
-                          >
-                            <Plus size={16} />
-                          </button>
-                          <button
-                            className="dp-action-btn dp-btn-delete"
-                            title="Delete Asset"
-                            onClick={() => {
-                              setSelectedAsset(asset);
-                              setModalMode("deleteAsset");
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3"><button onClick={() => toggleAssetExpansion(asset.id)} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">{isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button></td>
+                        <td className="px-4 py-3"><span className="font-mono text-sm font-semibold text-gray-900">{asset.tag_number}</span></td>
+                        <td className="px-4 py-3"><span className="font-medium text-gray-900 text-sm">{asset.name}</span></td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{asset.category || "—"}</td>
+                        <td className="px-4 py-3"><StatusBadge status={isComplete ? "completed" : "pending"} /></td>
+                        <td className="px-4 py-3 text-right"><span className="font-mono font-semibold text-gray-900">₱{parseFloat(asset.total_cost || 0).toLocaleString()}</span></td>
+                        <td className="px-4 py-3 text-right"><span className="font-mono font-semibold text-emerald-600">₱{getTotalDownpayment(asset).toLocaleString()}</span></td>
+                        <td className="px-4 py-3">{renderProgressBar(paymentPercent, isComplete)}</td>
+                        <td className="px-4 py-3"><div className="flex items-center justify-end gap-1"><ActionButton icon={Plus} label="Add Payment" onClick={() => openAddTransaction(asset)} /><ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => { setSelectedAsset(asset); setModalMode("deleteAsset"); }} /></div></td>
                       </tr>
                       {isExpanded && (
-                        <tr className="dp-transactions-container">
-                          <td colSpan={9} className="dp-td" style={{ padding: 0 }}>
-                            <div className="dp-transactions-list">
-                              <div className="dp-txn-header">
-                                <div className="dp-txn-title">
-                                  <Receipt size={14} />
-                                  Transaction History
-                                  <span className="dp-txn-count">
-                                    {assetTransactions.length} payment(s)
-                                  </span>
-                                </div>
-                                <button
-                                  className="dp-txn-add-btn"
-                                  onClick={() => openAddTransaction(asset)}
-                                >
-                                  <Plus size={14} /> Add Payment
-                                </button>
-                              </div>
-                              {assetTransactions.length === 0 ? (
-                                <div className="dp-txn-empty">
-                                  No transactions yet. Click "Add Payment" to record a downpayment.
-                                </div>
-                              ) : (
-                                assetTransactions.map((txn) => (
-                                  <div key={txn.id} className="dp-txn-item">
-                                    <div className="dp-txn-date">
-                                      <Calendar size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                                      {new Date(txn.transaction_date).toLocaleDateString()}
-                                    </div>
-                                    <div className="dp-txn-amount">
-                                      ₱{parseFloat(txn.amount || 0).toLocaleString()}
-                                    </div>
-                                    <div className="dp-txn-desc" title={txn.description}>
-                                      {txn.description || "—"}
-                                    </div>
-                                    <div className="dp-txn-actions">
-                                      <button
-                                        className="dp-txn-action-btn dp-txn-action-edit"
-                                        title="Edit"
-                                        onClick={() => openTransactionModal(asset, txn, "edit")}
-                                      >
-                                        <Edit size={14} />
-                                      </button>
-                                      <button
-                                        className="dp-txn-action-btn dp-txn-action-delete"
-                                        title="Delete"
-                                        onClick={() => openTransactionModal(asset, txn, "delete")}
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+                        <tr><td colSpan={9} className="bg-gray-50 border-b border-gray-200 p-4"><div className="ml-8">
+                          <div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2"><Receipt size={14} className="text-gray-500" /><span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Transaction History</span><span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{assetTransactions.length}</span></div><ModernButton variant="secondary" size="sm" icon={Plus} onClick={() => openAddTransaction(asset)}>Add Payment</ModernButton></div>
+                          {assetTransactions.length === 0 ? <div className="text-sm text-gray-500 text-center py-4 bg-white rounded-lg border border-dashed border-gray-300">No transactions yet.</div> : (
+                            <div className="space-y-2">{assetTransactions.map((txn) => (<div key={txn.id} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow"><div className="flex items-center gap-4"><div className="flex items-center gap-1.5 text-xs text-gray-500"><Calendar size={12} />{new Date(txn.transaction_date).toLocaleDateString()}</div><span className="font-mono font-semibold text-emerald-600">₱{parseFloat(txn.amount || 0).toLocaleString()}</span><span className="text-sm text-gray-600 truncate max-w-xs" title={txn.description}>{txn.description || "—"}</span></div><div className="flex items-center gap-1"><ActionButton icon={Edit} label="Edit" onClick={() => openTransactionModal(asset, txn, "edit")} /><ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => openTransactionModal(asset, txn, "delete")} /></div></div>))}</div>
+                          )}
+                        </div></td></tr>
                       )}
                     </React.Fragment>
                   );
@@ -852,400 +177,61 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
         </div>
       </div>
 
-      {/* Add Asset Modal */}
-      {showAddAssetModal &&
-        createPortal(
-          <div
-            className="dp-modal-overlay"
-            onClick={(e) => e.target === e.currentTarget && setShowAddAssetModal(false)}
-          >
-            <div className="dp-modal">
-              <div className="dp-modal-header">
-                <h3 className="dp-modal-title">Add Downpayment Asset</h3>
-                <button
-                  className="dp-modal-close"
-                  onClick={() => setShowAddAssetModal(false)}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <form onSubmit={handleAddAssetSubmit}>
-                <div className="dp-modal-body">
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      <FileText size={13} /> Asset Name *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      className="dp-form-input"
-                      value={addAssetForm.name}
-                      onChange={(e) =>
-                        setAddAssetForm({ ...addAssetForm, name: e.target.value })
-                      }
-                      placeholder="e.g. Office Equipment"
-                    />
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      <FileText size={13} /> Tag Number *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      className="dp-form-input"
-                      value={addAssetForm.tag_number}
-                      readOnly
-                      style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }}
-                      title="Tag number is auto-generated"
-                    />
-                    <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                      Auto-generated • Cannot be edited
-                    </p>
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      ₱ Total Cost *
-                    </label>
-                    <input
-                      required
-                      type="number"
-                      step="0.01"
-                      className="dp-form-input"
-                      value={addAssetForm.total_cost}
-                      onChange={(e) =>
-                        setAddAssetForm({
-                          ...addAssetForm,
-                          total_cost: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      ₱ Initial Downpayment 
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="dp-form-input"
-                      value={addAssetForm.downpayment_amount || ""}
-                      onChange={(e) =>
-                        setAddAssetForm({
-                          ...addAssetForm,
-                          downpayment_amount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="Enter initial downpayment (optional)"
-                    />
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      <FileText size={13} /> Initial Payment Description
-                    </label>
-                    <textarea
-                      className="dp-form-textarea"
-                      value={addAssetForm.downpayment_description || ""}
-                      onChange={(e) =>
-                        setAddAssetForm({
-                          ...addAssetForm,
-                          downpayment_description: e.target.value,
-                        })
-                      }
-                      placeholder="Describe the initial payment terms, installment plan, etc."
-                    />
-                  </div>
-                </div>
-                <div className="dp-modal-footer">
-                  <button
-                    type="button"
-                    className="dp-btn-cancel"
-                    onClick={() => setShowAddAssetModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="dp-btn-submit" disabled={loading}>
-                    {loading ? "Saving..." : "Save Asset"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {showAddAssetModal && createPortal(<div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowAddAssetModal(false)}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"><h3 className="text-lg font-semibold text-gray-900">Add Downpayment Asset</h3><button onClick={() => setShowAddAssetModal(false)} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X className="w-5 h-5" /></button></div>
+          <form onSubmit={handleAddAssetSubmit}><div className="p-6 space-y-4">
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Asset Name *</label><input required type="text" value={addAssetForm.name} onChange={(e) => setAddAssetForm({ ...addAssetForm, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Tag Number</label><input type="text" value={addAssetForm.tag_number} readOnly className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Total Cost (₱) *</label><input required type="number" step="0.01" value={addAssetForm.total_cost} onChange={(e) => setAddAssetForm({ ...addAssetForm, total_cost: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Initial Downpayment (₱)</label><input type="number" step="0.01" value={addAssetForm.downpayment_amount || ""} onChange={(e) => setAddAssetForm({ ...addAssetForm, downpayment_amount: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+          </div><div className="px-6 py-4 border-t border-gray-200 flex gap-3"><button type="button" onClick={() => setShowAddAssetModal(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button><button type="submit" disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50">{loading ? "Saving..." : "Save Asset"}</button></div></form>
+        </div>
+      </div>, document.body)}
 
-      {/* Add Transaction Modal */}
-      {showAddTransactionModal &&
-        selectedAsset &&
-        createPortal(
-          <div
-            className="dp-modal-overlay"
-            onClick={(e) => e.target === e.currentTarget && setShowAddTransactionModal(false)}
-          >
-            <div className="dp-modal">
-              <div className="dp-modal-header">
-                <h3 className="dp-modal-title">Add Payment Transaction</h3>
-                <button
-                  className="dp-modal-close"
-                  onClick={() => setShowAddTransactionModal(false)}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <form onSubmit={handleAddTransactionSubmit}>
-                <div className="dp-modal-body">
-                  <div className="dp-info-box pending">
-                    <AlertCircle size={16} color="#d97706" />
-                    <span style={{ fontSize: 13, color: "#92400e" }}>
-                      Adding payment for: <strong>{selectedAsset.name}</strong> (Total: ₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString()})
-                    </span>
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      <Calendar size={13} /> Payment Date *
-                    </label>
-                    <input
-                      required
-                      type="date"
-                      className="dp-form-input"
-                      value={addTransactionForm.transaction_date}
-                      onChange={(e) =>
-                        setAddTransactionForm({
-                          ...addTransactionForm,
-                          transaction_date: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      ₱ Payment Amount
-                    </label>
-                    <input
-                      required
-                      type="number"
-                      step="0.01"
-                      className="dp-form-input"
-                      value={addTransactionForm.amount}
-                      onChange={(e) =>
-                        setAddTransactionForm({
-                          ...addTransactionForm,
-                          amount: e.target.value === "" ? "" : parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="Enter payment amount"
-                    />
-                  </div>
-                  <div className="dp-form-group">
-                    <label className="dp-form-label">
-                      <FileText size={13} /> Payment Description
-                    </label>
-                    <textarea
-                      className="dp-form-textarea"
-                      value={addTransactionForm.description}
-                      onChange={(e) =>
-                        setAddTransactionForm({
-                          ...addTransactionForm,
-                          description: e.target.value,
-                        })
-                      }
-                      placeholder="Describe this payment (e.g., 1st installment, deposit, etc.)"
-                    />
-                  </div>
-                </div>
-                <div className="dp-modal-footer">
-                  <button
-                    type="button"
-                    className="dp-btn-cancel"
-                    onClick={() => setShowAddTransactionModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="dp-btn-submit" disabled={loading}>
-                    {loading ? "Saving..." : "Add Payment"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {showAddTransactionModal && selectedAsset && createPortal(<div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowAddTransactionModal(false)}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"><h3 className="text-lg font-semibold text-gray-900">Add Payment</h3><button onClick={() => setShowAddTransactionModal(false)} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X className="w-5 h-5" /></button></div>
+          <form onSubmit={handleAddTransactionSubmit}><div className="p-6 space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3"><p className="text-sm text-amber-800">Adding payment for: <strong>{selectedAsset.name}</strong></p><p className="text-xs text-amber-600 mt-1">Total: ₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString()}</p></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label><input required type="date" value={addTransactionForm.transaction_date} onChange={(e) => setAddTransactionForm({ ...addTransactionForm, transaction_date: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Amount (₱) *</label><input required type="number" step="0.01" value={addTransactionForm.amount} onChange={(e) => setAddTransactionForm({ ...addTransactionForm, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea value={addTransactionForm.description} onChange={(e) => setAddTransactionForm({ ...addTransactionForm, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[60px]" /></div>
+          </div><div className="px-6 py-4 border-t border-gray-200 flex gap-3"><button type="button" onClick={() => setShowAddTransactionModal(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button><button type="submit" disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50">{loading ? "Saving..." : "Add Payment"}</button></div></form>
+        </div>
+      </div>, document.body)}
 
-      {/* Edit Transaction Modal */}
-      {modalMode === "edit" &&
-        selectedTransaction &&
-        createPortal(
-          <div
-            className="dp-modal-overlay"
-            onClick={(e) => e.target === e.currentTarget && closeModal()}
-          >
-            <div className="dp-modal">
-              <div className="dp-modal-header">
-                <h3 className="dp-modal-title">Edit Payment</h3>
-                <button className="dp-modal-close" onClick={closeModal}>
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="dp-modal-body">
-                <div className="dp-form-group">
-                  <label className="dp-form-label">
-                    <Calendar size={13} /> Payment Date
-                  </label>
-                  <input
-                    type="date"
-                    className="dp-form-input"
-                    value={editForm.transaction_date}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        transaction_date: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="dp-form-group">
-                  <label className="dp-form-label">
-                    <DollarSign size={13} /> Payment Amount (₱)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="dp-form-input"
-                    value={editForm.amount || ""}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        amount: e.target.value === "" ? "" : parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="Enter payment amount"
-                  />
-                </div>
-                <div className="dp-form-group">
-                  <label className="dp-form-label">
-                    <FileText size={13} /> Payment Description
-                  </label>
-                  <textarea
-                    className="dp-form-textarea"
-                    value={editForm.description || ""}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Describe this payment"
-                  />
-                </div>
-              </div>
-              <div className="dp-modal-footer">
-                <button className="dp-btn-cancel" onClick={closeModal}>
-                  Cancel
-                </button>
-                <button
-                  className="dp-btn-submit"
-                  onClick={handleUpdateTransaction}
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Update Payment"}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {modalMode === "edit" && selectedTransaction && createPortal(<div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"><h3 className="text-lg font-semibold text-gray-900">Edit Payment</h3><button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X className="w-5 h-5" /></button></div>
+          <div className="p-6 space-y-4">
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label><input type="date" value={editForm.transaction_date} onChange={(e) => setEditForm({ ...editForm, transaction_date: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Amount (₱)</label><input type="number" step="0.01" value={editForm.amount || ""} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea value={editForm.description || ""} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[60px]" /></div>
+          </div>
+          <div className="px-6 py-4 border-t border-gray-200 flex gap-3"><button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button><button onClick={handleUpdateTransaction} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50">{loading ? "Saving..." : "Update"}</button></div>
+        </div>
+      </div>, document.body)}
 
-      {/* Delete Transaction Modal */}
-      {modalMode === "delete" &&
-        selectedTransaction &&
-        createPortal(
-          <div
-            className="dp-modal-overlay"
-            onClick={(e) => e.target === e.currentTarget && closeModal()}
-          >
-            <div className="dp-modal">
-              <div className="dp-modal-header">
-                <h3 className="dp-modal-title">Delete Payment</h3>
-                <button className="dp-modal-close" onClick={closeModal}>
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="dp-modal-body">
-                <p style={{ color: "#6b7280", lineHeight: "1.6" }}>
-                  Are you sure you want to delete this payment of{" "}
-                  <strong>₱{parseFloat(selectedTransaction.amount || 0).toLocaleString()}</strong>?
-                  {selectedTransaction.description && (
-                    <> ("{selectedTransaction.description}")</>
-                  )}
-                  <br /><br />
-                  This action cannot be undone.
-                </p>
-              </div>
-              <div className="dp-modal-footer">
-                <button className="dp-btn-cancel" onClick={closeModal}>
-                  Cancel
-                </button>
-                <button
-                  className="dp-btn-submit"
-                  onClick={handleDeleteTransaction}
-                  disabled={loading}
-                  style={{
-                    background: "linear-gradient(135deg, #991b1b, #dc2626)",
-                  }}
-                >
-                  {loading ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {modalMode === "delete" && selectedTransaction && createPortal(<div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"><h3 className="text-lg font-semibold text-gray-900">Delete Payment</h3><button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X className="w-5 h-5" /></button></div>
+          <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4"><p className="text-sm text-red-800">Delete payment of <strong>₱{parseFloat(selectedTransaction.amount || 0).toLocaleString()}</strong>?</p><p className="text-xs text-red-600 mt-2">This cannot be undone.</p></div></div>
+          <div className="px-6 py-4 border-t border-gray-200 flex gap-3"><button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button><button onClick={handleDeleteTransaction} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">{loading ? "Deleting..." : "Delete"}</button></div>
+        </div>
+      </div>, document.body)}
 
-      {/* Delete Asset Modal */}
-      {modalMode === "deleteAsset" &&
-        selectedAsset &&
-        createPortal(
-          <div
-            className="dp-modal-overlay"
-            onClick={(e) => e.target === e.currentTarget && closeModal()}
-          >
-            <div className="dp-modal">
-              <div className="dp-modal-header">
-                <h3 className="dp-modal-title">Delete Asset</h3>
-                <button className="dp-modal-close" onClick={closeModal}>
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="dp-modal-body">
-                <p style={{ color: "#6b7280", lineHeight: "1.6" }}>
-                  Are you sure you want to delete the asset{" "}
-                  <strong>{selectedAsset.name}</strong> and all its payment transactions?
-                  <br /><br />
-                  This action cannot be undone.
-                </p>
-              </div>
-              <div className="dp-modal-footer">
-                <button className="dp-btn-cancel" onClick={closeModal}>
-                  Cancel
-                </button>
-                <button
-                  className="dp-btn-submit"
-                  onClick={handleDeleteAsset}
-                  disabled={loading}
-                  style={{
-                    background: "linear-gradient(135deg, #991b1b, #dc2626)",
-                  }}
-                >
-                  {loading ? "Deleting..." : "Delete Asset"}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {modalMode === "deleteAsset" && selectedAsset && createPortal(<div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"><h3 className="text-lg font-semibold text-gray-900">Delete Asset</h3><button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X className="w-5 h-5" /></button></div>
+          <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4"><p className="text-sm text-red-800">Delete asset <strong>{selectedAsset.name}</strong> and all its payments?</p><p className="text-xs text-red-600 mt-2">This cannot be undone.</p></div></div>
+          <div className="px-6 py-4 border-t border-gray-200 flex gap-3"><button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button><button onClick={handleDeleteAsset} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">{loading ? "Deleting..." : "Delete Asset"}</button></div>
+        </div>
+      </div>, document.body)}
     </>
   );
 };
 
 export default DownpaymentTable;
+
+    

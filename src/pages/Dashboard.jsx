@@ -19,12 +19,6 @@ import {
   Sun,
   RefreshCw,
   Bell,
-  ShieldCheck,
-  Users,
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  Settings,
   ChevronRight,
   ChevronLeft,
   Menu,
@@ -36,6 +30,8 @@ import {
   Star,
   Zap,
   Rocket,
+  ChevronDown,
+  MoreHorizontal,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -46,10 +42,42 @@ import AssetSummary from "@/components/AssetSummary";
 import DashboardCharts from "@/components/DashboardCharts";
 import DownpaymentTable from "@/components/DownpaymentTable";
 import { SignOutModal } from "@/pages/SignOutModal";
+import {
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 import "./Dashboard.css";
+
 // ============================================================================
-// DASHBOARD
+// MODERN DASHBOARD - Bento Box Layout (2026 Design Standards)
 // ============================================================================
+
+const COLORS = {
+  brand: "#dc2626",
+  brandLight: "#f87171",
+  brand50: "#fef2f2",
+  emerald: "#10b981",
+  emerald50: "#ecfdf5",
+  amber: "#f59e0b",
+  amber50: "#fffbeb",
+  rose: "#f43f5e",
+  rose50: "#fff1f2",
+  indigo: "#6366f1",
+  indigo50: "#eef2ff",
+  slate: "#64748b",
+  slate50: "#f8fafc",
+};
+
+const STATUS_COLORS = {
+  Active: "#10b981",
+  Disposed: "#dc2626",
+  Transferred: "#f59e0b",
+  Pending: "#6366f1",
+};
 
 const Dashboard = () => {
   const { user, role, verifyPin, checkPinLockStatus } = useAuth();
@@ -70,10 +98,23 @@ const Dashboard = () => {
     active: 0,
     disposed: 0,
     depreciation: 0,
+    pending: 0,
+    transferred: 0,
   });
   const [logs, setLogs] = useState([]);
   const [currentView, setCurrentView] = useState("dashboard");
   
+  // Sidebar state - collapsible
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Table filter state
+  const [tableFilters, setTableFilters] = useState({
+    search: "",
+    category: "",
+    status: "",
+    company: "",
+  });
+
   const [showAmortization, setShowAmortization] = useState(false);
   const [amortizationDates, setAmortizationDates] = useState({
     start: "2026-02",
@@ -90,6 +131,14 @@ const Dashboard = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(false);
+
+  // Mock sparkline data - in production this would come from historical data
+  const sparklineData = useMemo(() => ({
+    totalValue: [45, 52, 48, 58, 62, 55, 68, 72, 65, 75, 80, 85, 92, 88, 95, 100],
+    active: [8, 10, 12, 11, 14, 15, 16, 18, 17, 20, 22, 21, 24, 23, 26, 28],
+    disposed: [1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 7, 8],
+    depreciation: [8000, 9200, 8800, 10500, 11200, 10800, 12500, 13200, 12800, 14500, 15200, 14800, 16500, 17200, 16800, 18500],
+  }), []);
 
   useEffect(() => {
     if (showAmortization) {
@@ -209,6 +258,8 @@ const Dashboard = () => {
     );
     const active = dataArr.filter((i) => i.status === "Active").length;
     const disposed = dataArr.filter((i) => i.status === "Disposed").length;
+    const pending = dataArr.filter((i) => i.status === "Pending").length;
+    const transferred = dataArr.filter((i) => i.status === "Transferred").length;
     const depreciation = dataArr
       .filter((i) => i.status === "Active")
       .reduce((sum, item) => {
@@ -217,7 +268,7 @@ const Dashboard = () => {
         const life = parseInt(item.useful_life_years) || 1;
         return sum + (cost - salvage) / life;
       }, 0);
-    setStats({ totalValue, active, disposed, depreciation });
+    setStats({ totalValue, active, disposed, depreciation, pending, transferred });
   };
 
   const fetchLogs = async () => {
@@ -423,7 +474,7 @@ const Dashboard = () => {
     while (current.getTime() <= endTime) {
       let monthlyTotal = 0;
 
-      (assets || []).forEach((asset) => {
+(assets || []).forEach((asset) => {
         if (asset.status !== "Active" || !asset.purchase_date) return;
 
         const dateParts = asset.purchase_date.split("-");
@@ -464,11 +515,21 @@ const Dashboard = () => {
     return amortizationSchedule.reduce((sum, item) => sum + item.amount, 0);
   }, [amortizationSchedule]);
 
+  // Status distribution for pie chart
+  const statusData = useMemo(() => {
+    const counts = assets.reduce((acc, a) => {
+      const s = a.status || "Unknown";
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [assets]);
+
   const allNavItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "summary", label: "Asset", icon: Table },
+    { id: "summary", label: "Asset Inventory", icon: Table },
     { id: "downpayment", label: "Downpayment", icon: TrendingUp },
-    { id: "logs", label: "Logs", icon: ClipboardList, adminOnly: true },
+    { id: "logs", label: "System Logs", icon: ClipboardList, adminOnly: true },
   ];
 
   const navItems = allNavItems.filter(item => !item.adminOnly || role === "admin");
@@ -512,68 +573,128 @@ const Dashboard = () => {
     }
   };
 
+  // Stat card data with colors
   const statCards = [
     {
       label: "Total Asset Value",
       value: "₱" + stats.totalValue.toLocaleString(),
       icon: TrendingUp,
       badge: "TOTAL",
+      color: COLORS.indigo,
+      bgColor: COLORS.indigo50,
+      sparkline: sparklineData.totalValue,
     },
     {
       label: "Active Assets",
       value: stats.active,
       icon: Package,
       badge: "LIVE",
+      color: COLORS.emerald,
+      bgColor: COLORS.emerald50,
+      sparkline: sparklineData.active,
     },
     {
       label: "Disposed Assets",
       value: stats.disposed,
       icon: Trash2,
       badge: "RETIRED",
+      color: COLORS.brand,
+      bgColor: COLORS.brand50,
+      sparkline: sparklineData.disposed,
     },
     {
       label: "Annual Depreciation",
-      value: "₱" + stats.depreciation.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+      value: "₱" + stats.depreciation.toLocaleString(undefined, { maximumFractionDigits: 0 }),
       icon: BarChart3,
       badge: "YEARLY",
+      color: COLORS.amber,
+      bgColor: COLORS.amber50,
+      sparkline: sparklineData.depreciation,
       onClick: () => setShowAmortization(true),
     },
   ];
+
+  // Custom Sparkline Component
+  const SparklineChart = ({ data, color }) => {
+    const chartData = data.map((value, index) => ({ value }));
+    const maxValue = Math.max(...data);
+    const minValue = Math.min(...data);
+    const range = maxValue - minValue || 1;
+    
+    return (
+      <ResponsiveContainer width="100%" height={40}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          <defs>
+            <linearGradient id={`sparkGradient-${color}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#sparkGradient-${color})`}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
 
   return (
     <>
       <SpeedInsights />
       
-      <div className="dash-container">
-        {/* ── Sidebar ── */}
-        <nav className="dash-sidebar">
+      <div className={`dash-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* ── Modern Sidebar ── */}
+        <nav className={`dash-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
           <div className="dash-brand">
-            <img src={NCT_logong} alt="NCT Logo" className="dash-logo" />
-            <span className="dash-brand-name">NCT Transnational<br /><em>Corp</em></span>
+            {!sidebarCollapsed && (
+              <>
+                <img src={NCT_logong} alt="NCT Logo" className="dash-logo" />
+                <span className="dash-brand-name">NCT Transnational<br /><em>Corp</em></span>
+              </>
+            )}
+            {sidebarCollapsed && (
+              <img src={NCT_logong} alt="NCT Logo" className="dash-logo-mini" />
+            )}
           </div>
+
+          <button 
+            className="sidebar-toggle"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
 
           <div className="dash-nav-tabs">
             {navItems.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setCurrentView(id)}
-                className={"dash-nav-tab" + (currentView === id ? " active" : "")}
+                className={`dash-nav-tab ${currentView === id ? 'active' : ''}`}
+                title={sidebarCollapsed ? label : undefined}
               >
-                <Icon size={18} />
-                {label}
+                <Icon size={20} />
+                {!sidebarCollapsed && <span>{label}</span>}
               </button>
             ))}
           </div>
 
           <div className="dash-user-section">
             <div className="dash-user-chip">
-              <div className="dash-user-avatar">
+              <div className="dash-user-avatar" style={{ background: `linear-gradient(135deg, ${COLORS.brand}, ${COLORS.brandLight})` }}>
                 {(user?.email?.[0] || "?").toUpperCase()}
               </div>
-              <div className="dash-user-info">
-                <span className="dash-user-email">{user?.email || 'Unknown'}</span>
-                <span className="dash-user-role">{role || 'user'}</span>
-              </div>
+              {!sidebarCollapsed && (
+                <div className="dash-user-info">
+                  <span className="dash-user-email">{user?.email || 'Unknown'}</span>
+                  <span className="dash-user-role">{role || 'user'}</span>
+                </div>
+              )}
             </div>
             
             <div className="dash-action-buttons">
@@ -585,9 +706,9 @@ const Dashboard = () => {
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              <button className="dash-logout-btn" onClick={handleLogout}>
+              <button className="dash-logout-btn" onClick={handleLogout} title="Sign Out">
                 <LogOut size={18} />
-                Sign Out
+                {!sidebarCollapsed && <span>Sign Out</span>}
               </button>
             </div>
           </div>
@@ -595,60 +716,126 @@ const Dashboard = () => {
 
         {/* ── Main Content ── */}
         <main className="dash-main">
-          {/* Dashboard View */}
+          {/* Dashboard View - Bento Box Layout */}
           {currentView === "dashboard" && (
             <div className="dash-view" key="dashboard">
               <div className="dash-header">
-                <h2 className="dash-title">Asset Dashboard</h2>
-                <p className="dash-subtitle">Real-time snapshot of your asset portfolio</p>
+                <div>
+                  <h2 className="dash-title">Asset Dashboard</h2>
+                  <p className="dash-subtitle">Real-time snapshot of your asset portfolio</p>
+                </div>
+                <div className="dash-header-actions">
+                  <button 
+                    className="dash-btn" 
+                    onClick={() => { fetchAssets(); fetchLogs(); }}
+                    disabled={isDataLoading}
+                  >
+                    <RefreshCw size={16} className={isDataLoading ? "spin" : ""} />
+                    Refresh
+                  </button>
+                </div>
               </div>
 
-              <div className="dash-stats-grid">
-                {statCards.map(({ label, value, icon: Icon, badge, onClick }) => (
+              {/* Bento Grid - Top Stats Row */}
+              <div className="bento-grid">
+                {statCards.map(({ label, value, icon: Icon, badge, color, bgColor, sparkline, onClick }, idx) => (
                   <div 
                     key={label} 
-                    className="dash-stat-card"
+                    className="bento-card stat-card"
                     onClick={onClick}
                     style={{ cursor: onClick ? 'pointer' : 'default' }}
                   >
-                    <div className="dash-stat-header">
-                      <div className="dash-stat-icon-wrap">
-                        <Icon size={20} className="dash-stat-icon" />
+                    <div className="stat-card-header">
+                      <div className="stat-icon-wrap" style={{ background: bgColor, color: color }}>
+                        <Icon size={20} />
                       </div>
-                      <span className="dash-stat-badge">{badge}</span>
+                      <span className="stat-badge" style={{ background: bgColor, color: color }}>{badge}</span>
                     </div>
-                    <p className="dash-stat-label">{label}</p>
-                    <p className="dash-stat-value">{value}</p>
+                    <div className="stat-card-body">
+                      <p className="stat-label">{label}</p>
+                      <p className="stat-value">{value}</p>
+                    </div>
+                    <div className="stat-sparkline">
+                      <SparklineChart data={sparkline} color={color} />
+                    </div>
+                    <div className="stat-card-glow" style={{ background: color }} />
                   </div>
                 ))}
               </div>
 
-              <div className="dash-health-card">
-                <h3 className="dash-section-title">Portfolio Health</h3>
-                <div className="dash-health-metrics">
-                  <div className="dash-health-metric">
-                    <p className="dash-metric-label">Utilization Rate</p>
-                    <p className="dash-metric-value">
-                      {(assets.length > 0 ? Math.round((stats.active / assets.length) * 100) : 0)}%
-                      <span className="dash-metric-unit">active</span>
-                    </p>
+              {/* Bento Grid - Two Column Layout */}
+              <div className="bento-grid-two">
+                {/* Portfolio Health Card */}
+                <div className="bento-card health-card">
+                  <div className="card-header">
+                    <h3 className="card-title">Portfolio Health</h3>
+                    <span className="card-subtitle">Overview metrics</span>
                   </div>
-                  <div className="dash-health-metric">
-                    <p className="dash-metric-label">Total Assets</p>
-                    <p className="dash-metric-value">{assets.length}</p>
+                  <div className="health-metrics">
+                    <div className="health-metric">
+                      <div className="metric-ring" style={{ '--progress': `${assets.length > 0 ? (stats.active / assets.length) * 100 : 0}%`, '--color': COLORS.emerald }}>
+                        <span className="metric-value">{assets.length > 0 ? Math.round((stats.active / assets.length) * 100) : 0}%</span>
+                      </div>
+                      <p className="metric-label">Utilization</p>
+                    </div>
+                    <div className="health-metric">
+                      <div className="metric-ring" style={{ '--progress': `${assets.length > 0 ? (stats.pending / assets.length) * 100 : 0}%`, '--color': COLORS.indigo }}>
+                        <span className="metric-value">{stats.pending}</span>
+                      </div>
+                      <p className="metric-label">Pending</p>
+                    </div>
+                    <div className="health-metric">
+                      <div className="metric-ring" style={{ '--progress': `${assets.length > 0 ? (stats.transferred / assets.length) * 100 : 0}%`, '--color': COLORS.amber }}>
+                        <span className="metric-value">{stats.transferred}</span>
+                      </div>
+                      <p className="metric-label">Transferred</p>
+                    </div>
                   </div>
-                  <div className="dash-health-metric">
-                    <p className="dash-metric-label">Disposal Rate</p>
-                    <p className="dash-metric-value">
-                      {(assets.length > 0 ? Math.round((stats.disposed / assets.length) * 100) : 0)}%
-                      <span className="dash-metric-unit">disposed</span>
-                    </p>
+                </div>
+
+                {/* Status Distribution Card */}
+                <div className="bento-card status-card">
+                  <div className="card-header">
+                    <h3 className="card-title">Status Distribution</h3>
+                    <span className="card-subtitle">Assets by status</span>
+                  </div>
+                  <div className="status-chart">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <RePieChart>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={65}
+                          paddingAngle={4}
+                          dataKey="value"
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS.slate} />
+                          ))}
+                        </Pie>
+                      </RePieChart>
+                    </ResponsiveContainer>
+                    <div className="status-legend">
+                      {statusData.map((item) => (
+                        <div key={item.name} className="legend-item">
+                          <span className="legend-dot" style={{ background: STATUS_COLORS[item.name] || COLORS.slate }} />
+                          <span className="legend-label">{item.name}</span>
+                          <span className="legend-value">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="dash-analytics">
-                <h3 className="dash-section-title">Asset Reports</h3>
+              {/* Analytics Section */}
+              <div className="bento-card analytics-card">
+                <div className="card-header">
+                  <h3 className="card-title">Asset Analytics</h3>
+                  <span className="card-subtitle">Detailed breakdown</span>
+                </div>
                 <DashboardCharts assets={assets} />
               </div>
             </div>
@@ -681,12 +868,12 @@ const Dashboard = () => {
                 {(logs || []).length === 0 ? (
                   <div className="dash-log-empty">No logs found.</div>
                 ) : (
-                  logs.map((log) => (
+                  logs.slice(0, 50).map((log) => (
                     <div key={log.id} className="dash-log-row">
                       <span>{new Date(log.created_at).toLocaleString()}</span>
                       <span>{log.user_email}</span>
                       <span>
-                        <span className={"dash-log-badge " + actionTypeColor(log.action_type)}>
+                        <span className={`dash-log-badge ${actionTypeColor(log.action_type)}`}>
                           {log.action_type}
                         </span>
                       </span>
@@ -840,3 +1027,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
