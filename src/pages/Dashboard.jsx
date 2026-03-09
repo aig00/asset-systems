@@ -18,6 +18,24 @@ import {
   Moon,
   Sun,
   RefreshCw,
+  Bell,
+  ShieldCheck,
+  Users,
+  TrendingDown,
+  DollarSign,
+  Calendar,
+  Settings,
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  Grid,
+  List,
+  Filter,
+  Search,
+  Sparkles,
+  Star,
+  Zap,
+  Rocket,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -29,7 +47,6 @@ import DashboardCharts from "@/components/DashboardCharts";
 import DownpaymentTable from "@/components/DownpaymentTable";
 import { SignOutModal } from "@/pages/SignOutModal";
 import "./Dashboard.css";
-
 // ============================================================================
 // DASHBOARD
 // ============================================================================

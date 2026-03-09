@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { useTheme } from "../context/ThemeContext";
 
-/* ── Multi-hue chart palette (modern, not all-red) ── */
+/* ── Modern Chart Palette (2026 Design Trends) ── */
 const COLORS = [
   "#6366f1", // indigo
   "#10b981", // emerald
@@ -24,9 +24,11 @@ const COLORS = [
   "#8b5cf6", // violet
   "#ec4899", // pink
   "#14b8a6", // teal
+  "#f43f5e", // rose
+  "#a78bfa", // purple
 ];
 
-/* Status-specific colors */
+/* Status-specific colors with modern accents */
 const STATUS_COLORS = {
   Active:      "#10b981",
   Disposed:    "#dc2626",
@@ -38,25 +40,36 @@ const STATUS_COLORS = {
 const CustomTooltip = ({ active, payload, label }) => {
   const { isDark } = useTheme();
   if (!active || !payload?.length) return null;
+  
+  const theme = {
+    bg: isDark ? "rgba(17,17,17,0.95)" : "rgba(255,255,255,0.97)",
+    border: isDark ? "rgba(255,255,255,0.08)" : "rgba(232,229,227,0.8)",
+    text: isDark ? "#f5f5f5" : "#111827",
+    muted: isDark ? "#9ca3af" : "#6b7280",
+    subtle: isDark ? "#d1d5db" : "#374151",
+  };
+
   return (
     <div
       style={{
-        background: isDark ? "rgba(26,26,26,0.95)" : "rgba(255,255,255,0.97)",
-        border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#e8e5e3"}`,
-        borderRadius: "12px",
-        padding: "12px 16px",
-        boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
-        fontFamily: "'DM Sans', sans-serif",
-        backdropFilter: "blur(8px)",
+        background: theme.bg,
+        border: `1px solid ${theme.border}`,
+        borderRadius: "14px",
+        padding: "14px 18px",
+        boxShadow: "0 16px 40px rgba(0,0,0,0.16)",
+        fontFamily: "'Inter', sans-serif",
+        backdropFilter: "blur(12px)",
+        borderImage: `linear-gradient(135deg, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(220,38,38,0.15)'}, transparent) 1`,
       }}
     >
       {label && (
         <p
           style={{
-            color: isDark ? "#f5f5f5" : "#111827",
+            color: theme.text,
             fontWeight: 600,
             fontSize: 13,
-            marginBottom: 6,
+            marginBottom: 8,
+            letterSpacing: "0.02em",
           }}
         >
           {label}
@@ -66,26 +79,28 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p
           key={i}
           style={{
-            color: isDark ? "#d1d5db" : "#374151",
+            color: theme.subtle,
             fontSize: 13,
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            margin: "3px 0",
+            gap: 10,
+            margin: "4px 0",
+            lineHeight: 1.4,
           }}
         >
           <span
             style={{
               display: "inline-block",
-              width: 8,
-              height: 8,
+              width: 10,
+              height: 10,
               borderRadius: "50%",
               background: entry.color || entry.fill,
               flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
             }}
           />
-          <span style={{ color: isDark ? "#9ca3af" : "#6b7280" }}>{entry.name}:</span>
-          <strong style={{ color: isDark ? "#f5f5f5" : "#111827" }}>
+          <span style={{ color: theme.muted, fontWeight: 500 }}>{entry.name}:</span>
+          <strong style={{ color: theme.text, fontWeight: 700 }}>
             {typeof entry.value === "number"
               ? entry.value.toLocaleString()
               : entry.value}
@@ -146,7 +161,7 @@ const DashboardCharts = ({ assets }) => {
   }, [assets]);
 
   /* Theme-aware chart colors */
-  const grid   = isDark ? "rgba(255,255,255,0.06)" : "#f0eeec";
+  const grid   = isDark ? "rgba(255,255,255,0.06)" : "rgba(232,229,227,0.6)";
   const axis   = isDark ? "#525252" : "#9ca3af";
   const textColor = isDark ? "#a3a3a3" : "#6b7280";
 
@@ -157,15 +172,17 @@ const DashboardCharts = ({ assets }) => {
     boxShadow:    "var(--shadow-card)",
     padding:      "24px",
     width:        "100%",
+    transition:   "all var(--duration-base) var(--ease-out)",
   };
 
   const titleStyle = {
-    fontFamily:    "'Syne', system-ui, sans-serif",
-    fontSize:      "15px",
+    fontFamily:    "'Space Grotesk', system-ui, sans-serif",
+    fontSize:      "16px",
     fontWeight:    700,
     color:         "var(--text-primary)",
-    marginBottom:  "2px",
-    letterSpacing: "-0.01em",
+    marginBottom:  "6px",
+    letterSpacing: "-0.02em",
+    textTransform: "uppercase",
   };
 
   const subtitleStyle = {
@@ -173,10 +190,16 @@ const DashboardCharts = ({ assets }) => {
     color:        textColor,
     marginBottom: "20px",
     fontWeight:   400,
+    letterSpacing: "0.04em",
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "20px", width: "100%" }}>
+    <div style={{ 
+      display: "grid", 
+      gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", 
+      gap: "20px", 
+      width: "100%" 
+    }}>
 
       {/* ── Pie: Status Distribution ── */}
       <div style={cardStyle}>
@@ -203,7 +226,12 @@ const DashboardCharts = ({ assets }) => {
             </Pie>
             <Tooltip content={<CustomTooltip />} />
             <Legend
-              wrapperStyle={{ fontSize: 12, color: textColor, paddingTop: 8 }}
+              wrapperStyle={{ 
+                fontSize: 12, 
+                color: textColor, 
+                paddingTop: 8,
+                fontFamily: "'Inter', sans-serif"
+              }}
               formatter={(v) => <span style={{ color: textColor, fontSize: 12 }}>{v}</span>}
             />
           </PieChart>

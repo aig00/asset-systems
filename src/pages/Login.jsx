@@ -2,22 +2,56 @@ import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
 import nctLogo from "@/assets/NCT_logong.png";
 
 const LOGIN_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body, #root { width: 100%; height: 100%; }
 
   .lg-root {
-    font-family: 'Outfit', 'DM Sans', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     height: 100vh;
     width: 100%;
     display: flex;
-    background: #f8f7f6;
+    background: linear-gradient(180deg, #f8f7f6, #f3f2f0);
     overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated background gradients */
+  .lg-root::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(1200px 400px at 20% -20%, rgba(99,102,241,0.08), transparent 40%),
+      radial-gradient(800px 300px at 120% 0%, rgba(16,185,129,0.06), transparent 40%),
+      radial-gradient(600px 600px at 50% 50%, rgba(220,38,38,0.04), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Floating particles animation */
+  .lg-root::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(99,102,241,0.1) 1px, transparent 1px),
+      radial-gradient(circle at 80% 80%, rgba(16,185,129,0.1) 1px, transparent 1px),
+      radial-gradient(circle at 40% 60%, rgba(220,38,38,0.1) 1px, transparent 1px);
+    background-size: 100px 100px, 120px 120px, 80px 80px;
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
   }
 
   /* ── Left panel ── */
@@ -27,9 +61,11 @@ const LOGIN_STYLES = `
     display: flex;
     flex-direction: column;
     padding: 48px 56px 44px;
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     overflow: hidden;
     flex-shrink: 0;
+    box-shadow: 0 24px 80px rgba(220,38,38,0.25);
+    border-right: 1px solid rgba(255,255,255,0.1);
   }
 
   .lg-left::before {
@@ -44,31 +80,35 @@ const LOGIN_STYLES = `
     position: absolute;
     top: -80px; left: -140px;
     width: 680px; height: 680px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, transparent 60%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
     clip-path: polygon(0 0, 38% 0, 100% 100%, 62% 100%);
     pointer-events: none;
+    z-index: 0;
   }
 
   .lg-slash-2 {
     position: absolute;
     bottom: -100px; right: -80px;
     width: 540px; height: 540px;
-    background: linear-gradient(135deg, transparent, rgba(0,0,0,0.06) 80%);
+    background: linear-gradient(135deg, transparent, rgba(0,0,0,0.08) 80%);
     clip-path: polygon(30% 0, 100% 0, 70% 100%, 0 100%);
     pointer-events: none;
+    z-index: 0;
   }
 
   .lg-bg-word {
     position: absolute;
     bottom: -40px; left: -12px;
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 280px;
-    color: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.08);
     line-height: 1;
     pointer-events: none;
     white-space: nowrap;
     z-index: 0;
     letter-spacing: -6px;
+    font-weight: 700;
+    text-transform: uppercase;
   }
 
   /* Logo at top */
@@ -76,12 +116,19 @@ const LOGIN_STYLES = `
     position: relative; z-index: 2;
     display: flex; align-items: center; gap: 18px;
     flex-shrink: 0;
+    padding: 8px 0 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 16px;
   }
   .lg-logo-img {
     height: 52px; width: auto;
     object-fit: contain;
     filter: brightness(0) invert(1);
     flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+  .lg-logo:hover .lg-logo-img {
+    transform: scale(1.05);
   }
   .lg-logo-divider {
     width: 1.5px; height: 36px;
@@ -89,9 +136,9 @@ const LOGIN_STYLES = `
     flex-shrink: 0;
   }
   .lg-logo-text {
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px; font-weight: 600;
-    color: rgba(255,255,255,0.85); letter-spacing: 0.14em;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.9); letter-spacing: 0.16em;
     text-transform: uppercase;
     line-height: 1.35;
   }
@@ -107,26 +154,45 @@ const LOGIN_STYLES = `
 
   .lg-hero-label {
     font-size: 12px; font-weight: 600;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(255,255,255,0.6); margin-bottom: 16px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(255,255,255,0.7); margin-bottom: 16px;
     display: flex; align-items: center; gap: 10px;
+    animation: slideInLeft 0.6s ease-out;
   }
   .lg-hero-label::before {
     content: '';
     display: block; width: 28px; height: 2px;
-    background: rgba(255,255,255,0.4);
+    background: linear-gradient(90deg, rgba(255,255,255,0.6), transparent);
   }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
   .lg-hero-title {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: clamp(72px, 9vw, 112px); line-height: 0.88;
     color: #fff;
     letter-spacing: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    animation: slideInUp 0.8s ease-out 0.1s both;
   }
-  .lg-hero-title span { color: rgba(255,255,255,0.45); }
+  .lg-hero-title span { color: rgba(255,255,255,0.55); }
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .lg-hero-desc {
     margin-top: 20px;
-    font-size: 15px; font-weight: 300; line-height: 1.65;
-    color: rgba(255,255,255,0.55); max-width: 340px;
+    font-size: 15px; font-weight: 300; line-height: 1.7;
+    color: rgba(255,255,255,0.65); max-width: 360px;
+    animation: fadeIn 0.8s ease-out 0.2s both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* Stats pinned at bottom */
@@ -135,18 +201,20 @@ const LOGIN_STYLES = `
     display: flex; align-items: center; gap: 24px;
     padding-top: 32px;
     flex-shrink: 0;
+    animation: slideInUp 0.8s ease-out 0.3s both;
   }
   .lg-stat { display: flex; flex-direction: column; gap: 3px; }
   .lg-stat-num {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 32px; color: #fff; line-height: 1;
+    font-weight: 700;
   }
   .lg-stat-label {
-    font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 600;
   }
   .lg-stat-divider {
-    width: 1px; height: 44px; background: rgba(255,255,255,0.15); flex-shrink: 0;
+    width: 1px; height: 44px; background: rgba(255,255,255,0.18); flex-shrink: 0;
   }
 
   /* ── Right panel ── */
@@ -156,7 +224,7 @@ const LOGIN_STYLES = `
     align-items: center;
     justify-content: center;
     padding: 48px 56px;
-    background: #f8f7f6;
+    background: linear-gradient(180deg, #ffffff, #f8f7f6);
     position: relative;
     overflow: hidden;
   }
@@ -169,123 +237,171 @@ const LOGIN_STYLES = `
     width: 600px; height: 600px;
     background: radial-gradient(circle, rgba(220,38,38,0.04) 0%, transparent 70%);
     pointer-events: none;
+    z-index: 0;
   }
 
   .lg-form-wrap {
     position: relative; z-index: 1;
-    width: 100%; max-width: 440px;
+    width: 100%; max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 36px;
+    box-shadow: 
+      0 10px 30px rgba(0,0,0,0.08),
+      0 1px 3px rgba(0,0,0,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+    border: 1px solid rgba(0,0,0,0.06);
+    backdrop-filter: blur(10px);
     animation: lgSlideIn 0.5s cubic-bezier(.22,.61,.36,1) both;
   }
+  
+  /* Floating animation for form */
   @keyframes lgSlideIn {
-    from { opacity: 0; transform: translateX(24px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   .lg-form-eyebrow {
     font-size: 11px; font-weight: 600;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    color: #dc2626; margin-bottom: 10px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: #dc2626; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
   }
+  
   .lg-form-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 56px; color: #111827; line-height: 1;
-    margin-bottom: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; color: #111827; line-height: 1;
+    margin-bottom: 6px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
+  
   .lg-form-sub {
-    font-size: 15px; color: #9ca3af; font-weight: 300;
-    margin-bottom: 16px;
+    font-size: 15px; color: #6b7280; font-weight: 400;
+    margin-bottom: 20px;
+    line-height: 1.6;
   }
 
   .lg-divider {
     width: 48px; height: 3px;
     background: linear-gradient(90deg, #dc2626, transparent);
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     border-radius: 2px;
   }
 
   .lg-error {
     display: flex; align-items: flex-start; gap: 12px;
-    background: #fef2f2;
+    background: linear-gradient(180deg, #fef2f2, #fee2e2);
     border: 1px solid #fecaca;
-    border-radius: 12px; padding: 14px 16px;
+    border-radius: 14px; padding: 14px 16px;
     margin-bottom: 18px;
     animation: lgFadeIn 0.2s ease both;
+    box-shadow: 0 2px 8px rgba(220,38,38,0.08);
   }
   .lg-error-text { font-size: 14px; color: #991b1b; line-height: 1.5; }
-  @keyframes lgFadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes lgFadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
 
-  .lg-fields { display: flex; flex-direction: column; gap: 18px; }
-  .lg-field { display: flex; flex-direction: column; gap: 7px; }
+  .lg-fields { display: flex; flex-direction: column; gap: 16px; }
+  .lg-field { display: flex; flex-direction: column; gap: 8px; }
   .lg-label {
     font-size: 11px; font-weight: 600;
     letter-spacing: 0.12em; text-transform: uppercase;
     color: #6b7280;
+    display: flex; align-items: center; gap: 6px;
   }
   .lg-input-wrap { position: relative; display: flex; align-items: center; }
   .lg-input-icon {
     position: absolute; left: 16px;
-    color: #d1d5db; pointer-events: none;
+    color: #9ca3af; pointer-events: none;
     display: flex; align-items: center;
-    transition: color 0.15s;
+    transition: color 0.15s ease;
   }
   .lg-input {
-    font-family: 'Outfit', 'DM Sans', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 15px; color: #111827;
-    background: #fff;
+    background: linear-gradient(180deg, #ffffff, #fafafa);
     border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 15px 16px 15px 48px;
+    border-radius: 14px;
+    padding: 16px 16px 16px 48px;
     width: 100%; outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6);
   }
-  .lg-input::placeholder { color: #d1d5db; }
-  .lg-input:hover { border-color: #fca5a5; }
+  .lg-input::placeholder { color: #9ca3af; }
+  .lg-input:hover { 
+    border-color: #fca5a5; 
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(220,38,38,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
   .lg-input:focus {
     border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+    box-shadow: 0 0 0 4px rgba(220,38,38,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+    background: #ffffff;
   }
   .lg-input-wrap:focus-within .lg-input-icon { color: #ef4444; }
 
   .lg-pw-toggle {
     position: absolute; right: 14px;
     background: none; border: none; cursor: pointer;
-    color: #d1d5db; padding: 6px;
+    color: #9ca3af; padding: 8px;
     display: flex; align-items: center;
-    transition: color 0.15s; border-radius: 6px;
+    transition: all 0.15s ease;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
   }
-  .lg-pw-toggle:hover { color: #ef4444; }
+  .lg-pw-toggle:hover { 
+    color: #ef4444; 
+    background: rgba(220,38,38,0.06);
+  }
 
   .lg-btn {
-    margin-top: 24px;
+    margin-top: 20px;
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%;
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
     color: #fff;
-    font-family: 'Outfit', 'DM Sans', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 14px; font-weight: 600;
     letter-spacing: 0.08em; text-transform: uppercase;
     padding: 16px;
-    border: none; border-radius: 12px; cursor: pointer;
+    border: none; border-radius: 14px; cursor: pointer;
     position: relative; overflow: hidden;
-    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 4px 16px rgba(220,38,38,0.25);
+    transition: all 0.15s ease;
+    box-shadow: 
+      0 8px 24px rgba(220,38,38,0.3),
+      0 2px 8px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    transform: translateY(0);
   }
   .lg-btn::before {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
     transform: translateX(-100%);
-    transition: transform 0.5s ease;
+    transition: transform 0.6s ease;
   }
   .lg-btn:hover:not(:disabled)::before { transform: translateX(100%); }
   .lg-btn:hover:not(:disabled) {
-    background: #b91c1c;
-    box-shadow: 0 6px 24px rgba(220,38,38,0.35);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    box-shadow: 
+      0 12px 32px rgba(220,38,38,0.4),
+      0 4px 12px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+    transform: translateY(-2px);
   }
-  .lg-btn:active:not(:disabled) { transform: translateY(0); }
-  .lg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .lg-btn:active:not(:disabled) { 
+    transform: translateY(0);
+    box-shadow: 
+      0 6px 16px rgba(220,38,38,0.35),
+      0 2px 8px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .lg-btn:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
 
   .lg-spinner {
     width: 18px; height: 18px;
@@ -297,37 +413,65 @@ const LOGIN_STYLES = `
   @keyframes lgSpin { to { transform: rotate(360deg); } }
 
   .lg-footer-note {
-    margin-top: 22px;
+    margin-top: 20px;
     display: flex; align-items: center; gap: 10px;
-    font-size: 12px; color: #d1d5db;
+    font-size: 12px; color: #9ca3af;
+    justify-content: center;
   }
   .lg-footer-note::before, .lg-footer-note::after {
-    content: ''; flex: 1; height: 1px; background: #e8e5e3;
+    content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
   }
 
   .lg-corner-badge {
     position: absolute; bottom: 24px; right: 24px;
-    background: #fff; border: 1px solid #e8e5e3;
-    border-radius: 10px; padding: 10px 14px;
+    background: linear-gradient(135deg, #ffffff, #f9fafb);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 10px 14px;
     display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    backdrop-filter: blur(8px);
   }
   .lg-badge-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: #10b981;
-    box-shadow: 0 0 6px rgba(16,185,129,0.5);
+    box-shadow: 0 0 8px rgba(16,185,129,0.6);
     animation: lgPulse 2s ease infinite;
   }
   @keyframes lgPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
   }
-  .lg-badge-text { font-size: 12px; color: #9ca3af; letter-spacing: 0.04em; }
+  .lg-badge-text { font-size: 12px; color: #6b7280; letter-spacing: 0.04em; font-weight: 500; }
+
+  /* Responsive design */
+  @media (max-width: 1024px) {
+    .lg-left { width: 45%; }
+    .lg-form-wrap { max-width: 420px; }
+  }
 
   @media (max-width: 768px) {
-    .lg-left { display: none; }
-    .lg-right { padding: 32px 24px; }
-    .lg-form-title { font-size: 44px; }
+    .lg-left { 
+      display: none; 
+      width: 0;
+    }
+    .lg-right { 
+      padding: 32px 24px; 
+      background: linear-gradient(180deg, #ffffff, #f8f7f6);
+    }
+    .lg-form-wrap { 
+      max-width: 100%; 
+      padding: 28px;
+      border-radius: 18px;
+    }
+    .lg-form-title { font-size: 40px; }
+    .lg-hero-title { font-size: 64px; }
+  }
+
+  @media (max-width: 480px) {
+    .lg-form-wrap { padding: 24px; }
+    .lg-form-title { font-size: 36px; }
+    .lg-hero-title { font-size: 56px; }
+    .lg-hero-desc { font-size: 14px; }
   }
 `;
 

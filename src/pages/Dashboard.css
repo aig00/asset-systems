@@ -7,15 +7,31 @@
    • Glassmorphic modals & overlays
    • Proper dark mode support
    • Smooth micro-interactions
+   • Modern typography with Inter & Space Grotesk
+   • Layered depth with refined shadows
+   • Intentional spacing and rhythm
    ================================================================ */
 
 /* ── Layout Shell ── */
 .dash-container {
   display: flex;
   min-height: 100vh;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background: var(--surface-bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(180deg, var(--surface-bg), var(--surface-2));
   color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background gradient overlay */
+.dash-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(1200px 400px at 20% -20%, rgba(99,102,241,0.08), transparent 40%),
+              radial-gradient(800px 300px at 120% 0%, rgba(16,185,129,0.06), transparent 40%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ================================================================
@@ -524,7 +540,7 @@
 }
 
 /* ================================================================
-   LOGS VIEW
+   LOGS VIEW — Modern Enhanced Design
    ================================================================ */
 .dash-logs-actions {
   display: flex;
@@ -538,34 +554,61 @@
   border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  transition: box-shadow var(--duration-base) ease;
+}
+
+.dash-logs-list:hover {
+  box-shadow: var(--shadow-card-hover);
 }
 
 .dash-log-header {
   display: grid;
   grid-template-columns: 1.4fr 1.4fr 1fr 2.2fr;
-  padding: 14px 24px;
-  background: var(--surface-2);
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .dash-log-row {
   display: grid;
   grid-template-columns: 1.4fr 1.4fr 1fr 2.2fr;
-  padding: 14px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--border-light);
   font-size: 13px;
   color: var(--text-secondary);
-  transition: background var(--duration-fast) ease;
+  transition: all var(--duration-base) ease;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-log-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background var(--duration-base) ease;
 }
 
 .dash-log-row:hover {
-  background: var(--surface-2);
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+  transform: translateX(2px);
+  border-bottom-color: var(--border);
+}
+
+.dash-log-row:hover::before {
+  background: linear-gradient(180deg, var(--brand), var(--brand-light));
 }
 
 .dash-log-row:last-child {
@@ -577,27 +620,170 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 14px;
+  background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
 }
 
 .dash-log-badge {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: var(--radius-badge);
   letter-spacing: 0.02em;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--duration-base) ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.log-badge-red    { background: var(--brand-50); color: var(--brand); }
-.log-badge-green  { background: var(--emerald-50); color: #059669; }
-.log-badge-amber  { background: var(--amber-50); color: #b45309; }
-.log-badge-gray   { background: var(--surface-3); color: var(--text-muted); }
+.log-badge-red {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
 
-.dark .log-badge-red   { background: rgba(220,38,38,0.1); }
-.dark .log-badge-green { background: rgba(16,185,129,0.1); }
-.dark .log-badge-amber { background: rgba(245,158,11,0.1); }
-.dark .log-badge-gray  { background: rgba(255,255,255,0.05); }
+.log-badge-green {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #059669;
+  border: 1px solid #dcfce7;
+}
+
+.log-badge-amber {
+  background: linear-gradient(135deg, #fffbeb, #fed7aa);
+  color: #b45309;
+  border: 1px solid #fed7aa;
+}
+
+.log-badge-gray {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+/* Enhanced badge hover effects */
+.log-badge-red:hover {
+  background: linear-gradient(135deg, #fecaca, #fca5a5);
+  color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220,38,38,0.15);
+}
+
+.log-badge-green:hover {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.15);
+}
+
+.log-badge-amber:hover {
+  background: linear-gradient(135deg, #fed7aa, #fdba74);
+  color: #92400e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245,158,11,0.15);
+}
+
+.log-badge-gray:hover {
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  color: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107,114,128,0.15);
+}
+
+/* Dark mode enhancements */
+.dark .log-badge-red {
+  background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(220,38,38,0.08));
+  color: #fca5a5;
+  border-color: rgba(220,38,38,0.25);
+}
+
+.dark .log-badge-green {
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.08));
+  color: #4ade80;
+  border-color: rgba(16,185,129,0.25);
+}
+
+.dark .log-badge-amber {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+  color: #f59e0b;
+  border-color: rgba(245,158,11,0.25);
+}
+
+.dark .log-badge-gray {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+  color: #9ca3af;
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* Dark mode hover effects */
+.dark .log-badge-red:hover {
+  background: linear-gradient(135deg, rgba(220,38,38,0.25), rgba(220,38,38,0.15));
+  color: #fecaca;
+  box-shadow: 0 4px 12px rgba(220,38,38,0.25);
+}
+
+.dark .log-badge-green:hover {
+  background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.15));
+  color: #bbf7d0;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.25);
+}
+
+.dark .log-badge-amber:hover {
+  background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.15));
+  color: #fdba74;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.25);
+}
+
+.dark .log-badge-gray:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.08));
+  color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(107,114,128,0.25);
+}
+
+/* Enhanced log row animations */
+@keyframes dashLogRowSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dash-log-row {
+  animation: dashLogRowSlideIn 0.25s ease-out;
+}
+
+/* Scrollbar styling for logs list */
+.dash-logs-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dash-logs-list::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+.dash-logs-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.dash-logs-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.dark .dash-logs-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+.dark .dash-logs-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
 
 /* ================================================================
    MODALS — Glassmorphic Overlays

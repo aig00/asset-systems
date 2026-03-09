@@ -15,6 +15,11 @@ import {
   MapPin,
   User,
   AlignLeft,
+  Sparkles,
+  Star,
+  Zap,
+  Plus,
+  Save,
 } from "lucide-react";
 
 const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail }) => {
