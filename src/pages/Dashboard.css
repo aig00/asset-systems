@@ -80,24 +80,57 @@
   z-index: 0;
 }
 
-/* ── Sidebar ── */
+/* ── Floating Sidebar ── */
 .dash-sidebar {
   width: var(--nav-width);
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 20px 16px;
+  /* Glassmorphism: semi-transparent background with blur */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   position: fixed;
-  height: 100vh;
+  /* Shorter height to emphasize the sidebar */
+  height: 85vh;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 40;
-  transition: width 0.3s var(--ease-out);
-  box-shadow: var(--shadow-sm);
+  transition: width 0.3s var(--ease-out), box-shadow 0.3s ease, transform 0.3s ease;
+  /* Smooth curved border - larger radius on the right side */
+  border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
+  /* Floating effect - elevated shadow */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Subtle floating animation */
+  animation: floatSidebar 6s ease-in-out infinite;
+}
+
+/* Floating animation keyframes */
+@keyframes floatSidebar {
+  0%, 100% {
+    transform: translateY(-50%);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  50% {
+    transform: translateY(calc(-50% - 3px));
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .dash-sidebar.collapsed {
   width: var(--nav-width-collapsed);
   padding: 20px 12px;
+  /* Maintain glassmorphism and floating effect when collapsed */
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
 .dash-sidebar.collapsed .dash-brand-name,
@@ -118,17 +151,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0 20px;
+  gap: 8px;
+  padding: 6px 0 16px;
   border-bottom: 1px solid var(--border-light);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-.dash-logo { width: 44px; height: 44px; object-fit: contain; border-radius: 12px; }
-.dash-logo-mini { width: 32px; height: 32px; }
+.dash-logo { width: 38px; height: 38px; object-fit: contain; border-radius: 10px; }
+.dash-logo-mini { width: 28px; height: 28px; }
 
 .dash-brand-name {
-  font-size: 13px; font-weight: 700; text-align: center;
+  font-size: 12px; font-weight: 700; text-align: center;
   color: var(--slate-700); line-height: 1.3;
 }
 
@@ -152,49 +185,65 @@
 }
 
 .dash-nav-tabs {
-  display: flex; flex-direction: column; gap: 4px;
-  flex: 1; padding: 12px 0;
+  display: flex; flex-direction: column; gap: 2px;
+  flex: 1; padding: 8px 0;
 }
 
+/* Enhanced navigation tabs with glassmorphism hover */
 .dash-nav-tab {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; border: none; background: transparent;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border: none; background: transparent;
   border-radius: var(--radius-md); cursor: pointer;
-  font-size: 14px; font-weight: 500; color: var(--slate-500);
+  font-size: 13px; font-weight: 500; color: var(--slate-500);
   transition: all var(--duration-fast); position: relative;
   font-family: inherit;
+  /* Smooth glass effect on hover */
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 
 .dash-nav-tab:hover {
-  background: var(--slate-50); color: var(--slate-700);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--slate-700);
+  /* Add subtle shadow on hover */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateX(2px);
 }
 
 .dash-nav-tab.active {
-  background: var(--brand-50); color: var(--brand); font-weight: 600;
+  background: var(--brand-50);
+  color: var(--brand);
+  font-weight: 600;
+  /* Glass effect for active state */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(220, 38, 38, 0.15);
 }
 
 .dash-nav-tab.active::before {
   content: ''; position: absolute; left: 0; top: 50%;
-  transform: translateY(-50%); width: 3px; height: 24px;
+  transform: translateY(-50%); width: 3px; height: 20px;
   background: var(--brand); border-radius: 0 4px 4px 0;
+  /* Glow effect */
+  box-shadow: 0 0 12px var(--brand-light);
 }
 
 .dash-user-section {
-  margin-top: auto; padding-top: 16px;
+  margin-top: auto; padding-top: 12px;
   border-top: 1px solid var(--border-light);
 }
 
 .dash-user-chip {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px; background: var(--surface-2);
-  border-radius: var(--radius-md); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; background: var(--surface-2);
+  border-radius: var(--radius-md); margin-bottom: 10px;
   border: 1px solid var(--border-light);
 }
 
 .dash-user-avatar {
-  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0;
+  color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0;
 }
 
 .dash-user-info { display: flex; flex-direction: column; min-width: 0; }
@@ -211,8 +260,13 @@
 
 .dash-action-buttons { display: flex; gap: 8px; }
 
+/* Make action buttons stack vertically when collapsed */
+.dash-sidebar.collapsed .dash-action-buttons {
+  flex-direction: column;
+}
+
 .dash-theme-btn {
-  width: 40px; height: 40px; border: 1px solid var(--border);
+  width: 36px; height: 36px; border: 1px solid var(--border);
   background: var(--surface); border-radius: var(--radius-sm);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   color: var(--slate-400); transition: all var(--duration-fast); flex-shrink: 0;
@@ -224,14 +278,25 @@
 
 .dash-logout-btn {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 10px; border: 1px solid var(--brand-100);
+  gap: 6px; padding: 8px; border: 1px solid var(--brand-100);
   background: var(--brand-50); color: var(--brand);
   border-radius: var(--radius-sm); cursor: pointer;
-  font-size: 13px; font-weight: 600; font-family: inherit;
+  font-size: 12px; font-weight: 600; font-family: inherit;
   transition: all var(--duration-fast);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .dash-logout-btn:hover { background: var(--brand-100); }
+
+/* Hide text in logout button when collapsed */
+.dash-sidebar.collapsed .dash-logout-btn span {
+  display: none;
+}
+
+.dash-sidebar.collapsed .dash-logout-btn {
+  justify-content: center;
+}
 
 /* ── Main Content ── */
 .dash-main {
