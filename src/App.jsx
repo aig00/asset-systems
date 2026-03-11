@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ErrorBoundary, ProtectedRoute } from "@/components/common";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import MobileBlocker from "@/components/MobileBlocker";
 
 // Lazy load components for better performance
 const Login = React.lazy(() => import("@/pages/Login"));
@@ -83,11 +84,13 @@ const App = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
+        <MobileBlocker>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </MobileBlocker>
       </ThemeProvider>
     </ErrorBoundary>
   );

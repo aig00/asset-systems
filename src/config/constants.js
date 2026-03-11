@@ -79,3 +79,6 @@ export const LOG_ACTIONS = {
   DELETE_LOGS: 'DELETE_LOGS',
 };
 
+// Device breakpoints
+export const MOBILE_BREAKPOINT = 1024; // Desktop minimum width in pixels
+
