@@ -1078,15 +1078,6 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Payment</h4>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Downpayment (₱)</label>
-                    <input type="number" step="0.01" name="downpayment_amount" value={editForm.downpayment_amount || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter downpayment amount" />
-                    <p className="text-xs text-gray-500 mt-1">Leave as 0 for full payment.</p>
-                  </div>
-                </div>
               </div>
               
               <div className="px-6 py-4 border-t border-gray-200 flex gap-3 sticky bottom-0 bg-white">
@@ -1201,4 +1192,3 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 AssetSummary.displayName = 'AssetSummary';
 
 export default AssetSummary;
-
