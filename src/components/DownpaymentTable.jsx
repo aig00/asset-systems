@@ -235,16 +235,16 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
 
       <div className="dash-logs-list">
         <div className="dash-log-header items-center">
-          <span className="text-center"></span>
-          <span className="text-center">Tag #</span>
-          <span className="text-center">Asset Name</span>
-          <span className="text-center">Category</span>
-          <span className="text-center">Status</span>
-          <span className="text-center">Total Cost</span>
-          <span className="text-center">Downpayment</span>
-          <span className="text-center">Progress</span>
-          <span className="text-center">Actions</span>
-        </div>
+  <span></span>
+  <span className="text-left">Tag #</span>
+  <span className="text-left">Asset Name</span>
+  <span className="text-left">Category</span>
+  <span className="text-left">Status</span>
+  <span className="text-right">Total Cost</span>
+  <span className="text-right">Downpayment</span>
+  <span className="text-left">Progress</span>
+  <span className="text-right">Actions</span>
+</div>
         {downpaymentAssets.length === 0 ? (
           searchQuery ? (
             <div className="text-center py-16 px-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
