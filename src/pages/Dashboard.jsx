@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../supabaseClient";
 import useSupabaseRealtime from "@/hooks/useSupabaseRealtime";
 import AddAssetForm from "@/components/AddAssetForm";
 import AssetSummary from "@/components/AssetSummary";
@@ -89,6 +89,14 @@ const Dashboard = () => {
     transactions: null,
     logs: null,
   });
+
+  useEffect(() => {
+    return () => {
+      Object.values(abortControllersRef.current).forEach((controller) => {
+        if (controller) controller.abort();
+      });
+    };
+  }, []);
 
   const [assets, setAssets] = useState([]);
   const [transactions, setTransactions] = useState({});
@@ -157,16 +165,16 @@ const Dashboard = () => {
       if (abortControllersRef.current.transactions) {
         abortControllersRef.current.transactions.abort();
       }
+      const controller = new AbortController();
+      abortControllersRef.current.transactions = controller;
       
       const { data, error } = await supabase
         .from("downpayment_transactions")
         .select("*")
-        .order("transaction_date", { ascending: false });
+        .order("transaction_date", { ascending: false })
+        .abortSignal(controller.signal);
 
-      if (error) {
-        console.error("Error fetching transactions:", error);
-        return;
-      }
+      if (error) throw error;
 
       const grouped = {};
       (data || []).forEach((txn) => {
@@ -177,29 +185,33 @@ const Dashboard = () => {
       });
       setTransactions(grouped);
     } catch (err) {
-      console.error("Unexpected error in fetchTransactions:", err);
+      if (err.name !== "AbortError" && !err.message?.includes("AbortError")) {
+        console.error("Unexpected error in fetchTransactions:", err);
+      }
     }
   };
 
-  const fetchAssets = async (isBackground = false) => {
-    const shouldShowLoading = !isBackground || assets.length === 0;
+  const fetchAssets = async (arg = false) => {
+    const isBackground = typeof arg === "object" ? arg.isBackground : arg;
+    const skipLoading = typeof arg === "object" ? arg.skipLoading : false;
+    const shouldShowLoading = !skipLoading && (!isBackground || assets.length === 0);
+
     if (shouldShowLoading) setIsDataLoading(true);
     
     try {
       if (abortControllersRef.current.assets) {
         abortControllersRef.current.assets.abort();
       }
+      const controller = new AbortController();
+      abortControllersRef.current.assets = controller;
       
       const { data, error } = await supabase
         .from("assets")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(controller.signal);
       
-      if (error) {
-        console.error("Error fetching assets:", error);
-        setIsDataLoading(false);
-        return;
-      }
+      if (error) throw error;
       
       const dataList = data || [];
       const pendingUpdates = [];
@@ -236,7 +248,8 @@ const Dashboard = () => {
         const { data: updatedData, error: refetchError } = await supabase
           .from("assets")
           .select("*")
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .abortSignal(controller.signal);
         
         finalData = refetchError ? dataList : (updatedData || []);
       }
@@ -244,9 +257,13 @@ const Dashboard = () => {
       setAssets(finalData);
       calculateStats(finalData);
     } catch (err) {
-      console.error("Unexpected error in fetchAssets:", err);
+      if (err.name !== "AbortError" && !err.message?.includes("AbortError")) {
+        console.error("Error in fetchAssets:", err);
+      }
     } finally {
-      setIsDataLoading(false);
+      if (shouldShowLoading) {
+        setIsDataLoading(false);
+      }
     }
   };
 
@@ -276,21 +293,39 @@ const Dashboard = () => {
       if (abortControllersRef.current.logs) {
         abortControllersRef.current.logs.abort();
       }
+      const controller = new AbortController();
+      abortControllersRef.current.logs = controller;
       
       const { data, error } = await supabase
         .from("logs")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(controller.signal);
       
-      if (error) {
-        console.error("Error fetching logs:", error);
-        return;
-      }
+      if (error) throw error;
       
       const filteredLogs = (data || []).filter(log => log.action_type !== "INSERT");
       setLogs(filteredLogs);
     } catch (err) {
-      console.error("Unexpected error in fetchLogs:", err);
+      if (err.name !== "AbortError" && !err.message?.includes("AbortError")) {
+        console.error("Unexpected error in fetchLogs:", err);
+      }
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsDataLoading(true);
+    try {
+      // Call fetches in parallel and wait for both to complete
+      await Promise.all([
+        fetchAssets({ isBackground: true, skipLoading: true }),
+        fetchLogs()
+      ]);
+    } catch (error) {
+      console.error("An error occurred during refresh:", error);
+    } finally {
+      // Always ensure the loading state is turned off
+      setIsDataLoading(false);
     }
   };
 
@@ -744,7 +779,7 @@ const Dashboard = () => {
                 <div className="dash-header-actions">
                   <button 
                     className="dash-btn" 
-                    onClick={() => { fetchAssets(); fetchLogs(); }}
+                    onClick={handleRefresh}
                     disabled={isDataLoading}
                   >
                     <RefreshCw size={16} className={isDataLoading ? "spin" : ""} />
@@ -913,7 +948,7 @@ const Dashboard = () => {
               <div className="dash-actions">
                 <button
                   className="dash-btn"
-                  onClick={() => { fetchAssets(); fetchLogs(); }}
+                  onClick={handleRefresh}
                   disabled={isDataLoading}
                 >
                   <RefreshCw size={16} className={isDataLoading ? "spin" : ""} /> Refresh
@@ -1044,4 +1079,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

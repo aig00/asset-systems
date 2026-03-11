@@ -38,6 +38,9 @@ export const usePageFocusFix = ({
           resetStates.forEach(setter => {
             if (typeof setter === 'function') {
               setter(prev => {
+                // Handle boolean state (simple loading flags)
+                if (typeof prev === 'boolean') return false;
+
                 // If it's an object with loading, reset it
                 if (prev && typeof prev === 'object') {
                   return { ...prev, loading: false, isLoading: false };
@@ -189,4 +192,3 @@ export const useLoadingReset = (isLoading, setIsLoading) => {
 };
 
 export default usePageFocusFix;
-

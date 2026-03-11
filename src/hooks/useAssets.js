@@ -113,7 +113,8 @@ export const useAssets = () => {
       queryClient.setQueryData(['assets'], (old) => {
         if (!old) return [newAsset]
         return old.map(asset => 
-          asset.id === newAsset.id ? { ...asset, ...newAsset } : asset
+          // Use loose comparison or string conversion for IDs to prevent type mismatches
+          String(asset.id) === String(newAsset.id) ? { ...asset, ...newAsset } : asset
         )
       })
 
@@ -128,7 +129,7 @@ export const useAssets = () => {
     },
     onSuccess: () => {
       // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
+      return queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
   })
 
@@ -140,7 +141,8 @@ export const useAssets = () => {
       const previousAssets = queryClient.getQueryData(['assets'])
 
       queryClient.setQueryData(['assets'], (old) => 
-        old ? old.filter(asset => asset.id !== assetId) : []
+        // Safe ID comparison to ensure item is removed from UI immediately
+        old ? old.filter(asset => String(asset.id) !== String(assetId)) : []
       )
 
       return { previousAssets }
@@ -152,7 +154,7 @@ export const useAssets = () => {
       console.error('Error deleting asset:', err)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
+      return queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
   })
 
@@ -165,7 +167,7 @@ export const useAssets = () => {
 
       queryClient.setQueryData(['assets'], (old) => 
         old ? old.map(asset => 
-          asset.id === assetId 
+          String(asset.id) === String(assetId) 
             ? { ...asset, status: 'Transferred', current_company: destination }
             : asset
         ) : []
@@ -180,7 +182,7 @@ export const useAssets = () => {
       console.error('Error transferring asset:', err)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
+      return queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
   })
 
@@ -193,7 +195,7 @@ export const useAssets = () => {
 
       queryClient.setQueryData(['assets'], (old) => 
         old ? old.map(asset => 
-          asset.id === assetId 
+          String(asset.id) === String(assetId) 
             ? { ...asset, status: 'Disposed' }
             : asset
         ) : []
@@ -208,7 +210,7 @@ export const useAssets = () => {
       console.error('Error disposing asset:', err)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
+      return queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
   })
 
