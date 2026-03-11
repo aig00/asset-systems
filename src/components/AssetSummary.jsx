@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import PinVerificationModal from "./PinVerificationModal";
 import { useAuth } from "../context/AuthContext";
-import { ModernSearchBar, ModernButton, StatusBadge, ActionButton, KebabMenu } from "./ui/ModernTable";
+import { ModernSearchBar, ModernButton, StatusBadge, KebabMenu } from "./ui/ModernTable";
 import {
   Eye,
   Edit,
@@ -38,9 +38,10 @@ import {
   FolderOutput,
   MoreVertical,
   Printer,
+  Plus,
 } from "lucide-react";
 
-const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendingOnly = false }) => {
+const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendingOnly = false, onAddAsset }) => {
   const { verifyPin, checkPinLockStatus } = useAuth();
   
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -626,21 +627,63 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
         )}
         <span className="text-center">
           <div className="flex items-center justify-center gap-1">
-            <ActionButton icon={Eye} label="View" onClick={() => openModal(asset, "view")} />
+            <button
+              onClick={() => openModal(asset, "view")}
+              className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+              title="View"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
             {(userRole === "head" || userRole === "admin") && (
-              <ActionButton icon={Edit} label="Edit" variant="primary" onClick={() => openWithPin(() => openModal(asset, "edit"))} />
+              <button
+                onClick={() => openWithPin(() => openModal(asset, "edit"))}
+                className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+                title="Edit"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
             )}
-            <ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => openWithPin(() => openModal(asset, "delete"))} />
+            <button
+              onClick={() => openWithPin(() => openModal(asset, "delete"))}
+              className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
             {asset.status === "Active" && (
               <>
-                <ActionButton icon={ArrowRightLeft} label="Transfer" onClick={() => openWithPin(() => openModal(asset, "transfer"))} />
-                <ActionButton icon={Archive} label="Dispose" onClick={() => openWithPin(() => openModal(asset, "dispose"))} />
+                <button
+                  onClick={() => openWithPin(() => openModal(asset, "transfer"))}
+                  className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors rounded-md"
+                  title="Transfer"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => openWithPin(() => openModal(asset, "dispose"))}
+                  className="p-1.5 text-gray-400 hover:text-rose-600 transition-colors rounded-md"
+                  title="Dispose"
+                >
+                  <Archive className="w-4 h-4" />
+                </button>
               </>
             )}
             {asset.status === "Pending" && userRole === "admin" && (
               <>
-                <ActionButton icon={CheckCircle} label="Approve" onClick={() => handleApprove(asset.id)} />
-                <ActionButton icon={XCircle} label="Reject" onClick={() => handleReject(asset.id)} />
+                <button
+                  onClick={() => handleApprove(asset.id)}
+                  className="p-1.5 text-gray-400 hover:text-emerald-600 transition-colors rounded-md"
+                  title="Approve"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleReject(asset.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+                  title="Reject"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
               </>
             )}
           </div>
@@ -688,9 +731,34 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
           <span className="text-center">Actions</span>
         </div>
         {filteredAssets.length === 0 ? (
-          <div className="dash-log-empty">
-            {searchQuery ? "No assets match your search." : "No assets found. Add one to get started."}
-          </div>
+          searchQuery ? (
+            <div className="text-center py-16 px-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+              <div className="inline-block p-4 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Search size={32} className="text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                No assets match your search
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Try adjusting your search terms to find what you're looking for.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-16 px-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+              <div className="inline-block p-4 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Package size={32} className="text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                No assets yet
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Get started by adding a new asset to your inventory.
+              </p>
+              <div className="mt-6">
+                <button className="dash-btn dash-btn-primary" onClick={onAddAsset} style={{ background: '#dc2626' }}><Plus size={16} /> Add Asset</button>
+              </div>
+            </div>
+          )
         ) : (
           filteredAssets.map(renderTableRow)
         )}

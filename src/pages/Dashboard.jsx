@@ -986,6 +986,7 @@ const Dashboard = () => {
                 userEmail={user?.email}
                 refreshData={() => { fetchAssets(); fetchLogs(); }}
                 showPendingOnly={false}
+                onAddAsset={() => setShowAddForm(true)}
               />
             </div>
           )}

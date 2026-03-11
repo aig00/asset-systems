@@ -192,8 +192,34 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
           <span>Actions</span>
         </div>
         {downpaymentAssets.length === 0 ? (
-          <div className="dash-log-empty">{searchQuery ? "No assets match your search." : "No downpayment assets found."}</div>
-        ) : (
+          searchQuery ? (
+            <div className="text-center py-16 px-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+              <div className="inline-block p-4 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Search size={32} className="text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                No assets match your search
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Try adjusting your search terms to find what you're looking for.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-16 px-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+              <div className="inline-block p-4 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Package size={32} className="text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                No downpayment assets yet
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Get started by adding a new asset with an initial downpayment.
+              </p>
+              <div className="mt-6">
+                <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626' }}><Plus size={16} /> Add Asset</button>
+              </div>
+            </div>
+          )) : (
           downpaymentAssets.map((asset) => {
             const paymentPercent = calculatePaymentCompletion(asset);
             const assetTransactions = transactions[asset.id] || [];
@@ -457,4 +483,3 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
 };
 
 export default DownpaymentTable;
-

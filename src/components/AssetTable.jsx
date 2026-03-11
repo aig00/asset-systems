@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import PinVerificationModal from "./PinVerificationModal";
-import { ModernTable, ModernSearchBar, ModernButton, StatusBadge, KebabMenu, ActionButton } from "./ui/ModernTable";
+import { ModernTable, ModernSearchBar, ModernButton, StatusBadge, KebabMenu } from "./ui/ModernTable";
 import {
   Trash2,
   ArrowRightLeft,
@@ -59,35 +59,40 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
       {/* Actions */}
       <td className="px-4 py-3.5">
         <div className="flex items-center justify-end gap-1">
-          <ActionButton 
-            icon={Eye} 
-            label="View Details"
+          <button
             onClick={() => onView(asset)}
-          />
+            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
           
           {(role === "head" || role === "admin") && (
-            <ActionButton 
-              icon={Edit} 
-              label="Edit"
-              variant="primary"
+            <button
               onClick={() => onEdit(asset)}
-            />
+              className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
           )}
           
-          <ActionButton 
-            icon={Trash2} 
-            label="Delete"
-            variant="danger"
-            danger
+          <button
             onClick={() => onDelete(asset)}
-          />
+            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
           
           {role === "head" && asset.status === "Active" && (
-            <ActionButton 
-              icon={ArrowRightLeft} 
-              label="Transfer"
+            <button
               onClick={() => onTransfer(asset)}
-            />
+              className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors rounded-md"
+              title="Transfer"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+            </button>
           )}
         </div>
       </td>
@@ -399,35 +404,40 @@ const AssetTable = ({ assets, refreshData }) => {
       width: 'w-40',
       render: (_, row) => (
         <div className="flex items-center justify-end gap-1">
-          <ActionButton 
-            icon={Eye} 
-            label="View Details"
+          <button
             onClick={() => {}}
-          />
+            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
           
           {(role === "head" || role === "admin") && (
-            <ActionButton 
-              icon={Edit} 
-              label="Edit"
-              variant="primary"
+            <button
               onClick={() => handleEditClick(row)}
-            />
+              className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
           )}
           
-          <ActionButton 
-            icon={Trash2} 
-            label="Delete"
-            variant="danger"
-            danger
+          <button
             onClick={() => handleDisposeClick(row)}
-          />
+            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
           
           {role === "head" && row.status === "Active" && (
-            <ActionButton 
-              icon={ArrowRightLeft} 
-              label="Transfer"
+            <button
               onClick={() => handleTransferClick(row)}
-            />
+              className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors rounded-md"
+              title="Transfer"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+            </button>
           )}
         </div>
       )
@@ -731,4 +741,3 @@ const AssetTable = ({ assets, refreshData }) => {
 };
 
 export default AssetTable;
-
