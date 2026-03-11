@@ -652,95 +652,79 @@ const AssetSummary = ({ assets, userRole, userEmail, refreshData, showPendingOnl
 
   // Export by LOB functions
   const openExportLobModal = () => {
-    const lobs = [...new Set(assets.map(asset => asset.current_company).filter(Boolean))];
+    const lobs = [...new Set(filteredAssets.map(a => a.current_company).filter(Boolean))];
     setAvailableLobs(lobs);
-    setSelectedLobs(lobs);
+    setSelectedLobs([]);
     setShowExportLobModal(true);
   };
 
-  const handleExportByLob = () => {
-    if (selectedLobs.length === 0) {
-      alert("Please select at least one LOB to export.");
+  const handleExportByLob = async (lobToExport) => {
+    if (!lobToExport) {
+      alert("Please select a LOB to export.");
       return;
     }
 
-    const wb = XLSX.utils.book_new();
-    const summaryData = [];
-    let grandTotal = 0;
+    const workbook = new ExcelJS.Workbook();
+    const lobAssets = filteredAssets.filter(a => a.current_company === lobToExport);
 
-    selectedLobs.forEach(lob => {
-      const lobAssets = assets.filter(asset => asset.current_company === lob);
-      if (lobAssets.length === 0) return;
+    if (lobAssets.length === 0) {
+      alert(`No assets found for LOB: ${lobToExport}.`);
+      setShowExportLobModal(false);
+      return;
+    }
 
-      const sheetData = lobAssets.map(asset => {
-        const quantity = Number(asset.quantity) || 0;
-        const unitCost = Number(asset.unit_cost) || 0;
-        const totalCost = Number(asset.total_cost) || 0;
-        const salvageValue = Number(asset.salvage_value) || 0;
-        const usefulLifeYears = Number(asset.useful_life_years) || 0;
-        let monthlyAmortization = 0;
-        if (usefulLifeYears > 0) {
-          monthlyAmortization = (totalCost - salvageValue) / (usefulLifeYears * 12);
-        }
-        return {
-          "Tag Number": asset.tag_number || "",
-          "Asset Name": asset.name || "",
-          "Category": asset.category || "",
-          "Status": asset.status || "",
-          "Company": asset.current_company || "",
-          "Quantity": quantity,
-          "Unit Cost": unitCost,
-          "Total Cost": totalCost,
-          "Salvage Value": salvageValue,
-          "Useful Life (Years)": usefulLifeYears,
-          "Purchase Date": asset.purchase_date || "",
-          "Reference Number": asset.reference_number || "",
-          "Serial Number": asset.serial_number || "",
-          "Description": asset.description || "",
-          "Location": asset.location || "",
-          "Assigned To": asset.assigned_to || "",
-          "Monthly Amortization": monthlyAmortization.toFixed(2)
-        };
-      });
+    const sheetName = lobToExport.length > 30 ? lobToExport.substring(0, 30) : lobToExport;
+    const worksheet = workbook.addWorksheet(sheetName);
 
-      const ws = XLSX.utils.json_to_sheet(sheetData);
-      let sheetName = lob.length > 30 ? lob.substring(0, 30) : lob;
-      let uniqueSheetName = sheetName;
-      let counter = 1;
-      while (wb.SheetNames.includes(uniqueSheetName)) {
-          uniqueSheetName = `${sheetName.substring(0, 28)}_${counter}`;
-          counter++;
-      }
-      XLSX.utils.book_append_sheet(wb, ws, uniqueSheetName);
+    worksheet.columns = [
+        { header: "Tag #", key: "tagNumber", width: 15 },
+        { header: "Asset Name", key: "assetName", width: 30 },
+        { header: "Category", key: "category", width: 20 },
+        { header: "Status", key: "status", width: 15 },
+        { header: "LOB", key: "lob", width: 20 },
+        { header: "Quantity", key: "quantity", width: 10 },
+        { header: "Unit Cost", key: "unitCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Total Cost", key: "totalCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Salvage Value", key: "salvageValue", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Useful Life", key: "usefulLife", width: 12 },
+        { header: "Purchase Date", key: "purchaseDate", width: 15 },
+        { header: "Reference #", key: "referenceNumber", width: 15 },
+        { header: "Serial #", key: "serialNumber", width: 15 },
+        { header: "Location", key: "location", width: 20 },
+        { header: "Assigned To", key: "assignedTo", width: 20 },
+        { header: "Description", key: "description", width: 30 },
+    ];
 
-      const lobTotal = lobAssets.reduce((sum, a) => sum + (parseFloat(a.total_cost) || 0), 0);
-      grandTotal += lobTotal;
-      summaryData.push({
-        "LOB": lob,
-        "Asset Count": lobAssets.length,
-        "Total Value": lobTotal
-      });
+    worksheet.getRow(1).font = { bold: true };
+
+    lobAssets.forEach(asset => {
+        worksheet.addRow({
+          tagNumber: asset.tag_number || "",
+          assetName: asset.name || "",
+          category: asset.category || "",
+          status: asset.status || "",
+          lob: asset.current_company || "",
+          quantity: asset.quantity || 0,
+          unitCost: asset.unit_cost != null ? parseFloat(asset.unit_cost) : 0,
+          totalCost: asset.total_cost != null ? parseFloat(asset.total_cost) : undefined,
+          salvageValue: asset.salvage_value != null ? parseFloat(asset.salvage_value) : 0,
+          usefulLife: asset.useful_life_years || 0,
+          purchaseDate: asset.purchase_date || "",
+          referenceNumber: asset.reference_number || "",
+          serialNumber: asset.serial_number || "",
+          location: asset.location || "",
+          assignedTo: asset.assigned_to || "",
+          description: asset.description || "",
+        });
     });
 
-    summaryData.push({
-      "LOB": "GRAND TOTAL",
-      "Asset Count": selectedLobs.reduce((sum, lob) => sum + assets.filter(a => a.current_company === lob).length, 0),
-      "Total Value": grandTotal
-    });
-    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
-
-    const dateStr = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `Assets_By_LOB_${dateStr}.xlsx`);
+    const safeLobName = lobToExport.replace(/[\s/]/g, '_');
+    await downloadExcel(workbook, `Assets_For_${safeLobName}_${new Date().toISOString().split('T')[0]}.xlsx`);
     setShowExportLobModal(false);
   };
 
   const toggleLob = (lob) => {
-    if (selectedLobs.includes(lob)) {
-      setSelectedLobs(selectedLobs.filter(l => l !== lob));
-    } else {
-      setSelectedLobs([...selectedLobs, lob]);
-    }
+    setSelectedLobs([lob]);
   };
 
   // Export by Category functions
@@ -1021,4 +1005,3 @@ function calculatePayment(asset) {
 }
 
 export default AssetSummary;
-

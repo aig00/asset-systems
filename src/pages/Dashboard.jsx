@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import ExcelJS from "exceljs";
 import NCT_logong from "@/assets/NCT_logong.png";
 import { useTabVisibility } from "@/hooks/useTabVisibility";
 import {
@@ -139,6 +140,17 @@ const Dashboard = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(false);
+
+  const downloadExcel = async (workbook, filename) => {
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   // Mock sparkline data - in production this would come from historical data
   const sparklineData = useMemo(() => ({
@@ -355,7 +367,46 @@ const Dashboard = () => {
   };
 
   const exportLogs = async () => {
-    console.log("Exporting logs...");
+    if (!logs || logs.length === 0) {
+      alert("No logs to export.");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("System Logs");
+
+    worksheet.columns = [
+      { header: "Timestamp", key: "timestamp", width: 22 },
+      { header: "User", key: "user", width: 30 },
+      { header: "Action Type", key: "actionType", width: 20 },
+      { header: "Tag #", key: "tagNumber", width: 15 },
+      { header: "Asset Name", key: "assetName", width: 30 },
+      { header: "Category", key: "category", width: 20 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "LOB", key: "lob", width: 20 },
+      { header: "Total Cost", key: "totalCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+      { header: "Details", key: "message", width: 60 },
+    ];
+
+    worksheet.getRow(1).font = { bold: true };
+
+    logs.forEach(log => {
+      const details = log.details || {};
+      worksheet.addRow({
+        timestamp: new Date(log.created_at).toLocaleString(),
+        user: log.user_email,
+        actionType: log.action_type,
+        tagNumber: details.tag_number || "",
+        assetName: details.asset_name || "",
+        category: details.category || "",
+        status: details.status || "",
+        lob: details.current_company || details.company || "",
+        totalCost: details.total_cost != null ? parseFloat(details.total_cost) : undefined,
+        message: details.message || formatLogDetails(log),
+      });
+    });
+
+    await downloadExcel(workbook, `System_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const deleteLogs = async () => {

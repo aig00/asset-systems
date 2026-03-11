@@ -502,70 +502,131 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 
   // Export functions
   const openExportLobModal = () => {
-    const lobs = [...new Set(assets.map(a => a.current_company).filter(Boolean))];
+    const lobs = [...new Set(filteredAssets.map(a => a.current_company).filter(Boolean))];
     setAvailableLobs(lobs);
     setSelectedLobs(lobs);
     setShowExportLobModal(true);
   };
 
-  const handleExportByLob = () => {
+  const handleExportByLob = async () => {
     if (selectedLobs.length === 0) { alert("Please select at least one LOB."); return; }
-    const wb = XLSX.utils.book_new();
-    let grandTotal = 0;
+    const workbook = new ExcelJS.Workbook();
 
     selectedLobs.forEach(lob => {
-      const lobAssets = assets.filter(a => a.current_company === lob);
+      const lobAssets = filteredAssets.filter(a => a.current_company === lob);
       if (lobAssets.length === 0) return;
-      const sheetData = lobAssets.map(asset => ({
-        "Tag Number": asset.tag_number || "",
-        "Asset Name": asset.name || "",
-        "Category": asset.category || "",
-        "Status": asset.status || "",
-        "Company": asset.current_company || "",
-        "Quantity": Number(asset.quantity) || 0,
-        "Unit Cost": Number(asset.unit_cost) || 0,
-        "Total Cost": Number(asset.total_cost) || 0,
-        "Salvage Value": Number(asset.salvage_value) || 0,
-        "Useful Life (Years)": Number(asset.useful_life_years) || 0,
-        "Purchase Date": asset.purchase_date || "",
-      }));
-      const ws = XLSX.utils.json_to_sheet(sheetData);
+
       const sheetName = lob.length > 30 ? lob.substring(0, 30) : lob;
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      grandTotal += lobAssets.reduce((sum, a) => sum + (parseFloat(a.total_cost) || 0), 0);
+      const worksheet = workbook.addWorksheet(sheetName);
+
+      worksheet.columns = [
+        { header: "Tag #", key: "tagNumber", width: 15 },
+        { header: "Asset Name", key: "assetName", width: 30 },
+        { header: "Category", key: "category", width: 20 },
+        { header: "Status", key: "status", width: 15 },
+        { header: "LOB", key: "lob", width: 20 },
+        { header: "Quantity", key: "quantity", width: 10 },
+        { header: "Unit Cost", key: "unitCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Total Cost", key: "totalCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Salvage Value", key: "salvageValue", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Useful Life", key: "usefulLife", width: 12 },
+        { header: "Purchase Date", key: "purchaseDate", width: 15 },
+        { header: "Reference #", key: "referenceNumber", width: 15 },
+        { header: "Serial #", key: "serialNumber", width: 15 },
+        { header: "Location", key: "location", width: 20 },
+        { header: "Assigned To", key: "assignedTo", width: 20 },
+        { header: "Description", key: "description", width: 30 },
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      lobAssets.forEach(asset => {
+        worksheet.addRow({
+          tagNumber: asset.tag_number || "",
+          assetName: asset.name || "",
+          category: asset.category || "",
+          status: asset.status || "",
+          lob: asset.current_company || "",
+          quantity: asset.quantity || 0,
+          unitCost: asset.unit_cost != null ? parseFloat(asset.unit_cost) : 0,
+          totalCost: asset.total_cost != null ? parseFloat(asset.total_cost) : undefined,
+          salvageValue: asset.salvage_value != null ? parseFloat(asset.salvage_value) : 0,
+          usefulLife: asset.useful_life_years || 0,
+          purchaseDate: asset.purchase_date || "",
+          referenceNumber: asset.reference_number || "",
+          serialNumber: asset.serial_number || "",
+          location: asset.location || "",
+          assignedTo: asset.assigned_to || "",
+          description: asset.description || "",
+        });
+      });
     });
 
-    XLSX.writeFile(wb, `Assets_By_LOB_${new Date().toISOString().split('T')[0]}.xlsx`);
+    await downloadExcel(workbook, `Assets_By_LOB_${new Date().toISOString().split('T')[0]}.xlsx`);
     setShowExportLobModal(false);
   };
 
   const openExportCategoryModal = () => {
-    const categories = [...new Set(assets.map(a => a.category).filter(Boolean))];
+    const categories = [...new Set(filteredAssets.map(a => a.category).filter(Boolean))];
     setAvailableCategories(categories);
     setSelectedCategories(categories);
     setShowExportCategoryModal(true);
   };
 
-  const handleExportByCategory = () => {
+  const handleExportByCategory = async () => {
     if (selectedCategories.length === 0) { alert("Please select at least one category."); return; }
-    const wb = XLSX.utils.book_new();
+    const workbook = new ExcelJS.Workbook();
 
     selectedCategories.forEach(category => {
-      const categoryAssets = assets.filter(a => a.category === category);
+      const categoryAssets = filteredAssets.filter(a => a.category === category);
       if (categoryAssets.length === 0) return;
-      const sheetData = categoryAssets.map(asset => ({
-        "Tag Number": asset.tag_number || "",
-        "Asset Name": asset.name || "",
-        "Category": asset.category || "",
-        "Status": asset.status || "",
-        "Company": asset.current_company || "",
-        "Total Cost": Number(asset.total_cost) || 0,
-      }));
-      const ws = XLSX.utils.json_to_sheet(sheetData);
-      XLSX.utils.book_append_sheet(wb, ws, category.length > 30 ? category.substring(0, 30) : category);
+      const sheetName = category.length > 30 ? category.substring(0, 30) : category;
+      const worksheet = workbook.addWorksheet(sheetName);
+
+      worksheet.columns = [
+        { header: "Tag #", key: "tagNumber", width: 15 },
+        { header: "Asset Name", key: "assetName", width: 30 },
+        { header: "Category", key: "category", width: 20 },
+        { header: "Status", key: "status", width: 15 },
+        { header: "LOB", key: "lob", width: 20 },
+        { header: "Quantity", key: "quantity", width: 10 },
+        { header: "Unit Cost", key: "unitCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Total Cost", key: "totalCost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Salvage Value", key: "salvageValue", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+        { header: "Useful Life", key: "usefulLife", width: 12 },
+        { header: "Purchase Date", key: "purchaseDate", width: 15 },
+        { header: "Reference #", key: "referenceNumber", width: 15 },
+        { header: "Serial #", key: "serialNumber", width: 15 },
+        { header: "Location", key: "location", width: 20 },
+        { header: "Assigned To", key: "assignedTo", width: 20 },
+        { header: "Description", key: "description", width: 30 },
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      categoryAssets.forEach(asset => {
+        worksheet.addRow({
+          tagNumber: asset.tag_number || "",
+          assetName: asset.name || "",
+          category: asset.category || "",
+          status: asset.status || "",
+          lob: asset.current_company || "",
+          quantity: asset.quantity || 0,
+          unitCost: asset.unit_cost != null ? parseFloat(asset.unit_cost) : 0,
+          totalCost: asset.total_cost != null ? parseFloat(asset.total_cost) : undefined,
+          salvageValue: asset.salvage_value != null ? parseFloat(asset.salvage_value) : 0,
+          usefulLife: asset.useful_life_years || 0,
+          purchaseDate: asset.purchase_date || "",
+          referenceNumber: asset.reference_number || "",
+          serialNumber: asset.serial_number || "",
+          location: asset.location || "",
+          assignedTo: asset.assigned_to || "",
+          description: asset.description || "",
+        });
+      });
     });
 
-    XLSX.writeFile(wb, `Assets_By_Category_${new Date().toISOString().split('T')[0]}.xlsx`);
+    await downloadExcel(workbook, `Assets_By_Category_${new Date().toISOString().split('T')[0]}.xlsx`);
     setShowExportCategoryModal(false);
   };
 
