@@ -875,7 +875,7 @@ const Dashboard = () => {
                 </button>
               </div>
 
-              <div className="dash-logs-list">
+              <div className="dash-logs-list system-logs-list">
                 <div className="dash-log-header">
                   <span>Timestamp</span>
                   <span>User</span>

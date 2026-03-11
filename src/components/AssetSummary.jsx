@@ -581,11 +581,11 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
     const statusVariant = statusClass(asset.status);
     
     return (
-      <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-        <td className="px-4 py-3">
+      <div key={asset.id} className="dash-log-row hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+        <span>
           <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{asset.tag_number}</span>
-        </td>
-        <td className="px-4 py-3">
+        </span>
+        <span>
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{asset.name}</span>
             {asset.is_existing && (
@@ -594,23 +594,23 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
               </span>
             )}
           </div>
-        </td>
-        <td className="px-4 py-3">
+        </span>
+        <span>
           <span className="text-sm text-gray-600 dark:text-gray-400">{asset.category || "—"}</span>
-        </td>
-        <td className="px-4 py-3">
+        </span>
+        <span>
           <StatusBadge status={statusVariant} />
-        </td>
-        <td className="px-4 py-3">
+        </span>
+        <span>
           <span className="text-sm text-gray-600 dark:text-gray-400">{asset.current_company || "—"}</span>
-        </td>
-        <td className="px-4 py-3 text-right">
+        </span>
+        <span className="text-right">
           <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">
             ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
           </span>
-        </td>
+        </span>
         {showPendingOnly && (
-          <td className="px-4 py-3">
+          <span>
             <div className="flex flex-col gap-1">
               <span className={`text-xs font-semibold ${calculatePaymentCompletion(asset) >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {calculatePaymentCompletion(asset).toFixed(1)}%
@@ -622,9 +622,9 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                 />
               </div>
             </div>
-          </td>
+          </span>
         )}
-        <td className="px-4 py-3">
+        <span className="text-right">
           <div className="flex items-center justify-end gap-1">
             <ActionButton icon={Eye} label="View" onClick={() => openModal(asset, "view")} />
             {(userRole === "head" || userRole === "admin") && (
@@ -644,8 +644,8 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
               </>
             )}
           </div>
-        </td>
-      </tr>
+        </span>
+      </div>
     );
   };
 
@@ -676,41 +676,24 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
       </div>
 
       {/* ── Modern Table ── */}
-      <div className="bg-white dark:bg-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tag #</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LOB</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Cost</th>
-                {showPendingOnly && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payment</th>}
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filteredAssets.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                        <Search className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {searchQuery ? "No assets match your search." : "No assets found. Add one to get started."}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredAssets.map(renderTableRow)
-              )}
-            </tbody>
-          </table>
+      <div className="dash-logs-list">
+        <div className="dash-log-header">
+          <span>Tag #</span>
+          <span>Asset Name</span>
+          <span>Category</span>
+          <span>Status</span>
+          <span>LOB</span>
+          <span>Total Cost</span>
+          {showPendingOnly && <span>Payment</span>}
+          <span>Actions</span>
         </div>
+        {filteredAssets.length === 0 ? (
+          <div className="dash-log-empty">
+            {searchQuery ? "No assets match your search." : "No assets found. Add one to get started."}
+          </div>
+        ) : (
+          filteredAssets.map(renderTableRow)
+        )}
       </div>
 
       {/* ── Modals ── */}

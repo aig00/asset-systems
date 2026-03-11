@@ -1,17 +1,10 @@
-# TODO - Floating Navigation UI/UX Implementation
+# UI Update Task - System Logs Table Style
 
-## Task: Implement floating glassmorphism sidebar with smooth curved border
+## Objective
+Apply System Logs table row styling to DownpaymentTable and AssetSummary tables
 
-### Steps:
-1. [x] Update Dashboard.css - Add glassmorphism styles and floating effects to sidebar
-2. [x] Test the implementation
-
-### Changes Summary:
-- Keep left sidebar position
-- Add glassmorphism effect (backdrop blur, semi-transparent background)
-- Add smooth curved border (larger border-radius on right side: 24px)
-- Add floating shadow effect (elevated multi-layer shadows)
-- Add subtle floating animation (6s ease-in-out infinite)
-- Enhanced navigation tabs with glassmorphism hover effects
-- Glowing active state indicator
+## Steps
+- [x] 1. Update DownpaymentTable.jsx - Apply System Logs table row styling
+- [x] 2. Update AssetSummary.jsx - Apply System Logs table row styling
+- [x] 3. Update Dashboard.css - Add custom CSS for different grid layouts
 

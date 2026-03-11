@@ -179,57 +179,100 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead><tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-              <th className="w-10 px-4 py-3"></th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tag #</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Cost</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Downpayment</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Progress</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Actions</th>
-            </tr></thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {downpaymentAssets.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-16 text-center"><div className="flex flex-col items-center gap-2"><div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><Search className="w-6 h-6 text-gray-400" /></div><p className="text-sm text-gray-500 dark:text-gray-400">{searchQuery ? "No assets match your search." : "No downpayment assets found."}</p></div></td></tr>
-              ) : (
-                downpaymentAssets.map((asset) => {
-                  const paymentPercent = calculatePaymentCompletion(asset);
-                  const assetTransactions = transactions[asset.id] || [];
-                  const isExpanded = expandedAssets[asset.id];
-                  const isComplete = paymentPercent >= 100;
-                  return (
-                    <React.Fragment key={asset.id}>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <td className="px-4 py-3"><button onClick={() => toggleAssetExpansion(asset.id)} className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">{isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button></td>
-                        <td className="px-4 py-3"><span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{asset.tag_number}</span></td>
-                        <td className="px-4 py-3"><span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{asset.name}</span></td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{asset.category || "—"}</td>
-                        <td className="px-4 py-3"><StatusBadge status={isComplete ? "completed" : "pending"} /></td>
-                        <td className="px-4 py-3 text-right"><span className="font-mono font-semibold text-gray-900 dark:text-gray-100">₱{parseFloat(asset.total_cost || 0).toLocaleString()}</span></td>
-                        <td className="px-4 py-3 text-right"><span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">₱{getTotalDownpayment(asset).toLocaleString()}</span></td>
-                        <td className="px-4 py-3">{renderProgressBar(paymentPercent, isComplete)}</td>
-                        <td className="px-4 py-3"><div className="flex items-center justify-end gap-1"><ActionButton icon={Plus} label="Add Payment" onClick={() => openAddTransaction(asset)} /><ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => { setSelectedAsset(asset); setModalMode("deleteAsset"); }} /></div></td>
-                      </tr>
-                      {isExpanded &&
-                        <tr><td colSpan={9} className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 p-4"><div className="ml-8">
-                          <div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2"><Receipt size={14} className="text-gray-500 dark:text-gray-400" /><span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transaction History</span><span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">{assetTransactions.length}</span></div><ModernButton variant="secondary" size="sm" icon={Plus} onClick={() => openAddTransaction(asset)}>Add Payment</ModernButton></div>
-                          {assetTransactions.length === 0 ? <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">No transactions yet.</div> : (
-                            <div className="space-y-2">{assetTransactions.map((txn) => (<div key={txn.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-sm transition-shadow"><div className="flex items-center gap-4"><div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><Calendar size={12} />{new Date(txn.transaction_date).toLocaleDateString()}</div><span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">₱{parseFloat(txn.amount || 0).toLocaleString()}</span><span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs" title={txn.description}>{txn.description || "—"}</span></div><div className="flex items-center gap-1"><ActionButton icon={Edit} label="Edit" onClick={() => openTransactionModal(asset, txn, "edit")} /><ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => openTransactionModal(asset, txn, "delete")} /></div></div>))}</div>
-                          )}
-                        </div></td></tr>
-                      }
-                    </React.Fragment>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      <div className="dash-logs-list">
+        <div className="dash-log-header">
+          <span></span>
+          <span>Tag #</span>
+          <span>Asset Name</span>
+          <span>Category</span>
+          <span>Status</span>
+          <span>Total Cost</span>
+          <span>Downpayment</span>
+          <span>Progress</span>
+          <span>Actions</span>
         </div>
+        {downpaymentAssets.length === 0 ? (
+          <div className="dash-log-empty">{searchQuery ? "No assets match your search." : "No downpayment assets found."}</div>
+        ) : (
+          downpaymentAssets.map((asset) => {
+            const paymentPercent = calculatePaymentCompletion(asset);
+            const assetTransactions = transactions[asset.id] || [];
+            const isExpanded = expandedAssets[asset.id];
+            const isComplete = paymentPercent >= 100;
+            return (
+              <React.Fragment key={asset.id}>
+                <div className={`dash-log-row ${isExpanded ? 'expanded' : ''}`}>
+                  <span>
+                    <button onClick={() => toggleAssetExpansion(asset.id)} className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                  </span>
+                  <span>
+                    <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{asset.tag_number}</span>
+                  </span>
+                  <span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{asset.name}</span>
+                  </span>
+                  <span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{asset.category || "—"}</span>
+                  </span>
+                  <span>
+                    <StatusBadge status={isComplete ? "completed" : "pending"} />
+                  </span>
+                  <span className="text-right">
+                    <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">₱{parseFloat(asset.total_cost || 0).toLocaleString()}</span>
+                  </span>
+                  <span className="text-right">
+                    <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">₱{getTotalDownpayment(asset).toLocaleString()}</span>
+                  </span>
+                  <span>{renderProgressBar(paymentPercent, isComplete)}</span>
+                  <span className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <ActionButton icon={Plus} label="Add Payment" onClick={() => openAddTransaction(asset)} />
+                      <ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => { setSelectedAsset(asset); setModalMode("deleteAsset"); }} />
+                    </div>
+                  </span>
+                </div>
+                {isExpanded && (
+                  <div className="dash-expanded-row">
+                    <div className="dash-expanded-content">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Receipt size={14} className="text-gray-500 dark:text-gray-400" />
+                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transaction History</span>
+                          <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">{assetTransactions.length}</span>
+                        </div>
+                        <ModernButton variant="secondary" size="sm" icon={Plus} onClick={() => openAddTransaction(asset)}>Add Payment</ModernButton>
+                      </div>
+                      {assetTransactions.length === 0 ? (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">No transactions yet.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {assetTransactions.map((txn) => (
+                            <div key={txn.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-sm transition-shadow">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                  <Calendar size={12} />
+                                  {new Date(txn.transaction_date).toLocaleDateString()}
+                                </div>
+                                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">₱{parseFloat(txn.amount || 0).toLocaleString()}</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs" title={txn.description}>{txn.description || "—"}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <ActionButton icon={Edit} label="Edit" onClick={() => openTransactionModal(asset, txn, "edit")} />
+                                <ActionButton icon={Trash2} label="Delete" variant="danger" danger onClick={() => openTransactionModal(asset, txn, "delete")} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })
+        )}
       </div>
 
       {/* Add Asset Modal */}

@@ -198,6 +198,10 @@
   color: var(--slate-200);
 }
 
+.dark .dash-title::after {
+  background: var(--brand-light);
+}
+
 .dark .dash-subtitle {
   color: var(--slate-500);
 }
@@ -597,6 +601,13 @@
 .dash-title {
   font-family: var(--font-sans); font-size: 28px; font-weight: 700;
   color: var(--slate-800); letter-spacing: -0.02em; line-height: 1.2;
+  position: relative; display: inline-block;
+}
+
+.dash-title::after {
+  content: ''; position: absolute; left: 0; bottom: -4px;
+  width: 250px; height: 3px; background: var(--brand);
+  border-radius: 2px;
 }
 
 .dash-subtitle {
@@ -879,6 +890,47 @@
 
 .dash-log-row:hover { background: var(--surface-2); }
 .dash-log-row:last-child { border-bottom: none; }
+
+/* ── Table Row Grid Layouts for Downpayment and Asset Tables ── */
+.dash-logs-list .dash-log-header {
+  display: grid;
+  grid-template-columns: 50px 120px 1.5fr 1fr 100px 140px 140px 140px 120px;
+  gap: 16px;
+}
+
+.dash-logs-list .dash-log-row {
+  display: grid;
+  grid-template-columns: 50px 120px 1.5fr 1fr 100px 140px 140px 140px 120px;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Asset Inventory Table Layout */
+.dash-logs-list.asset-inventory .dash-log-header,
+.dash-logs-list.asset-inventory .dash-log-row {
+  grid-template-columns: 120px 1.5fr 1fr 100px 100px 140px 160px;
+}
+
+/* System Logs Table Layout - 4 column layout */
+.system-logs-list .dash-log-header,
+.system-logs-list .dash-log-row {
+  grid-template-columns: 1.4fr 1.4fr 1fr 2.2fr;
+}
+
+/* Expanded Row Styles */
+.dash-expanded-row {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+}
+
+.dash-expanded-content {
+  margin-left: 66px;
+}
+
+.dash-log-row.expanded {
+  background: var(--surface-2);
+}
 
 .dash-log-empty {
   padding: 48px; text-align: center;
