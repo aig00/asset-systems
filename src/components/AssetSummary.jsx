@@ -582,11 +582,11 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
     
     return (
       <div key={asset.id} className="dash-log-row hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-        <span>
+        <span className="text-center">
           <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{asset.tag_number}</span>
         </span>
-        <span>
-          <div className="flex items-center gap-2">
+        <span className="text-center">
+          <div className="flex items-center justify-center gap-2">
             <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{asset.name}</span>
             {asset.is_existing && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700">
@@ -595,23 +595,23 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
             )}
           </div>
         </span>
-        <span>
+        <span className="text-center">
           <span className="text-sm text-gray-600 dark:text-gray-400">{asset.category || "—"}</span>
         </span>
-        <span>
+        <span className="text-center">
           <StatusBadge status={statusVariant} />
         </span>
-        <span>
+        <span className="text-center">
           <span className="text-sm text-gray-600 dark:text-gray-400">{asset.current_company || "—"}</span>
         </span>
-        <span className="text-right">
+        <span className="text-center">
           <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">
             ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
           </span>
         </span>
         {showPendingOnly && (
-          <span>
-            <div className="flex flex-col gap-1">
+          <span className="text-center">
+            <div className="flex flex-col gap-1 items-center">
               <span className={`text-xs font-semibold ${calculatePaymentCompletion(asset) >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {calculatePaymentCompletion(asset).toFixed(1)}%
               </span>
@@ -624,8 +624,8 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
             </div>
           </span>
         )}
-        <span className="text-right">
-          <div className="flex items-center justify-end gap-1">
+        <span className="text-center">
+          <div className="flex items-center justify-center gap-1">
             <ActionButton icon={Eye} label="View" onClick={() => openModal(asset, "view")} />
             {(userRole === "head" || userRole === "admin") && (
               <ActionButton icon={Edit} label="Edit" variant="primary" onClick={() => openWithPin(() => openModal(asset, "edit"))} />
@@ -676,16 +676,16 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
       </div>
 
       {/* ── Modern Table ── */}
-      <div className="dash-logs-list">
+      <div className={`dash-logs-list asset-inventory ${showPendingOnly ? 'has-payment' : ''}`}>
         <div className="dash-log-header">
-          <span>Tag #</span>
-          <span>Asset Name</span>
-          <span>Category</span>
-          <span>Status</span>
-          <span>LOB</span>
-          <span>Total Cost</span>
-          {showPendingOnly && <span>Payment</span>}
-          <span>Actions</span>
+          <span className="text-center">Tag #</span>
+          <span className="text-center">Asset Name</span>
+          <span className="text-center">Category</span>
+          <span className="text-center">Status</span>
+          <span className="text-center">LOB</span>
+          <span className="text-center">Total Cost</span>
+          {showPendingOnly && <span className="text-center">Payment</span>}
+          <span className="text-center">Actions</span>
         </div>
         {filteredAssets.length === 0 ? (
           <div className="dash-log-empty">
