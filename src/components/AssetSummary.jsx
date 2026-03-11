@@ -581,41 +581,41 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
     const statusVariant = statusClass(asset.status);
     
     return (
-      <tr key={asset.id} className="hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0">
+      <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
         <td className="px-4 py-3">
-          <span className="font-mono text-sm font-semibold text-gray-900">{asset.tag_number}</span>
+          <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{asset.tag_number}</span>
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 text-sm">{asset.name}</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{asset.name}</span>
             {asset.is_existing && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary-100 text-primary-700 border border-primary-200">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700">
                 Existing
               </span>
             )}
           </div>
         </td>
         <td className="px-4 py-3">
-          <span className="text-sm text-gray-600">{asset.category || "—"}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{asset.category || "—"}</span>
         </td>
         <td className="px-4 py-3">
           <StatusBadge status={statusVariant} />
         </td>
         <td className="px-4 py-3">
-          <span className="text-sm text-gray-600">{asset.current_company || "—"}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{asset.current_company || "—"}</span>
         </td>
         <td className="px-4 py-3 text-right">
-          <span className="font-mono font-semibold text-gray-900">
+          <span className="font-mono font-semibold text-gray-900 dark:text-gray-100">
             ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
           </span>
         </td>
         {showPendingOnly && (
           <td className="px-4 py-3">
             <div className="flex flex-col gap-1">
-              <span className={`text-xs font-semibold ${calculatePaymentCompletion(asset) >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              <span className={`text-xs font-semibold ${calculatePaymentCompletion(asset) >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {calculatePaymentCompletion(asset).toFixed(1)}%
               </span>
-              <div className="w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-14 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${calculatePaymentCompletion(asset) >= 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
                   style={{ width: `${calculatePaymentCompletion(asset)}%` }}
@@ -652,7 +652,7 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
   return (
     <>
       {/* ── Modern Toolbar ── */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between gap-4">
         <ModernSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -661,7 +661,7 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
         />
         
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 mr-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">
             {filteredAssets.length} of {assets.length} results
           </span>
           
@@ -676,30 +676,30 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
       </div>
 
       {/* ── Modern Table ── */}
-      <div className="bg-white overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tag #</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Asset Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">LOB</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Cost</th>
-                {showPendingOnly && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>}
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">Actions</th>
+              <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tag #</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">LOB</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Cost</th>
+                {showPendingOnly && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payment</th>}
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredAssets.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <Search className="w-6 h-6 text-gray-400" />
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {searchQuery ? "No assets match your search." : "No assets found. Add one to get started."}
                       </p>
                     </div>

@@ -60,6 +60,280 @@
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* ── Dark Mode CSS Variables ── */
+.dark {
+  --brand: #dc2626;
+  --brand-light: #f87171;
+  --brand-dark: #b91c1c;
+  --brand-50: rgba(220, 38, 38, 0.15);
+  --brand-100: rgba(220, 38, 38, 0.2);
+  --emerald: #10b981;
+  --emerald-50: rgba(16, 185, 129, 0.15);
+  --amber: #f59e0b;
+  --amber-50: rgba(245, 158, 11, 0.15);
+  --indigo: #6366f1;
+  --indigo-50: rgba(99, 102, 241, 0.15);
+  --rose: #f43f5e;
+  --rose-50: rgba(244, 63, 94, 0.15);
+  --slate-50: #1a1a1a;
+  --slate-100: #262626;
+  --slate-200: #404040;
+  --slate-300: #525252;
+  --slate-400: #a3a3a3;
+  --slate-500: #d4d4d4;
+  --slate-600: #e5e5e5;
+  --slate-700: #f5f5f5;
+  --slate-800: #fafafa;
+  --surface: #171717;
+  --surface-2: #1f1f1f;
+  --surface-3: #262626;
+  --surface-bg: #0a0a0a;
+  --border: #404040;
+  --border-light: #2a2a2a;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Dark Mode Specific Overrides ── */
+.dark .dash-container {
+  background: var(--surface-bg);
+  color: var(--slate-400);
+}
+
+.dark .dash-container::before {
+  background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.08) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 80% 0%, rgba(16,185,129,0.06) 0%, transparent 50%);
+}
+
+.dark .dash-sidebar {
+  background: rgba(23, 23, 23, 0.85);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark .dash-brand {
+  border-bottom-color: var(--border-light);
+}
+
+.dark .dash-brand-name {
+  color: var(--slate-300);
+}
+
+.dark .dash-brand-name em {
+  color: var(--brand-light);
+}
+
+.dark .sidebar-toggle {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--slate-400);
+}
+
+.dark .dash-nav-tab {
+  color: var(--slate-400);
+}
+
+.dark .dash-nav-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--slate-200);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dark .dash-nav-tab.active {
+  background: rgba(220, 38, 38, 0.15);
+  color: var(--brand-light);
+  box-shadow: 0 2px 12px rgba(220, 38, 38, 0.2);
+}
+
+.dark .dash-user-section {
+  border-top-color: var(--border-light);
+}
+
+.dark .dash-user-chip {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.dark .dash-user-email {
+  color: var(--slate-300);
+}
+
+.dark .dash-user-role {
+  color: var(--brand-light);
+}
+
+.dark .dash-theme-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--slate-400);
+}
+
+.dark .dash-theme-btn:hover {
+  background: var(--surface-3);
+  color: var(--slate-200);
+}
+
+.dark .dash-logout-btn {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--brand-light);
+}
+
+.dark .dash-logout-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+
+.dark .dash-main {
+  background: transparent;
+}
+
+.dark .dash-title {
+  color: var(--slate-200);
+}
+
+.dark .dash-subtitle {
+  color: var(--slate-500);
+}
+
+.dark .bento-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.dark .stat-label {
+  color: var(--slate-400);
+}
+
+.dark .stat-value {
+  color: var(--slate-200);
+}
+
+.dark .card-title {
+  color: var(--slate-200);
+}
+
+.dark .card-subtitle {
+  color: var(--slate-500);
+}
+
+.dark .metric-ring::before {
+  background: var(--surface);
+}
+
+.dark .metric-ring .metric-value {
+  color: var(--slate-200);
+}
+
+.dark .metric-label {
+  color: var(--slate-400);
+}
+
+.dark .legend-label {
+  color: var(--slate-400);
+}
+
+.dark .legend-value {
+  color: var(--slate-200);
+}
+
+.dark .dash-btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--slate-400);
+}
+
+.dark .dash-btn:hover {
+  background: var(--surface-3);
+  color: var(--slate-200);
+  border-color: var(--slate-500);
+}
+
+.dark .dash-log-header {
+  background: var(--surface-2);
+  color: var(--slate-400);
+  border-bottom-color: var(--border);
+}
+
+.dark .dash-log-row {
+  color: var(--slate-400);
+  border-bottom-color: var(--border-light);
+}
+
+.dark .dash-log-row:hover {
+  background: var(--surface-2);
+}
+
+.dark .dash-log-empty {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--slate-500);
+}
+
+.dark .dash-modal {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.dark .dash-modal-header {
+  border-bottom-color: var(--border-light);
+}
+
+.dark .dash-modal-header h3 {
+  color: var(--slate-200);
+}
+
+.dark .dash-modal-header button {
+  background: var(--surface-2);
+  border-color: var(--border-light);
+  color: var(--slate-400);
+}
+
+.dark .dash-modal-header button:hover {
+  background: var(--surface-3);
+  color: var(--slate-200);
+  border-color: var(--border);
+}
+
+.dark .dash-modal-body p {
+  color: var(--slate-400);
+}
+
+.dark .dash-date-inputs label {
+  color: var(--slate-500);
+}
+
+.dark .dash-date-inputs input {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--slate-200);
+}
+
+.dark .dash-sched-row {
+  color: var(--slate-400);
+  border-bottom-color: var(--border-light);
+}
+
+.dark .dash-sched-row:nth-child(even) {
+  background: var(--surface-2);
+}
+
+.dark .dash-sched-row span:last-child {
+  color: var(--slate-200);
+}
+
+.dark .dash-modal-body input[type="password"] {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--slate-200);
+}
+
 /* ── Layout Shell ── */
 .dash-container {
   display: flex;
