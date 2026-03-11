@@ -326,10 +326,27 @@ const Dashboard = () => {
   const deleteLogs = async () => {
     if (!window.confirm("Are you sure you want to PERMANENTLY DELETE all system logs?")) return;
 
+    // First fetch all log IDs, then delete them one by one
+    const { data: logs, error: fetchError } = await supabase
+      .from("logs")
+      .select("id");
+
+    if (fetchError) {
+      console.error("Error fetching logs:", fetchError);
+      alert("Failed to fetch logs");
+      return;
+    }
+
+    if (!logs || logs.length === 0) {
+      alert("No logs to delete");
+      return;
+    }
+
+    // Delete all logs by their IDs
     const { error } = await supabase
       .from("logs")
       .delete()
-      .neq("id", 0);
+      .in("id", logs.map(log => log.id));
 
     if (error) {
       console.error("Error deleting logs:", error);
