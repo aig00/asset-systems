@@ -683,12 +683,14 @@ const Dashboard = () => {
             </linearGradient>
           </defs>
           <Area
-            type="monotone"
+            type="natural"
             dataKey="value"
             stroke={color}
             strokeWidth={2}
             fill={`url(#sparkGradient-${color})`}
-            isAnimationActive={false}
+            isAnimationActive={true}
+            animationDuration={1500}
+            animationEasing="cubic-bezier(0.22, 0.61, 0.36, 1)"
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -698,6 +700,25 @@ const Dashboard = () => {
   return (
     <>
       <SpeedInsights />
+      <style>{`
+        @keyframes dashSlideUp {
+          0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        .dash-slide-in {
+          opacity: 0;
+          animation: dashSlideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .dash-title {
+          font-size: 2.5rem;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          color: #0f172a;
+        }
+        .dark .dash-title {
+          color: #f1f5f9;
+        }
+      `}</style>
       
       <div className={`dash-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* ── Modern Sidebar ── */}
@@ -773,8 +794,8 @@ const Dashboard = () => {
             <div className="dash-view" key="dashboard">
               <div className="dash-header">
                 <div>
-                  <h2 className="dash-title">Asset Dashboard</h2>
-                  <p className="dash-subtitle">Real-time snapshot of your asset portfolio</p>
+                  <h2 className="dash-title dash-slide-in">Asset Dashboard</h2>
+                  <p className="dash-subtitle text-gray-600 dark:text-gray-400">Real-time snapshot of your asset portfolio</p>
                 </div>
                 <div className="dash-header-actions">
                   <button 
@@ -810,6 +831,7 @@ const Dashboard = () => {
                     <div className="stat-sparkline">
                       <SparklineChart data={sparkline} color={color} />
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-600 text-right pr-2 -mt-1">Last 30 Days</p>
                     <div className="stat-card-glow" style={{ background: color }} />
                   </div>
                 ))}
@@ -821,7 +843,7 @@ const Dashboard = () => {
                 <div className="bento-card health-card">
                   <div className="card-header">
                     <h3 className="card-title">Portfolio Health</h3>
-                    <span className="card-subtitle">Overview metrics</span>
+                    <span className="card-subtitle text-gray-600 dark:text-gray-400">Overview metrics</span>
                   </div>
                   <div className="health-metrics">
                     <div className="health-metric">
@@ -849,7 +871,7 @@ const Dashboard = () => {
                 <div className="bento-card status-card">
                   <div className="card-header">
                     <h3 className="card-title">Status Distribution</h3>
-                    <span className="card-subtitle">Assets by status</span>
+                    <span className="card-subtitle text-gray-600 dark:text-gray-400">Assets by status</span>
                   </div>
                   <div className="status-chart">
                     <ResponsiveContainer width="100%" height={160}>
@@ -886,7 +908,7 @@ const Dashboard = () => {
               <div className="bento-card analytics-card">
                 <div className="card-header">
                   <h3 className="card-title">Asset Analytics</h3>
-                  <span className="card-subtitle">Detailed breakdown</span>
+                  <span className="card-subtitle text-gray-600 dark:text-gray-400">Detailed breakdown</span>
                 </div>
                 <DashboardCharts assets={assets} />
               </div>
@@ -897,8 +919,8 @@ const Dashboard = () => {
           {currentView === "logs" && (
             <div className="dash-view" key="logs">
               <div className="dash-header">
-                <h2 className="dash-title">System Logs</h2>
-                <p className="dash-subtitle">{logs.length} entries recorded</p>
+                <h2 className="dash-title dash-slide-in">System Logs</h2>
+                <p className="dash-subtitle text-gray-600 dark:text-gray-400">{logs.length} entries recorded</p>
               </div>
               
               <div className="dash-logs-actions">
@@ -941,8 +963,8 @@ const Dashboard = () => {
           {currentView === "summary" && (
             <div className="dash-view" key="summary">
               <div className="dash-header">
-                <h2 className="dash-title">Asset Inventory</h2>
-                <p className="dash-subtitle">{assets.length} total records</p>
+                <h2 className="dash-title dash-slide-in">Asset Inventory</h2>
+                <p className="dash-subtitle text-gray-600 dark:text-gray-400">{assets.length} total records</p>
               </div>
               
               <div className="dash-actions">
@@ -972,8 +994,8 @@ const Dashboard = () => {
           {currentView === "downpayment" && (
             <div className="dash-view" key="downpayment">
               <div className="dash-header">
-                <h2 className="dash-title">Downpayment Assets</h2>
-                <p className="dash-subtitle">Track installment payments</p>
+                <h2 className="dash-title dash-slide-in">Downpayment Assets</h2>
+                <p className="dash-subtitle text-gray-600 dark:text-gray-400">Track installment payments</p>
               </div>
 
               <DownpaymentTable
