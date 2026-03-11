@@ -473,7 +473,6 @@ const AssetTable = ({ assets, refreshData }) => {
           current_company: editForm.current_company,
           location: editForm.location,
           assigned_to: editForm.assigned_to,
-          downpayment_amount: editForm.downpayment_amount,
         })
         .eq("id", selectedAsset.id);
 

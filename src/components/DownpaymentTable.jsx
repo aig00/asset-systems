@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import ExcelJS from "exceljs";
 import { supabase } from "../supabaseClient";
 import { ModernSearchBar, ModernButton, StatusBadge, ActionButton } from "./ui/ModernTable";
 import {
@@ -18,6 +19,7 @@ import {
   FileText,
   CheckCircle2,
   Tag,
+  Download,
 } from "lucide-react";
 
 const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
@@ -30,7 +32,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   const [loading, setLoading] = useState(false);
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
-  const [addAssetForm, setAddAssetForm] = useState({ name: "", category: "", tag_number: "", total_cost: 0, status: "Pending", downpayment_amount: 0, downpayment_description: "" });
+  const [addAssetForm, setAddAssetForm] = useState({ name: "", category: "", tag_number: "", total_cost: "", status: "Pending", downpayment_amount: "", downpayment_description: "" });
   const [addTransactionForm, setAddTransactionForm] = useState({ amount: "", description: "", transaction_date: new Date().toISOString().split("T")[0] });
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -74,18 +76,65 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
 
   const toggleAssetExpansion = (assetId) => { setExpandedAssets((prev) => ({ ...prev, [assetId]: !prev[assetId] })); };
 
+  const handleExportDownpaymentAssets = async () => {
+    if (downpaymentAssets.length === 0) {
+      alert("No downpayment assets to export.");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Downpayment Assets");
+
+    worksheet.columns = [
+      { header: "Tag #", key: "tagNumber", width: 15 },
+      { header: "Asset Name", key: "assetName", width: 35 },
+      { header: "Category", key: "category", width: 18 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Total Cost", key: "totalCost", width: 18, style: { numFmt: '"₱"#,##0.00' } },
+      { header: "Downpayment", key: "totalDownpayment", width: 18, style: { numFmt: '"₱"#,##0.00' } },
+      { header: "Progress", key: "paymentProgress", width: 15 },
+    ];
+
+    worksheet.getRow(1).font = { bold: true };
+
+    downpaymentAssets.forEach(asset => {
+      const paymentPercent = calculatePaymentCompletion(asset);
+      const isComplete = paymentPercent >= 100;
+
+      worksheet.addRow({
+        tagNumber: asset.tag_number || "",
+        assetName: asset.name || "",
+        category: asset.category || "—",
+        status: isComplete ? "Completed" : "Pending",
+        totalCost: parseFloat(asset.total_cost || 0),
+        totalDownpayment: getTotalDownpayment(asset),
+        paymentProgress: `${paymentPercent.toFixed(1)}%`,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Downpayment_Assets_${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleAddAssetSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
     const totalCost = parseFloat(addAssetForm.total_cost) || 0;
-    const assetData = { name: addAssetForm.name, category: addAssetForm.category || "General", tag_number: addAssetForm.tag_number, total_cost: totalCost, downpayment_amount: 0, quantity: 1, unit_cost: totalCost, salvage_value: 0, useful_life_years: 1, status: "Pending", current_company: "HO", purchase_date: new Date().toISOString().split("T")[0] };
+    if (totalCost <= 0) { alert("Total cost must be greater than 0"); setLoading(false); return; }
+    const assetData = { name: addAssetForm.name, category: addAssetForm.category || "General", tag_number: addAssetForm.tag_number, total_cost: totalCost, quantity: 1, unit_cost: totalCost, salvage_value: 0, useful_life_years: 1, status: "Pending", current_company: "HO", purchase_date: new Date().toISOString().split("T")[0] };
     const { data: assetDataResult, error } = await supabase.from("assets").insert([assetData]).select();
     if (error) { alert("Error: " + error.message); setLoading(false); return; }
-    const initialAmount = parseFloat(addAssetForm.downpayment_amount || 0);
+    const initialAmount = parseFloat(addAssetForm.downpayment_amount) || 0;
     if (initialAmount > 0 && assetDataResult?.[0]) {
       await supabase.from("downpayment_transactions").insert([{ asset_id: assetDataResult[0].id, amount: initialAmount, description: addAssetForm.downpayment_description || "Initial downpayment", transaction_date: new Date().toISOString().split("T")[0], created_by: userEmail }]);
     }
     await supabase.from("logs").insert({ user_email: userEmail || "unknown", action_type: "CREATE_ASSET", details: { asset_name: addAssetForm.name, message: `Asset "${addAssetForm.name}" created via Downpayment` } });
-    setLoading(false); setShowAddAssetModal(false); setAddAssetForm({ name: "", category: "", tag_number: "", total_cost: 0, status: "Pending" }); refreshData(); fetchTransactions();
+    setLoading(false); setShowAddAssetModal(false); setAddAssetForm({ name: "", category: "", tag_number: "", total_cost: "", status: "Pending", downpayment_amount: "", downpayment_description: "" }); refreshData(); fetchTransactions();
   };
 
   const handleAddTransactionSubmit = async (e) => {
@@ -174,22 +223,27 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
       
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between gap-4">
         <ModernSearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search by name, tag, category..." className="flex-1 max-w-sm" />
-<button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626' }}>
-          <Plus size={16} /> Add Asset
-        </button>
+        <div className="flex items-center gap-2">
+          <ModernButton variant="secondary" size="sm" icon={Download} onClick={handleExportDownpaymentAssets}>
+            Export
+          </ModernButton>
+          <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626' }}>
+            <Plus size={16} /> Add Asset
+          </button>
+        </div>
       </div>
 
       <div className="dash-logs-list">
-        <div className="dash-log-header">
-          <span></span>
-          <span>Tag #</span>
-          <span>Asset Name</span>
-          <span>Category</span>
-          <span>Status</span>
-          <span>Total Cost</span>
-          <span>Downpayment</span>
-          <span>Progress</span>
-          <span>Actions</span>
+        <div className="dash-log-header items-center">
+          <span className="text-center"></span>
+          <span className="text-center">Tag #</span>
+          <span className="text-center">Asset Name</span>
+          <span className="text-center">Category</span>
+          <span className="text-center">Status</span>
+          <span className="text-center">Total Cost</span>
+          <span className="text-center">Downpayment</span>
+          <span className="text-center">Progress</span>
+          <span className="text-center">Actions</span>
         </div>
         {downpaymentAssets.length === 0 ? (
           searchQuery ? (
@@ -330,11 +384,11 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
                 <div className="dp-form-grid">
                   <div className="dp-field">
                     <label className="dp-field-label"><DollarSign size={12} /> Total Cost (₱) <span className="dp-required-dot" /></label>
-                    <input required type="number" step="0.01" value={addAssetForm.total_cost} onChange={(e) => setAddAssetForm({ ...addAssetForm, total_cost: parseFloat(e.target.value) || 0 })} className="dp-field-input" placeholder="0.00" />
+                    <input required type="number" step="0.01" value={addAssetForm.total_cost} onChange={(e) => setAddAssetForm({ ...addAssetForm, total_cost: e.target.value })} className="dp-field-input" placeholder="0.00" />
                   </div>
                   <div className="dp-field">
                     <label className="dp-field-label"><DollarSign size={12} /> Initial Downpayment (₱)</label>
-                    <input type="number" step="0.01" value={addAssetForm.downpayment_amount || ""} onChange={(e) => setAddAssetForm({ ...addAssetForm, downpayment_amount: parseFloat(e.target.value) || 0 })} className="dp-field-input" placeholder="Optional" />
+                    <input type="number" step="0.01" value={addAssetForm.downpayment_amount} onChange={(e) => setAddAssetForm({ ...addAssetForm, downpayment_amount: e.target.value })} className="dp-field-input" placeholder="Optional" />
                   </div>
                 </div>
                 <div className="dp-field">
@@ -344,7 +398,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
               </div>
               <div className="dp-modal-footer">
                 <button type="button" className="dp-btn-cancel" onClick={() => setShowAddAssetModal(false)}>Cancel</button>
-                <button type="submit" disabled={loading} className="dp-btn-submit">{loading ? "Saving..." : <>Save Asset</>}</button>
+                <button type="submit" disabled={loading || !addAssetForm.tag_number} className="dp-btn-submit">{loading ? "Saving..." : <>Save Asset</>}</button>
               </div>
             </form>
           </div>
