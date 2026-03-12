@@ -131,7 +131,6 @@ const Dashboard = () => {
     end: "2027-12",
   });
   const [paidMonths, setPaidMonths] = useState(new Set());
-  const [showMonthlyReport, setShowMonthlyReport] = useState(false);
   const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [showPinModal, setShowPinModal] = useState(false);
@@ -586,7 +585,7 @@ const Dashboard = () => {
         const dateParts = asset.purchase_date.split("-");
         const pYear = parseInt(dateParts[0]);
         const pMonth = parseInt(dateParts[1]);
-        const startDepreciationDate = new Date(pYear, pMonth, 1);
+        const startDepreciationDate = new Date(pYear, pMonth - 1, 1);
 
         const lifeYears = parseFloat(asset.useful_life_years) || 0;
         if (lifeYears <= 0) return;
@@ -639,8 +638,7 @@ const Dashboard = () => {
       const dateParts = asset.purchase_date.split("-");
       const pYear = parseInt(dateParts[0]);
       const pMonth = parseInt(dateParts[1]); // 1-12
-      // Logic consistent with amortizationSchedule: start next month
-      const startDepreciationDate = new Date(pYear, pMonth, 1); 
+      const startDepreciationDate = new Date(pYear, pMonth - 1, 1);
 
       const lifeYears = parseFloat(asset.useful_life_years) || 0;
       if (lifeYears <= 0) return;
@@ -682,8 +680,6 @@ const Dashboard = () => {
       { header: "Monthly Depreciation", key: "monthly_depreciation", width: 20, style: { numFmt: '"₱"#,##0.00' } },
     ];
 
-    worksheet.getRow(1).font = { bold: true };
-
     monthlyReportData.items.forEach(item => {
       worksheet.addRow({
         tag: item.tag_number,
@@ -703,6 +699,27 @@ const Dashboard = () => {
     totalRow.font = { bold: true };
     totalRow.eachCell((cell) => { cell.font = { bold: true }; });
 
+    // Insert title and spacer rows at the top
+    worksheet.insertRow(1, [""]);
+    worksheet.insertRow(1, ["Monthly Depreciation Report"]);
+
+    // Configure Title
+    const titleRow = worksheet.getRow(1);
+    titleRow.font = { size: 14, bold: true };
+    worksheet.mergeCells('A1:F1');
+    worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+    if (reportMonth) {
+      const [y, m] = reportMonth.split('-');
+      const date = new Date(parseInt(y), parseInt(m) - 1);
+      const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      worksheet.getCell('A1').value = `Monthly Depreciation Report - ${monthStr}`;
+    }
+
+    // Re-style header row (now at row 3)
+    worksheet.getRow(3).font = { bold: true };
+    worksheet.getRow(3).alignment = { horizontal: 'center' };
+
     await downloadExcel(workbook, `Monthly_Depreciation_${reportMonth}.xlsx`);
   };
 
@@ -720,6 +737,7 @@ const Dashboard = () => {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "summary", label: "Asset Inventory", icon: Table },
     { id: "downpayment", label: "Downpayment", icon: TrendingUp },
+    { id: "monthly-depreciation", label: "Monthly Depreciation", icon: FileText },
     { id: "logs", label: "System Logs", icon: ClipboardList, adminOnly: true },
   ];
 
@@ -945,10 +963,6 @@ const Dashboard = () => {
                     <RefreshCw size={16} className={isDataLoading ? "spin" : ""} />
                     Refresh
                   </button>
-                  <button className="dash-btn" onClick={() => setShowMonthlyReport(true)}>
-                    <FileText size={16} />
-                    Monthly Depreciation
-                  </button>
                 </div>
               </div>
 
@@ -1118,10 +1132,6 @@ const Dashboard = () => {
                 >
                   <RefreshCw size={16} className={isDataLoading ? "spin" : ""} /> Refresh
                 </button>
-                <button className="dash-btn" onClick={() => setShowMonthlyReport(true)}>
-                  <FileText size={16} />
-                  Monthly Depreciation
-                </button>
                 <button className="dash-btn dash-btn-primary" onClick={() => setShowAddForm(true)}>
                   <Plus size={16} /> Add Asset
                 </button>
@@ -1138,6 +1148,100 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* Monthly Depreciation View */}
+          {currentView === "monthly-depreciation" && (
+            <div className="dash-view" key="monthly-depreciation">
+              <div className="dash-header">
+                <h2 className="dash-title dash-slide-in">Monthly Depreciation</h2>
+                <p className="dash-subtitle text-gray-600 dark:text-gray-400">
+                  Calculate and export depreciation for a specific month
+                </p>
+              </div>
+
+              <div className="dash-actions" style={{ justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Select Month:
+                  </label>
+                  <input
+                    type="month"
+                    value={reportMonth}
+                    onChange={(e) => setReportMonth(e.target.value)}
+                    className="dash-input"
+                    style={{ 
+                      padding: '8px 12px', 
+                      borderRadius: '8px', 
+                      border: '1px solid #d1d5db', 
+                      fontSize: '14px',
+                      backgroundColor: isDark ? '#374151' : '#fff',
+                      color: isDark ? '#fff' : '#000',
+                      borderColor: isDark ? '#4b5563' : '#d1d5db'
+                    }}
+                  />
+                </div>
+                <button 
+                  className="dash-btn dash-btn-primary" 
+                  onClick={handleExportMonthlyReport} 
+                  disabled={!monthlyReportData.items.length}
+                >
+                  <Download size={16} /> Export to Excel
+                </button>
+              </div>
+
+              <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead style={{ backgroundColor: isDark ? '#1f2937' : '#f9fafb', borderBottom: '1px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+                      <tr>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Asset Name</th>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Tag #</th>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Category</th>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Purchase Date</th>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280', textAlign: 'right' }}>Total Cost</th>
+                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280', textAlign: 'right' }}>Monthly Depr.</th>
+                      </tr>
+                    </thead>
+                    <tbody style={{ divideY: '1px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+                      {monthlyReportData.items.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: isDark ? '#9ca3af' : '#6b7280' }}>
+                            No assets are depreciating during this month.
+                          </td>
+                        </tr>
+                      ) : (
+                        monthlyReportData.items.map((item, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f3f4f6') }}>
+                            <td style={{ padding: '12px 16px', fontWeight: 500, color: isDark ? '#f3f4f6' : '#111827' }}>{item.name}</td>
+                            <td style={{ padding: '12px 16px', fontSize: '13px', color: isDark ? '#9ca3af' : '#6b7280' }}>{item.tag_number}</td>
+                            <td style={{ padding: '12px 16px', color: isDark ? '#d1d5db' : '#374151' }}>{item.category}</td>
+                            <td style={{ padding: '12px 16px', color: isDark ? '#d1d5db' : '#374151' }}>{item.purchase_date}</td>
+                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', textAlign: 'right', color: isDark ? '#d1d5db' : '#374151' }}>
+                              ₱{item.total_cost.toLocaleString()}
+                            </td>
+                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', textAlign: 'right', fontWeight: 600, color: '#dc2626' }}>
+                              ₱{item.monthly_depreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                    {monthlyReportData.items.length > 0 && (
+                      <tfoot style={{ backgroundColor: isDark ? '#1f2937' : '#f9fafb', borderTop: '2px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+                        <tr>
+                          <td colSpan={5} style={{ padding: '16px', textAlign: 'right', fontWeight: 700, color: isDark ? '#f3f4f6' : '#111827' }}>
+                            TOTAL MONTHLY DEPRECIATION
+                          </td>
+                          <td style={{ padding: '16px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#dc2626' }}>
+                            ₱{monthlyReportData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Downpayment View */}
           {currentView === "downpayment" && (
             <div className="dash-view" key="downpayment">
@@ -1207,60 +1311,6 @@ const Dashboard = () => {
                   <span>Total</span>
                   <span>₱{amortizationTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showMonthlyReport && (
-        <div className="dash-modal-overlay" onClick={() => setShowMonthlyReport(false)}>
-          <div className="dash-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
-            <div className="dash-modal-header">
-              <h3>Monthly Depreciation Report</h3>
-              <button onClick={() => setShowMonthlyReport(false)}><X size={18} /></button>
-            </div>
-            <div className="dash-modal-body">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }} className="dark:text-gray-300">Select Month:</label>
-                  <input
-                    type="month"
-                    value={reportMonth}
-                    onChange={(e) => setReportMonth(e.target.value)}
-                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }}
-                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                <button className="dash-btn dash-btn-primary" onClick={handleExportMonthlyReport} disabled={!monthlyReportData.items.length}>
-                  <Download size={16} /> Export to Excel
-                </button>
-              </div>
-              
-              <div className="dash-sched-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                <div className="dash-sched-row" style={{ fontWeight: 700, borderBottom: '2px solid #e5e7eb', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1 }}>
-                  <span style={{ flex: 1.2 }}>Asset Name</span>
-                  <span style={{ flex: 0.8 }}>Tag #</span>
-                  <span style={{ flex: 0.6, textAlign: 'right' }}>Cost</span>
-                  <span style={{ flex: 0.8, textAlign: 'right' }}>Depreciation</span>
-                </div>
-                {monthlyReportData.items.length === 0 ? (
-                  <div style={{ padding: '30px', textAlign: 'center', color: '#6b7280' }}>No assets are depreciating during this month.</div>
-                ) : (
-                  monthlyReportData.items.map((item, idx) => (
-                    <div key={idx} className="dash-sched-row">
-                      <span style={{ flex: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.name}>{item.name}</span>
-                      <span style={{ flex: 0.8, fontSize: '12px', color: '#6b7280' }}>{item.tag_number}</span>
-                      <span style={{ flex: 0.6, textAlign: 'right', fontFamily: 'monospace' }}>₱{item.total_cost.toLocaleString()}</span>
-                      <span style={{ flex: 0.8, textAlign: 'right', fontWeight: 600, color: '#dc2626', fontFamily: 'monospace' }}>₱{item.monthly_depreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              <div className="dash-sched-total" style={{ marginTop: '16px', borderTop: '2px solid #e5e7eb', paddingTop: '12px' }}>
-                <span>Total Monthly Depreciation</span>
-                <span style={{ fontSize: '18px', color: '#dc2626' }}>₱{monthlyReportData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>

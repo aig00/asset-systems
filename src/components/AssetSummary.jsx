@@ -240,7 +240,7 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
     const endTime = new Date(end.getFullYear(), end.getMonth(), 1).getTime();
 
     const [pYear, pMonth] = selectedAsset.purchase_date.split("-").map(Number);
-    const startDepreciationDate = new Date(pYear, pMonth, 1);
+    const startDepreciationDate = new Date(pYear, pMonth - 1, 1);
 
     const lifeYears = parseFloat(selectedAsset.useful_life_years) || 0;
     const endDepreciationDate = new Date(startDepreciationDate);
