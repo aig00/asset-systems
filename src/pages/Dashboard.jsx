@@ -34,6 +34,8 @@ import {
   ChevronDown,
   MoreHorizontal,
   FileText,
+  Calendar,
+  TrendingDown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -875,6 +877,16 @@ const Dashboard = () => {
         .dark .dash-title {
           color: #f1f5f9;
         }
+
+        /* Modern Background & Contrast */
+        .dash-container {
+          background-color: #f1f5f9; /* Slate 100 for contrast against white cards */
+          background-image: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.03), transparent 70%);
+        }
+        .dark .dash-container {
+          background-color: #020617; /* Slate 950 */
+          background-image: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.08), transparent 70%);
+        }
       `}</style>
       
       <div className={`dash-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -1152,73 +1164,106 @@ const Dashboard = () => {
           {currentView === "monthly-depreciation" && (
             <div className="dash-view" key="monthly-depreciation">
               <div className="dash-header">
-                <h2 className="dash-title dash-slide-in">Monthly Depreciation</h2>
-                <p className="dash-subtitle text-gray-600 dark:text-gray-400">
-                  Calculate and export depreciation for a specific month
-                </p>
-              </div>
-
-              <div className="dash-actions" style={{ justifyContent: 'space-between', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Select Month:
-                  </label>
-                  <input
-                    type="month"
-                    value={reportMonth}
-                    onChange={(e) => setReportMonth(e.target.value)}
-                    className="dash-input"
-                    style={{ 
-                      padding: '8px 12px', 
-                      borderRadius: '8px', 
-                      border: '1px solid #d1d5db', 
-                      fontSize: '14px',
-                      backgroundColor: isDark ? '#374151' : '#fff',
-                      color: isDark ? '#fff' : '#000',
-                      borderColor: isDark ? '#4b5563' : '#d1d5db'
-                    }}
-                  />
+                <div>
+                  <h2 className="dash-title dash-slide-in">Monthly Depreciation</h2>
+                  <p className="dash-subtitle text-gray-600 dark:text-gray-400">
+                    Calculate and export depreciation for a specific month
+                  </p>
                 </div>
-                <button 
-                  className="dash-btn dash-btn-primary" 
-                  onClick={handleExportMonthlyReport} 
-                  disabled={!monthlyReportData.items.length}
-                >
-                  <Download size={16} /> Export to Excel
-                </button>
+                <div className="dash-header-actions">
+                  <button 
+                    className="dash-btn dash-btn-primary" 
+                    onClick={handleExportMonthlyReport} 
+                    disabled={!monthlyReportData.items.length}
+                  >
+                    <Download size={16} /> Export Report
+                  </button>
+                </div>
               </div>
 
-              <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ backgroundColor: isDark ? '#1f2937' : '#f9fafb', borderBottom: '1px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bento-card p-5 flex flex-col justify-center border-l-4 border-l-rose-500 relative overflow-hidden">
+                  <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide z-10">Total Depreciation</span>
+                  <span className="text-3xl font-bold text-gray-900 dark:text-white mt-2 z-10">
+                    ₱{monthlyReportData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1 z-10">For {(() => {
+                    const [y, m] = reportMonth.split('-');
+                    return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                  })()}</span>
+                  <TrendingDown className="absolute right-4 bottom-4 text-rose-500 opacity-10 w-16 h-16" />
+                </div>
+                
+                <div className="bento-card p-5 flex flex-col justify-center border-l-4 border-l-emerald-500 relative overflow-hidden">
+                  <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide z-10">Assets Depreciating</span>
+                  <span className="text-3xl font-bold text-gray-900 dark:text-white mt-2 z-10">
+                    {monthlyReportData.items.length}
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1 z-10">Active items this period</span>
+                  <Package className="absolute right-4 bottom-4 text-emerald-500 opacity-10 w-16 h-16" />
+                </div>
+                
+                <div className="bento-card p-5 flex flex-col justify-center border-l-4 border-l-indigo-500 relative">
+                  <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Report Period</span>
+                  <div className="relative z-10">
+                    <input
+                      type="month"
+                      value={reportMonth}
+                      onChange={(e) => setReportMonth(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-base rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 font-medium shadow-sm transition-all hover:border-indigo-300"
+                    />
+                    <Calendar className="absolute right-3 top-3 text-gray-400 pointer-events-none" size={20} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bento-card overflow-hidden p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                       <tr>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Asset Name</th>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Tag #</th>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Category</th>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280' }}>Purchase Date</th>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280', textAlign: 'right' }}>Total Cost</th>
-                        <th style={{ padding: '16px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isDark ? '#9ca3af' : '#6b7280', textAlign: 'right' }}>Monthly Depr.</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tag #</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Purchase Date</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Total Cost</th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Monthly Depr.</th>
                       </tr>
                     </thead>
-                    <tbody style={{ divideY: '1px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
                       {monthlyReportData.items.length === 0 ? (
                         <tr>
-                          <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: isDark ? '#9ca3af' : '#6b7280' }}>
-                            No assets are depreciating during this month.
+                          <td colSpan={6} className="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                                <FileText size={32} className="text-gray-400 dark:text-gray-500" />
+                              </div>
+                              <p className="text-lg font-medium text-gray-900 dark:text-gray-200">No depreciation records</p>
+                              <p className="text-sm mt-1 text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                                No active assets are depreciating in {(() => {
+                                  const [y, m] = reportMonth.split('-');
+                                  return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                })()}.
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       ) : (
                         monthlyReportData.items.map((item, idx) => (
-                          <tr key={idx} style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f3f4f6') }}>
-                            <td style={{ padding: '12px 16px', fontWeight: 500, color: isDark ? '#f3f4f6' : '#111827' }}>{item.name}</td>
-                            <td style={{ padding: '12px 16px', fontSize: '13px', color: isDark ? '#9ca3af' : '#6b7280' }}>{item.tag_number}</td>
-                            <td style={{ padding: '12px 16px', color: isDark ? '#d1d5db' : '#374151' }}>{item.category}</td>
-                            <td style={{ padding: '12px 16px', color: isDark ? '#d1d5db' : '#374151' }}>{item.purchase_date}</td>
-                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', textAlign: 'right', color: isDark ? '#d1d5db' : '#374151' }}>
+                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{item.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 font-mono">{item.tag_number}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                                {item.category}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{item.purchase_date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right font-mono">
                               ₱{item.total_cost.toLocaleString()}
                             </td>
-                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', textAlign: 'right', fontWeight: 600, color: '#dc2626' }}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600 dark:text-rose-400 text-right font-mono">
                               ₱{item.monthly_depreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                           </tr>
@@ -1226,12 +1271,12 @@ const Dashboard = () => {
                       )}
                     </tbody>
                     {monthlyReportData.items.length > 0 && (
-                      <tfoot style={{ backgroundColor: isDark ? '#1f2937' : '#f9fafb', borderTop: '2px solid ' + (isDark ? '#374151' : '#e5e7eb') }}>
+                      <tfoot className="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
                         <tr>
-                          <td colSpan={5} style={{ padding: '16px', textAlign: 'right', fontWeight: 700, color: isDark ? '#f3f4f6' : '#111827' }}>
-                            TOTAL MONTHLY DEPRECIATION
+                          <td colSpan={5} className="px-6 py-4 text-right text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                            Total Monthly Depreciation
                           </td>
-                          <td style={{ padding: '16px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#dc2626' }}>
+                          <td className="px-6 py-4 text-right text-lg font-bold text-rose-600 dark:text-rose-400 font-mono">
                             ₱{monthlyReportData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
