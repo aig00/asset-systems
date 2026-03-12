@@ -80,13 +80,15 @@ const PinVerificationModal = ({
   if (!isOpen) return null;
 
   return (
+
     <div
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 2000,
-        background: "rgba(15, 5, 5, 0.48)",
-        backdropFilter: "blur(7px)",
+        zIndex: 9999,
+        background: "rgba(15, 5, 5, 0.65)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

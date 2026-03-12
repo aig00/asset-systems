@@ -7,7 +7,6 @@ import {
   Hash,
   Building2,
   Calendar,
-  DollarSign,
   Clock,
   Layers,
   FileText,
@@ -537,7 +536,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
               <div className="form-grid">
                 <div className="field">
                   <label className="field-label">
-                    <Hash size={12} /> Quantity{" "}
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f87171' }}>₱</span> Unit Cost (₱){" "}
                     <span className="required-dot" />
                   </label>
                   <input
@@ -570,7 +569,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
 
                 <div className="field">
                   <label className="field-label">
-                    <DollarSign size={12} /> Salvage Value (₱){" "}
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f87171' }}>₱</span> Salvage Value (₱){" "}
                     <span className="required-dot" />
                   </label>
                   <input
