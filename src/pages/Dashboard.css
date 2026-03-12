@@ -106,13 +106,16 @@
 }
 
 .dark .dash-container::before {
-  background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.08) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 80% 0%, rgba(16,185,129,0.06) 0%, transparent 50%);
+  background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(220, 38, 38, 0.12) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 80% 110%, rgba(248, 113, 113, 0.1) 0%, transparent 50%);
 }
 
 .dark .dash-sidebar {
-  background: rgba(23, 23, 23, 0.85);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: 
+    linear-gradient(rgba(23, 23, 23, 0.3), rgba(23, 23, 23, 0.3)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)) border-box;
+  border: 1px solid transparent;
+  border-left: none;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 2px 8px rgba(0, 0, 0, 0.2);
@@ -209,6 +212,17 @@
 .dark .bento-card {
   background: var(--surface);
   border-color: var(--border);
+}
+
+.dark .stat-card {
+  background: rgba(23, 23, 23, 0.3);
+  background: 
+    linear-gradient(rgba(23, 23, 23, 0.3), rgba(23, 23, 23, 0.3)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)) border-box;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
 }
 
 .dark .stat-label {
@@ -352,8 +366,8 @@
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 40% at 80% 0%, rgba(16,185,129,0.04) 0%, transparent 50%);
+  background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(220, 38, 38, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 80% 110%, rgba(248, 113, 113, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -362,10 +376,13 @@
 .dash-sidebar {
   width: var(--nav-width);
   /* Glassmorphism: semi-transparent background with blur */
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.25)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1)) border-box;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid transparent;
+  border-left: none;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
@@ -642,7 +659,18 @@
 }
 
 /* Stat Card */
-.stat-card { display: flex; flex-direction: column; }
+.stat-card {
+  display: flex; flex-direction: column;
+  /* Glassmorphism */
+  background: rgba(255, 255, 255, 0.35);
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2)) border-box;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid transparent;
+}
 
 .stat-card-header {
   display: flex; justify-content: space-between;
