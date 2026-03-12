@@ -33,6 +33,7 @@ import {
   Rocket,
   ChevronDown,
   MoreHorizontal,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -130,6 +131,8 @@ const Dashboard = () => {
     end: "2027-12",
   });
   const [paidMonths, setPaidMonths] = useState(new Set());
+  const [showMonthlyReport, setShowMonthlyReport] = useState(false);
+  const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
@@ -618,6 +621,91 @@ const Dashboard = () => {
     return amortizationSchedule.reduce((sum, item) => sum + item.amount, 0);
   }, [amortizationSchedule]);
 
+  // Calculate Monthly Depreciation Report Data
+  const monthlyReportData = useMemo(() => {
+    if (!reportMonth) return { items: [], total: 0 };
+    
+    const [y, m] = reportMonth.split('-').map(Number);
+    // reportMonth is YYYY-MM (1-indexed). Date constructor month is 0-indexed.
+    // We want the 1st of that month to check against the range.
+    const currentReportDate = new Date(y, m - 1, 1);
+    
+    const items = [];
+    let total = 0;
+
+    (assets || []).forEach((asset) => {
+      if (asset.status !== "Active" || !asset.purchase_date) return;
+
+      const dateParts = asset.purchase_date.split("-");
+      const pYear = parseInt(dateParts[0]);
+      const pMonth = parseInt(dateParts[1]); // 1-12
+      // Logic consistent with amortizationSchedule: start next month
+      const startDepreciationDate = new Date(pYear, pMonth, 1); 
+
+      const lifeYears = parseFloat(asset.useful_life_years) || 0;
+      if (lifeYears <= 0) return;
+
+      const endDepreciationDate = new Date(startDepreciationDate);
+      endDepreciationDate.setFullYear(endDepreciationDate.getFullYear() + lifeYears);
+
+      // Check if the selected report month is within the useful life of the asset
+      if (currentReportDate >= startDepreciationDate && currentReportDate < endDepreciationDate) {
+        const cost = parseFloat(asset.total_cost) || 0;
+        const salvage = parseFloat(asset.salvage_value) || 0;
+        const monthlyDep = (cost - salvage) / (lifeYears * 12);
+        
+        items.push({
+          tag_number: asset.tag_number,
+          name: asset.name,
+          category: asset.category,
+          purchase_date: asset.purchase_date,
+          total_cost: cost,
+          monthly_depreciation: monthlyDep
+        });
+        total += monthlyDep;
+      }
+    });
+    
+    return { items, total };
+  }, [assets, reportMonth]);
+
+  const handleExportMonthlyReport = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Monthly Depreciation");
+
+    worksheet.columns = [
+      { header: "Tag #", key: "tag", width: 15 },
+      { header: "Asset Name", key: "name", width: 30 },
+      { header: "Category", key: "category", width: 20 },
+      { header: "Purchase Date", key: "purchase_date", width: 15 },
+      { header: "Total Cost", key: "total_cost", width: 15, style: { numFmt: '"₱"#,##0.00' } },
+      { header: "Monthly Depreciation", key: "monthly_depreciation", width: 20, style: { numFmt: '"₱"#,##0.00' } },
+    ];
+
+    worksheet.getRow(1).font = { bold: true };
+
+    monthlyReportData.items.forEach(item => {
+      worksheet.addRow({
+        tag: item.tag_number,
+        name: item.name,
+        category: item.category,
+        purchase_date: item.purchase_date,
+        total_cost: item.total_cost,
+        monthly_depreciation: item.monthly_depreciation,
+      });
+    });
+
+    worksheet.addRow({});
+    const totalRow = worksheet.addRow({
+      name: "TOTAL",
+      monthly_depreciation: monthlyReportData.total
+    });
+    totalRow.font = { bold: true };
+    totalRow.eachCell((cell) => { cell.font = { bold: true }; });
+
+    await downloadExcel(workbook, `Monthly_Depreciation_${reportMonth}.xlsx`);
+  };
+
   // Status distribution for pie chart
   const statusData = useMemo(() => {
     const counts = assets.reduce((acc, a) => {
@@ -857,6 +945,10 @@ const Dashboard = () => {
                     <RefreshCw size={16} className={isDataLoading ? "spin" : ""} />
                     Refresh
                   </button>
+                  <button className="dash-btn" onClick={() => setShowMonthlyReport(true)}>
+                    <FileText size={16} />
+                    Monthly Depreciation
+                  </button>
                 </div>
               </div>
 
@@ -1026,6 +1118,10 @@ const Dashboard = () => {
                 >
                   <RefreshCw size={16} className={isDataLoading ? "spin" : ""} /> Refresh
                 </button>
+                <button className="dash-btn" onClick={() => setShowMonthlyReport(true)}>
+                  <FileText size={16} />
+                  Monthly Depreciation
+                </button>
                 <button className="dash-btn dash-btn-primary" onClick={() => setShowAddForm(true)}>
                   <Plus size={16} /> Add Asset
                 </button>
@@ -1111,6 +1207,60 @@ const Dashboard = () => {
                   <span>Total</span>
                   <span>₱{amortizationTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMonthlyReport && (
+        <div className="dash-modal-overlay" onClick={() => setShowMonthlyReport(false)}>
+          <div className="dash-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <div className="dash-modal-header">
+              <h3>Monthly Depreciation Report</h3>
+              <button onClick={() => setShowMonthlyReport(false)}><X size={18} /></button>
+            </div>
+            <div className="dash-modal-body">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }} className="dark:text-gray-300">Select Month:</label>
+                  <input
+                    type="month"
+                    value={reportMonth}
+                    onChange={(e) => setReportMonth(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <button className="dash-btn dash-btn-primary" onClick={handleExportMonthlyReport} disabled={!monthlyReportData.items.length}>
+                  <Download size={16} /> Export to Excel
+                </button>
+              </div>
+              
+              <div className="dash-sched-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <div className="dash-sched-row" style={{ fontWeight: 700, borderBottom: '2px solid #e5e7eb', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1 }}>
+                  <span style={{ flex: 1.2 }}>Asset Name</span>
+                  <span style={{ flex: 0.8 }}>Tag #</span>
+                  <span style={{ flex: 0.6, textAlign: 'right' }}>Cost</span>
+                  <span style={{ flex: 0.8, textAlign: 'right' }}>Depreciation</span>
+                </div>
+                {monthlyReportData.items.length === 0 ? (
+                  <div style={{ padding: '30px', textAlign: 'center', color: '#6b7280' }}>No assets are depreciating during this month.</div>
+                ) : (
+                  monthlyReportData.items.map((item, idx) => (
+                    <div key={idx} className="dash-sched-row">
+                      <span style={{ flex: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.name}>{item.name}</span>
+                      <span style={{ flex: 0.8, fontSize: '12px', color: '#6b7280' }}>{item.tag_number}</span>
+                      <span style={{ flex: 0.6, textAlign: 'right', fontFamily: 'monospace' }}>₱{item.total_cost.toLocaleString()}</span>
+                      <span style={{ flex: 0.8, textAlign: 'right', fontWeight: 600, color: '#dc2626', fontFamily: 'monospace' }}>₱{item.monthly_depreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <div className="dash-sched-total" style={{ marginTop: '16px', borderTop: '2px solid #e5e7eb', paddingTop: '12px' }}>
+                <span>Total Monthly Depreciation</span>
+                <span style={{ fontSize: '18px', color: '#dc2626' }}>₱{monthlyReportData.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>

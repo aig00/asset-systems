@@ -19,6 +19,7 @@ import {
   Zap,
   Plus,
   Save,
+  DollarSign,
 } from "lucide-react";
 
 const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail }) => {
@@ -536,7 +537,7 @@ const AddAssetForm = ({ onComplete, onCancel, userRole = "accountant", userEmail
               <div className="form-grid">
                 <div className="field">
                   <label className="field-label">
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f87171' }}>₱</span> Unit Cost (₱){" "}
+                    <Hash size={12} /> Quantity{" "}
                     <span className="required-dot" />
                   </label>
                   <input

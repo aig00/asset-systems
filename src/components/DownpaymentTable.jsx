@@ -46,7 +46,7 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [promotionData, setPromotionData] = useState(null);
   const [isNewCategory, setIsNewCategory] = useState(false);
-  const [promotionForm, setPromotionForm] = useState({ salvage_value: "0", useful_life_years: "5" });
+  const [promotionForm, setPromotionForm] = useState({ salvage_value: "0", useful_life_years: "5", tag_number: "" });
   const [searchQuery, setSearchQuery] = useState("");
   
   // PIN Verification state
@@ -62,18 +62,21 @@ const DownpaymentTable = ({ assets, userRole, userEmail, refreshData }) => {
   useEffect(() => {
     fetchTransactions();
     fetchPendingDownpayments();
-    if (showAddAssetModal) {
+  }, [showAddAssetModal]);
+
+  useEffect(() => {
+    if (showPromotionModal) {
       const generateTagNumber = async () => {
         const { data } = await supabase.from("assets").select("tag_number").not("tag_number", "is", null).order("tag_number", { ascending: false });
         let nextNum = 1;
         if (data?.length) {
           data.forEach((item) => { const match = item.tag_number?.match(/^TAG-(\d+)$/); if (match) { const num = parseInt(match[1], 10); if (num >= nextNum) nextNum = num + 1; } });
         }
-        setAddAssetForm((prev) => ({ ...prev, tag_number: `TAG-${nextNum.toString().padStart(3, "0")}` }));
+        setPromotionForm((prev) => ({ ...prev, tag_number: `TAG-${nextNum.toString().padStart(3, "0")}` }));
       };
       generateTagNumber();
     }
-  }, [showAddAssetModal]);
+  }, [showPromotionModal]);
 
   const fetchTransactions = async () => {
     const { data, error } = await supabase.from("downpayment_transactions").select("*").order("transaction_date", { ascending: false });
@@ -271,13 +274,16 @@ const fetchPendingDownpayments = async () => {
         assetDetails = { name: "Unknown Asset", category: "General", total_cost: totalCost };
       }
 
-      // Generate tag number
-      const { data: tagData } = await supabase.from("assets").select("tag_number").not("tag_number", "is", null).order("tag_number", { ascending: false });
-      let nextNum = 1;
-      if (tagData?.length) {
-        tagData.forEach((item) => { const match = item.tag_number?.match(/^TAG-(\d+)$/); if (match) { const num = parseInt(match[1], 10); if (num >= nextNum) nextNum = num + 1; } });
+      // Use provided tag number or generate one
+      let tagNumber = extraData.tag_number;
+      if (!tagNumber) {
+        const { data: tagData } = await supabase.from("assets").select("tag_number").not("tag_number", "is", null).order("tag_number", { ascending: false });
+        let nextNum = 1;
+        if (tagData?.length) {
+          tagData.forEach((item) => { const match = item.tag_number?.match(/^TAG-(\d+)$/); if (match) { const num = parseInt(match[1], 10); if (num >= nextNum) nextNum = num + 1; } });
+        }
+        tagNumber = `TAG-${nextNum.toString().padStart(3, "0")}`;
       }
-      const tagNumber = `TAG-${nextNum.toString().padStart(3, "0")}`;
 
       // Create the asset in inventory
       const assetData = { 
@@ -419,7 +425,7 @@ const fetchPendingDownpayments = async () => {
     setLoading(false);
     setShowPromotionModal(false);
     setPromotionData(null);
-    setPromotionForm({ salvage_value: "0", useful_life_years: "5" });
+    setPromotionForm({ salvage_value: "0", useful_life_years: "5", tag_number: "" });
     
     refreshData(); fetchTransactions(); fetchPendingDownpayments();
   };
@@ -856,11 +862,6 @@ const fetchPendingDownpayments = async () => {
                     )}
                   </div>
                   <div className="dp-field">
-                    <label className="dp-field-label"><Tag size={12} /> Tag Number</label>
-                    <input type="text" value={addAssetForm.tag_number} readOnly className="dp-field-input" style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} />
-                    <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>Auto-generated</p>
-                  </div>
-                  <div className="dp-field">
                     <label className="dp-field-label"><FileText size={12} /> Reference / Invoice #</label>
                     <input type="text" value={addAssetForm.reference_number} onChange={(e) => setAddAssetForm({ ...addAssetForm, reference_number: e.target.value })} className="dp-field-input" placeholder="e.g. INV-2024-001" />
                   </div>
@@ -929,7 +930,7 @@ const fetchPendingDownpayments = async () => {
               </div>
               <div className="dp-modal-footer">
                 <button type="button" className="dp-btn-cancel" onClick={() => setShowAddAssetModal(false)}>Cancel</button>
-                <button type="submit" disabled={loading || !addAssetForm.tag_number} className="dp-btn-submit">{loading ? "Saving..." : <>Save Downpayment</>}</button>
+                <button type="submit" disabled={loading} className="dp-btn-submit">{loading ? "Saving..." : <>Save Downpayment</>}</button>
               </div>
             </form>
           </div>
@@ -1092,6 +1093,11 @@ const fetchPendingDownpayments = async () => {
                   <p className="dp-info-text">The asset is now 100% paid. Please provide the final details to move it to the Asset Inventory.</p>
                 </div>
                 <div className="dp-form-grid">
+                  <div className="dp-field">
+                    <label className="dp-field-label"><Tag size={12} /> Tag Number <span className="dp-required-dot" /></label>
+                    <input required type="text" value={promotionForm.tag_number} readOnly className="dp-field-input" style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} />
+                    <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>Auto-generated</p>
+                  </div>
                   <div className="dp-field">
                     <label className="dp-field-label"><span style={{ fontSize: '13px', fontWeight: 'bold', color: '#f87171' }}>₱</span> Salvage Value (₱)</label>
                     <input type="number" step="0.01" value={promotionForm.salvage_value} onChange={(e) => setPromotionForm({...promotionForm, salvage_value: e.target.value})} className="dp-field-input" placeholder="0.00" />
