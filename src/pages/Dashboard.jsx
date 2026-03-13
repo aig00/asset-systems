@@ -46,6 +46,7 @@ import AssetSummary from "@/components/AssetSummary";
 import DashboardCharts from "@/components/DashboardCharts";
 import DownpaymentTable from "@/components/DownpaymentTable";
 import { SignOutModal } from "@/pages/SignOutModal";
+import { ModernButton } from "@/components/ui/ModernTable";
 import {
   PieChart as RePieChart,
   Pie,
@@ -1155,7 +1156,7 @@ const Dashboard = () => {
                 >
                   <RefreshCw size={16} className={isDataLoading ? "spin" : ""} /> Refresh
                 </button>
-                <button className="dash-btn dash-btn-primary" onClick={() => setShowAddForm(true)}>
+                <button className="dash-btn dash-btn-primary" onClick={() => setShowAddForm(true)} style={{ background: '#dc2626', color: isDark ? '#ffffff' : '#ffffff' }}>
                   <Plus size={16} /> Add Asset
                 </button>
               </div>
@@ -1182,13 +1183,15 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="dash-header-actions">
-                  <button 
-                    className="dash-btn dash-btn-primary" 
+                  <ModernButton 
+                    variant="secondary" 
+                    size="md" 
+                    icon={Download}
                     onClick={handleExportMonthlyReport} 
                     disabled={!monthlyReportData.items.length}
                   >
-                    <Download size={16} /> Export Report
-                  </button>
+                    Export
+                  </ModernButton>
                 </div>
               </div>
 

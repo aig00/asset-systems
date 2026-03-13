@@ -816,7 +816,7 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                 Get started by adding a new asset to your inventory.
               </p>
               <div className="mt-6">
-                <button className="dash-btn dash-btn-primary" onClick={onAddAsset} style={{ background: '#dc2626' }}><Plus size={16} /> Add Asset</button>
+                <button className="dash-btn dash-btn-primary" onClick={onAddAsset} style={{ background: '#dc2626', color: '#ffffff' }}><Plus size={16} /> Add Asset</button>
               </div>
             </div>
           )

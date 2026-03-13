@@ -568,14 +568,14 @@ const fetchPendingDownpayments = async () => {
           <ModernButton variant="secondary" size="sm" icon={Download} onClick={handleExportDownpaymentAssets}>
             Export
           </ModernButton>
-          <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626' }}>
+          <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626', color: '#ffffff' }}>
             <Plus size={16} /> Add Asset
           </button>
         </div>
       </div>
 
-      <div className="dash-logs-list">
-        <div className="dash-log-header items-center">
+        <div className="dash-logs-list">
+          <div className="dash-log-header items-center">
   <span></span>
   <span className="text-left">Tag #</span>
   <span className="text-left">Asset Name</span>
@@ -611,7 +611,7 @@ const fetchPendingDownpayments = async () => {
                 Get started by adding a new asset with an initial downpayment.
               </p>
               <div className="mt-6">
-                <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626' }}><Plus size={16} /> Add Asset</button>
+                <button className="dash-btn dash-btn-primary" onClick={() => setShowAddAssetModal(true)} style={{ background: '#dc2626', color: '#ffffff' }}><Plus size={16} /> Add Asset</button>
               </div>
             </div>
           )) : (
