@@ -830,80 +830,80 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
         <div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
           {/* VIEW MODAL */}
           {modalMode === "view" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Asset Details</h3>
-                    <p className="text-sm text-gray-500">{selectedAsset.name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Asset Details</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Tag Number</p>
-                    <p className="font-mono font-semibold text-gray-900">{selectedAsset.tag_number}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Tag Number</p>
+                    <p className="font-mono font-semibold text-gray-900 dark:text-slate-100">{selectedAsset.tag_number}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Category</p>
-                    <p className="font-medium text-gray-900">{selectedAsset.category || "—"}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Category</p>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{selectedAsset.category || "—"}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Status</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</p>
                     <StatusBadge status={statusClass(selectedAsset.status)} />
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">LOB</p>
-                    <p className="font-medium text-gray-900">{selectedAsset.current_company || "—"}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">LOB</p>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{selectedAsset.current_company || "—"}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Total Cost</p>
-                    <p className="font-mono font-semibold text-gray-900">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Total Cost</p>
+                    <p className="font-mono font-semibold text-gray-900 dark:text-slate-100">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Salvage Value</p>
-                    <p className="font-mono text-gray-900">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Salvage Value</p>
+                    <p className="font-mono text-gray-900 dark:text-slate-100">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Useful Life</p>
-                    <p className="font-medium text-gray-900">{selectedAsset.useful_life_years} years</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Useful Life</p>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{selectedAsset.useful_life_years} years</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Purchase Date</p>
-                    <p className="font-medium text-gray-900">{selectedAsset.purchase_date || "—"}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Purchase Date</p>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{selectedAsset.purchase_date || "—"}</p>
                   </div>
                 </div>
                 
                 {/* Amortization Box */}
                 <div 
-                  className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-4 border border-primary-100 cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-primary-100 dark:border-primary-800 cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => setModalMode("amortization")}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider">Monthly Amortization</p>
-                      <p className="text-2xl font-bold text-primary-600">₱{calculateAmortization(selectedAsset)}</p>
-                      <p className="text-xs text-gray-500 mt-1">Straight-line depreciation</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">Monthly Amortization</p>
+                      <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">₱{calculateAmortization(selectedAsset)}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Straight-line depreciation</p>
                     </div>
-                    <TrendingDown className="w-8 h-8 text-primary-400" />
+                    <TrendingDown className="w-8 h-8 text-primary-400 dark:text-primary-300" />
                   </div>
-                  <p className="text-xs text-primary-600 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-primary-600 dark:text-primary-300 mt-2 flex items-center gap-1">
                     <ArrowRight className="w-3 h-3" /> Click to view full schedule
                   </p>
                 </div>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
-                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
-                <button onClick={handleExportAsset} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3">
+                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Close</button>
+                <button onClick={handleExportAsset} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-700">
                   <Download className="w-4 h-4" /> Export
                 </button>
               </div>
@@ -912,18 +912,18 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 
           {/* AMORTIZATION MODAL */}
           {modalMode === "amortization" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setModalMode("view")} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <button onClick={() => setModalMode("view")} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400">
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Amortization Schedule</h3>
-                    <p className="text-sm text-gray-500">{selectedAsset.name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Amortization Schedule</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -931,29 +931,29 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
               <div className="p-6">
                 <div className="flex gap-4 mb-4">
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1">From</label>
-                    <input type="month" value={amortizationDates.start} onChange={(e) => setAmortizationDates({ ...amortizationDates, start: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <label className="block text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">From</label>
+                    <input type="month" value={amortizationDates.start} onChange={(e) => setAmortizationDates({ ...amortizationDates, start: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1">To</label>
-                    <input type="month" value={amortizationDates.end} onChange={(e) => setAmortizationDates({ ...amortizationDates, end: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <label className="block text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">To</label>
+                    <input type="month" value={amortizationDates.end} onChange={(e) => setAmortizationDates({ ...amortizationDates, end: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between mb-3 text-xs">
-                  <span className="text-emerald-600 font-medium">{paidMonths.size} paid</span>
-                  <span className="text-amber-600 font-medium">{schedule.filter(s => s.amount > 0).length - paidMonths.size} remaining</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">{paidMonths.size} paid</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-medium">{schedule.filter(s => s.amount > 0).length - paidMonths.size} remaining</span>
                 </div>
                 
-                <div className="border border-gray-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                <div className="border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
                   {schedule.map((item, idx) => (
                     <div 
                       key={idx} 
-                      className={`flex items-center justify-between px-4 py-2.5 border-b border-gray-100 last:border-b-0 ${paidMonths.has(item.date) ? 'bg-emerald-50' : ''}`}
+                      className={`flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-slate-600 last:border-b-0 ${paidMonths.has(item.date) ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
                     >
-                      <span className={`text-sm ${paidMonths.has(item.date) ? 'text-emerald-700 font-medium' : 'text-gray-600'}`}>{item.date}</span>
+                      <span className={`text-sm ${paidMonths.has(item.date) ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-slate-300'}`}>{item.date}</span>
                       <div className="flex items-center gap-2">
-                        <span className={`font-mono text-sm ${paidMonths.has(item.date) ? 'text-emerald-700' : 'text-gray-900'}`}>
+                        <span className={`font-mono text-sm ${paidMonths.has(item.date) ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-slate-100'}`}>
                           ₱{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
                         {item.amount > 0 && (
@@ -966,7 +966,7 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                               setPaidMonths(newPaid);
                               savePaidMonth(selectedAsset.id, item.date, isPaid);
                             }}
-                            className={`w-5 h-5 rounded flex items-center justify-center text-xs ${paidMonths.has(item.date) ? 'bg-emerald-500 text-white' : 'border border-gray-300 text-gray-300 hover:border-emerald-300'}`}
+                            className={`w-5 h-5 rounded flex items-center justify-center text-xs ${paidMonths.has(item.date) ? 'bg-emerald-500 text-white' : 'border border-gray-300 dark:border-slate-500 text-gray-300 dark:text-slate-400 hover:border-emerald-300 dark:hover:border-emerald-500'}`}
                           >
                             {paidMonths.has(item.date) ? '✓' : ''}
                           </button>
@@ -974,45 +974,45 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                       </div>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
-                    <span className="text-sm font-semibold text-gray-900">Total</span>
-                    <span className="font-mono font-bold text-gray-900">₱{scheduleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-slate-700 border-t border-gray-200 dark:border-slate-600">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">Total</span>
+                    <span className="font-mono font-bold text-gray-900 dark:text-slate-100">₱{scheduleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200">
-                <button onClick={closeModal} className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700">
+                <button onClick={closeModal} className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Close</button>
               </div>
             </div>
           )}
 
           {/* TRANSFER MODAL */}
           {modalMode === "transfer" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <ArrowRightLeft className="w-5 h-5 text-amber-600" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                    <ArrowRightLeft className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Transfer Asset</h3>
-                    <p className="text-sm text-gray-500">{selectedAsset.name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Transfer Asset</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="p-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start gap-2">
-                  <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-amber-800">Transferring from <strong>{selectedAsset.current_company}</strong>. A transfer proof will be downloaded.</p>
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4 flex items-start gap-2">
+                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-amber-800 dark:text-amber-300">Transferring from <strong>{selectedAsset.current_company}</strong>. A transfer proof will be downloaded.</p>
                 </div>
                 
-                <label className="block text-sm font-medium text-gray-700 mb-2">Destination LOB</label>
-                <select value={transferCompany} onChange={(e) => setTransferCompany(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Destination LOB</label>
+                <select value={transferCompany} onChange={(e) => setTransferCompany(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100">
                   <option value="">Select LOB…</option>
                   <option value="CY Caloocan">CY Caloocan</option>
                   <option value="CY Bustos">CY Bustos</option>
@@ -1026,9 +1026,9 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                 </select>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
-                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                <button onClick={handleTransfer} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3">
+                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Cancel</button>
+                <button onClick={handleTransfer} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 dark:bg-amber-600 rounded-lg hover:bg-amber-700 dark:hover:bg-amber-700 disabled:opacity-50">
                   {loading ? "Processing…" : <><ArrowRight className="w-4 h-4" /> Confirm</>}
                 </button>
               </div>
@@ -1037,42 +1037,42 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 
           {/* DISPOSE MODAL */}
           {modalMode === "dispose" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-                    <Archive className="w-5 h-5 text-red-600" />
+                  <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                    <Archive className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Dispose Asset</h3>
-                    <p className="text-sm text-gray-500">{selectedAsset.name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Dispose Asset</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="p-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-800">This will export data to CSV and <strong>permanently delete</strong> the record.</p>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-800 dark:text-red-300">This will export data to CSV and <strong>permanently delete</strong> the record.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500">Total Cost</p>
-                    <p className="font-mono font-semibold">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString()}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Total Cost</p>
+                    <p className="font-mono font-semibold text-gray-900 dark:text-slate-100">₱{parseFloat(selectedAsset.total_cost || 0).toLocaleString()}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500">Salvage Value</p>
-                    <p className="font-mono">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString()}</p>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Salvage Value</p>
+                    <p className="font-mono text-gray-900 dark:text-slate-100">₱{parseFloat(selectedAsset.salvage_value || 0).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
-                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                <button onClick={handleDispose} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3">
+                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Cancel</button>
+                <button onClick={handleDispose} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-600 rounded-lg hover:bg-red-700 dark:hover:bg-red-700 disabled:opacity-50">
                   {loading ? "Processing…" : <><CheckCircle2 className="w-4 h-4" /> Confirm</>}
                 </button>
               </div>
@@ -1081,32 +1081,32 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 
           {/* DELETE MODAL */}
           {modalMode === "delete" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Delete Asset</h3>
-                    <p className="text-sm text-gray-500">This action is permanent</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Delete Asset</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">This action is permanent</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="p-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-800">You are about to <strong>permanently delete</strong> <strong>{selectedAsset.name}</strong>. This cannot be undone.</p>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-800 dark:text-red-300">You are about to <strong>permanently delete</strong> <strong>{selectedAsset.name}</strong>. This cannot be undone.</p>
                 </div>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
-                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                <button onClick={handleDelete} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3">
+                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Cancel</button>
+                <button onClick={handleDelete} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-600 rounded-lg hover:bg-red-700 dark:hover:bg-red-700 disabled:opacity-50">
                   {loading ? "Deleting…" : <><Trash2 className="w-4 h-4" /> Delete</>}
                 </button>
               </div>
@@ -1115,77 +1115,77 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
 
           {/* EDIT MODAL */}
           {modalMode === "edit" && (
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-                    <Edit className="w-5 h-5 text-primary-600" />
+                  <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+                    <Edit className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Edit Asset</h3>
-                    <p className="text-sm text-gray-500">{selectedAsset.name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Edit Asset</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{selectedAsset.name}</p>
                   </div>
                 </div>
-                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button onClick={closeModal} className="p-2 rounded-lg text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="p-6 space-y-6">
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h4>
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">Basic Information</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Asset Name</label>
-                      <input name="name" value={editForm.name || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Asset Name</label>
+                      <input name="name" value={editForm.name || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <input name="category" value={editForm.category || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Category</label>
+                      <input name="category" value={editForm.category || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Tag Number</label>
-                      <input name="tag_number" value={editForm.tag_number || ""} readOnly className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Tag Number</label>
+                      <input name="tag_number" value={editForm.tag_number || ""} readOnly className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Reference #</label>
-                      <input name="reference_number" value={editForm.reference_number || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Reference #</label>
+                      <input name="reference_number" value={editForm.reference_number || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Valuation</h4>
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">Valuation</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                      <input type="number" name="quantity" value={editForm.quantity || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Quantity</label>
+                      <input type="number" name="quantity" value={editForm.quantity || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost (₱)</label>
-                      <input type="number" step="0.01" name="unit_cost" value={editForm.unit_cost || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Unit Cost (₱)</label>
+                      <input type="number" step="0.01" name="unit_cost" value={editForm.unit_cost || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Salvage Value (₱)</label>
-                      <input type="number" step="0.01" name="salvage_value" value={editForm.salvage_value || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Salvage Value (₱)</label>
+                      <input type="number" step="0.01" name="salvage_value" value={editForm.salvage_value || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Useful Life (Years)</label>
-                      <input type="number" name="useful_life_years" value={editForm.useful_life_years || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Useful Life (Years)</label>
+                      <input type="number" name="useful_life_years" value={editForm.useful_life_years || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Logistics</h4>
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">Logistics</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
-                      <input type="date" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Purchase Date</label>
+                      <input type="date" name="purchase_date" value={editForm.purchase_date || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">LOB</label>
-                      <select name="current_company" value={editForm.current_company || "HO"} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">LOB</label>
+                      <select name="current_company" value={editForm.current_company || "HO"} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100">
                         <option value="HO">HO</option>
                         <option value="CY Caloocan">CY Caloocan</option>
                         <option value="CY Bustos">CY Bustos</option>
@@ -1198,20 +1198,20 @@ const AssetSummary = memo(({ assets, userRole, userEmail, refreshData, showPendi
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                      <input name="location" value={editForm.location || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Location</label>
+                      <input name="location" value={editForm.location || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                      <input name="assigned_to" value={editForm.assigned_to || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Assigned To</label>
+                      <input name="assigned_to" value={editForm.assigned_to || ""} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100" />
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="px-6 py-4 border-t border-gray-200 flex gap-3 sticky bottom-0 bg-white">
-                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                <button onClick={handleEditSave} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex gap-3 sticky bottom-0 bg-white dark:bg-slate-800">
+                <button onClick={closeModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600">Cancel</button>
+                <button onClick={handleEditSave} disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-700 disabled:opacity-50">
                   {loading ? "Saving…" : <><Save className="w-4 h-4" /> Save Changes</>}
                 </button>
               </div>
