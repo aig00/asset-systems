@@ -163,12 +163,11 @@ const DashboardCharts = ({ assets }) => {
   /* Theme-aware chart colors */
   const grid   = isDark ? "rgba(255,255,255,0.06)" : "rgba(232,229,227,0.6)";
   const axis   = isDark ? "#525252" : "#9ca3af";
-  const textColor = isDark ? "#a3a3a3" : "#6b7280";
 
   const cardStyle = {
-    background:   isDark ? "var(--surface-3)" : "var(--surface)",
+    background:   "var(--surface-card)",
     borderRadius: "var(--radius-card)",
-    border:       `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "var(--border)"}`,
+    border:       "1px solid var(--border)",
     boxShadow:    "var(--shadow-card)",
     padding:      "24px",
     width:        "100%",
@@ -179,7 +178,7 @@ const DashboardCharts = ({ assets }) => {
     fontFamily:    "'Space Grotesk', system-ui, sans-serif",
     fontSize:      "16px",
     fontWeight:    700,
-    color:         "var(--text-primary)",
+    color:         "var(--text-primary)", // This correctly uses CSS variables
     marginBottom:  "6px",
     letterSpacing: "-0.02em",
     textTransform: "uppercase",
@@ -187,7 +186,7 @@ const DashboardCharts = ({ assets }) => {
 
   const subtitleStyle = {
     fontSize:     "12px",
-    color:        textColor,
+    color:        "var(--text-secondary)",
     marginBottom: "20px",
     fontWeight:   400,
     letterSpacing: "0.04em",
@@ -228,11 +227,11 @@ const DashboardCharts = ({ assets }) => {
             <Legend
               wrapperStyle={{ 
                 fontSize: 12, 
-                color: textColor, 
+                color: "var(--text-secondary)", 
                 paddingTop: 8,
                 fontFamily: "'Inter', sans-serif"
               }}
-              formatter={(v) => <span style={{ color: textColor, fontSize: 12 }}>{v}</span>}
+              formatter={(v) => <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{v}</span>}
             />
           </PieChart>
         </ResponsiveContainer>

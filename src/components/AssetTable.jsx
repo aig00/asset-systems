@@ -28,18 +28,18 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
   const statusVariant = (asset.status || "").toLowerCase();
   
   return (
-    <tr className="hover:bg-gray-50 transition-colors duration-150 group">
+    <tr className="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-150 group">
       {/* Tag / Name */}
       <td className="px-4 py-3.5">
         <div>
-          <p className="font-medium text-gray-900 text-sm">{asset.name}</p>
-          <p className="text-xs text-gray-500 font-mono mt-0.5">{asset.tag_number}</p>
+          <p className="font-medium text-gray-900 dark:text-slate-100 text-sm">{asset.name}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400 font-mono mt-0.5">{asset.tag_number}</p>
         </div>
       </td>
       
       {/* Category */}
       <td className="px-4 py-3.5">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-200 border border-gray-200 dark:border-slate-600">
           {asset.category || "—"}
         </span>
       </td>
@@ -51,7 +51,7 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
       
       {/* Value */}
       <td className="px-4 py-3.5 text-right">
-        <span className="font-mono font-semibold text-gray-900">
+        <span className="font-mono font-semibold text-gray-900 dark:text-slate-100">
           ₱{parseFloat(asset.total_cost || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
         </span>
       </td>
@@ -61,7 +61,7 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
         <div className="flex items-center justify-end gap-1">
           <button
             onClick={() => onView(asset)}
-            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+            className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -70,7 +70,7 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
           {(role === "head" || role === "admin") && (
             <button
               onClick={() => onEdit(asset)}
-              className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+              className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md"
               title="Edit"
             >
               <Edit className="w-4 h-4" />
@@ -79,7 +79,7 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
           
           <button
             onClick={() => onDelete(asset)}
-            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+            className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-md"
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -88,7 +88,7 @@ const AssetRow = memo(({ asset, role, onView, onEdit, onDelete, onTransfer, isPe
           {role === "head" && asset.status === "Active" && (
             <button
               onClick={() => onTransfer(asset)}
-              className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors rounded-md"
+              className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-md"
               title="Transfer"
             >
               <ArrowRightLeft className="w-4 h-4" />
@@ -372,8 +372,8 @@ const AssetTable = ({ assets, refreshData }) => {
       header: 'Tag / Name',
       render: (_, row) => (
         <div>
-          <p className="font-medium text-gray-900 text-sm">{row.name}</p>
-          <p className="text-xs text-gray-500 font-mono mt-0.5">{row.tag_number}</p>
+          <p className="font-medium text-gray-900 dark:text-slate-100 text-sm">{row.name}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400 font-mono mt-0.5">{row.tag_number}</p>
         </div>
       )
     },
@@ -381,7 +381,7 @@ const AssetTable = ({ assets, refreshData }) => {
       key: 'category', 
       header: 'Category',
       render: (val) => (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-200 border border-gray-200 dark:border-slate-600">
           {val || "—"}
         </span>
       )
@@ -406,7 +406,7 @@ const AssetTable = ({ assets, refreshData }) => {
         <div className="flex items-center justify-end gap-1">
           <button
             onClick={() => {}}
-            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+            className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -415,7 +415,7 @@ const AssetTable = ({ assets, refreshData }) => {
           {(role === "head" || role === "admin") && (
             <button
               onClick={() => handleEditClick(row)}
-              className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-md"
+              className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md"
               title="Edit"
             >
               <Edit className="w-4 h-4" />
@@ -424,7 +424,7 @@ const AssetTable = ({ assets, refreshData }) => {
           
           <button
             onClick={() => handleDisposeClick(row)}
-            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md"
+            className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-md"
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -433,7 +433,7 @@ const AssetTable = ({ assets, refreshData }) => {
           {role === "head" && row.status === "Active" && (
             <button
               onClick={() => handleTransferClick(row)}
-              className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors rounded-md"
+              className="p-1.5 text-gray-400 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-md"
               title="Transfer"
             >
               <ArrowRightLeft className="w-4 h-4" />
@@ -492,9 +492,9 @@ const AssetTable = ({ assets, refreshData }) => {
   return (
     <>
       {/* ── Modern Table Container ── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
         {/* Header / Toolbar */}
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between gap-4">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/50 flex items-center justify-between gap-4">
           <ModernSearchBar
             value={searchQuery}
             onChange={setSearchQuery}

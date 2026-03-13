@@ -60,21 +60,32 @@ import "./Dashboard.css";
 // MODERN DASHBOARD - Bento Box Layout (2026 Design Standards)
 // ============================================================================
 
-const COLORS = {
-  brand: "#dc2626",
-  brandLight: "#f87171",
-  brand50: "#fef2f2",
-  emerald: "#10b981",
-  emerald50: "#ecfdf5",
-  amber: "#f59e0b",
-  amber50: "#fffbeb",
-  rose: "#f43f5e",
-  rose50: "#fff1f2",
-  indigo: "#6366f1",
-  indigo50: "#eef2ff",
-  slate: "#64748b",
-  slate50: "#f8fafc",
-};
+  const COLORS = {
+    brand: "#dc2626",
+    brandLight: "#f87171",
+    brand50: "#fef2f2",
+    brandDark: "#b91c1c",
+    emerald: "#10b981",
+    emerald50: "#ecfdf5",
+    amber: "#f59e0b",
+    amber50: "#fffbeb",
+    rose: "#f43f5e",
+    rose50: "#fff1f2",
+    indigo: "#6366f1",
+    indigo50: "#eef2ff",
+    slate: "#64748b",
+    slate50: "#f8fafc",
+    // Dark theme specific colors
+    darkSurface: "#171717",
+    darkSurface2: "#1f1f1f",
+    darkSurface3: "#262626",
+    darkBg: "#0a0a0a",
+    darkBorder: "#404040",
+    darkBorderLight: "#2a2a2a",
+    darkText: "#f5f5f5",
+    darkTextSecondary: "#a3a3a3",
+    darkTextMuted: "#6b7280",
+  };
 
 const STATUS_COLORS = {
   Active: "#10b981",
@@ -994,8 +1005,8 @@ const Dashboard = () => {
                       <span className="stat-badge" style={{ background: bgColor, color: color }}>{badge}</span>
                     </div>
                     <div className="stat-card-body">
-                      <p className="stat-label">{label}</p>
-                      <p className="stat-value">{value}</p>
+                      <p className="stat-label text-gray-500 dark:text-white">{label}</p>
+                      <p className="stat-value text-gray-900 dark:text-white">{value}</p>
                     </div>
                     <div className="stat-sparkline">
                       <SparklineChart data={sparkline} color={color} />

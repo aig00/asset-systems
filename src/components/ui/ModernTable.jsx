@@ -23,38 +23,38 @@ import {
 // Status badge variants
 const statusVariants = {
   active: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-50 dark:bg-emerald-900/30',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-700/50',
+    dot: 'bg-emerald-500 dark:bg-emerald-400',
     label: 'Active',
   },
   pending: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    bg: 'bg-amber-50 dark:bg-amber-900/30',
+    text: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-700/50',
+    dot: 'bg-amber-500 dark:bg-amber-400',
     label: 'Pending',
   },
   disposed: {
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    border: 'border-red-200',
-    dot: 'bg-red-500',
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    text: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-700/50',
+    dot: 'bg-red-500 dark:bg-red-400',
     label: 'Disposed',
   },
   transferred: {
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500',
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-700/50',
+    dot: 'bg-blue-500 dark:bg-blue-400',
     label: 'Transferred',
   },
   completed: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-50 dark:bg-emerald-900/30',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-700/50',
+    dot: 'bg-emerald-500 dark:bg-emerald-400',
     label: 'Completed',
   },
 };
@@ -90,7 +90,7 @@ export const ModernSearchBar = ({
 }) => {
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-400" />
       <input
         type="text"
         value={value}
@@ -98,8 +98,8 @@ export const ModernSearchBar = ({
         placeholder={placeholder}
         className="
           w-full max-w-md pl-10 pr-4 py-2.5 
-          bg-white border border-gray-200 rounded-lg
-          text-sm text-gray-700 placeholder-gray-400
+          bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg
+          text-sm text-gray-700 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400
           focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
           transition-all duration-200
         "
@@ -325,14 +325,14 @@ const ModernTable = ({
         <table className="w-full">
           {/* Table Header */}
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 dark:border-slate-700">
               {columns.map((column, index) => (
                 <th
                   key={index}
                   className={`
                     px-4 py-3 text-left text-xs font-semibold 
-                    text-gray-500 uppercase tracking-wider
-                    bg-gray-50
+                    text-gray-500 dark:text-slate-300 uppercase tracking-wider
+                    bg-gray-50 dark:bg-slate-800
                     ${column.align === 'right' ? 'text-right' : ''}
                     ${column.align === 'center' ? 'text-center' : ''}
                     ${column.width ? column.width : ''}
@@ -345,7 +345,7 @@ const ModernTable = ({
           </thead>
           
           {/* Table Body */}
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700">
             {loading ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center">
@@ -378,7 +378,7 @@ const ModernTable = ({
                   key={row.id || rowIndex}
                   onClick={() => onRowClick?.(row)}
                   className={`
-                    hover:bg-gray-50 transition-colors duration-150
+                    hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-150
                     ${onRowClick ? 'cursor-pointer' : ''}
                   `}
                 >
